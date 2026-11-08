@@ -923,7 +923,14 @@ button.bigdate:hover .d{color:var(--orange)}
 .wb-in::-webkit-scrollbar{display:none}
 .wb-in .chip{flex:none;height:30px;padding:0 12px;font-size:13px}
 .foot .grow{flex:1}
-@media (max-width:760px){.watchbar{display:none!important}}
+/* téléphone : la ligne « À surveiller » reste visible, fixée au-dessus de la barre de navigation */
+@media (max-width:760px){
+  .watchbar{position:fixed;left:0;right:0;bottom:calc(54px + env(safe-area-inset-bottom,0px));z-index:29;min-height:42px;padding:5px max(12px,env(safe-area-inset-right,0px)) 5px max(12px,env(safe-area-inset-left,0px));gap:8px;border-top:1px solid var(--ink);background:var(--bg)}
+  .watchbar .lbl{font-size:10px;letter-spacing:.04em}
+  .wb-in .chip{height:30px;font-size:12.5px;padding:0 10px}
+  body:has(.watchbar:not([hidden])) .work{padding-bottom:calc(102px + env(safe-area-inset-bottom,0px))}
+  body:has(.watchbar:not([hidden])) .toast{bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+}
 
 /* encadrés déplaçables */
 #head .hb-h .lbl{cursor:grab}
