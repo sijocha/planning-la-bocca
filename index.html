@@ -1298,15 +1298,15 @@ function buildDemo(){
   const T=(prod,carr,s)=>({prod,carr,s:s?1:0});
   const R=(h,s)=>({h,s:s?1:0});
   const days={
-    '2026-10-30':day({presents:[{n:'Karim',pl:'6 h – 14 h'},{n:'Sébastien',pl:'10 h – 18 h'}],
+    '2026-10-30':day({presents:[{n:'Karim',pl:'Matin'},{n:'Sébastien',pl:'Après-midi'}],
       semis:[{nom:'Semi 1',ch:'Marco',h:'07:30',tours:[T('6/16','CALLAS',1),T('0/4L','GOURDON',1),T('0/4L','GOURDON',1)]}],ciments:[{prod:'42,5R',rec:[R('07:00',1),R('13:00',1)]}]}),
-    '2026-11-02':day({presents:[{n:'Karim',pl:'6 h – 14 h'},{n:'Sébastien',pl:'10 h – 18 h'}],
+    '2026-11-02':day({presents:[{n:'Karim',pl:'Matin'},{n:'Sébastien',pl:'Après-midi'}],
       passation:[{t:'Graissage malaxeur',on:true,by:'Karim'},{t:'Nettoyage déchargeur',on:true,by:'Karim'},{t:'Piquage pales malaxeur',on:true,by:'Sébastien'},{t:'Enlèvement bennes : 2x Bennes (demain)',on:true,by:'Sébastien'}],
       labo:[{h:'09:00',t:'Prélèvement éprouvettes Les Terrasses du Golfe'}],ech:[{sens:'recu',c:'Nice',n:1,per:'Matin'}],
       semis:[{nom:'Semi 1',ch:'Marco',h:'07:30',tours:[T('6/16','CALLAS',1),T('6/16','CALLAS',1),T('0/4L','GOURDON',1),T('0/4L','GOURDON',1)]},
              {nom:'Semi 2',ch:'Didier',h:'08:00',tours:[T('0/4L','GOURDON',1),T('10/20','CALLAS',1),T('0/4L','GOURDON',1)]}],
       ciments:[{prod:'42,5R',rec:[R('07:00',1),R('09:00',1),R('14:00',1)]},{prod:'FILLER',rec:[R('10:00',1)]}]}),
-    '2026-11-03':day({presents:[{n:'Karim',pl:'6 h – 14 h'},{n:'Thomas',pl:'10 h – 18 h',rempl:true}],
+    '2026-11-03':day({presents:[{n:'Karim',pl:'Matin'},{n:'Thomas',pl:'Après-midi',rempl:true}],
       passation:[{t:'Graissage tapis peseur',on:true,by:'Karim, pour le poste de 10 h'},{t:'Enlèvement bennes : 2x Bennes',on:true,by:'Sébastien, la veille'},{t:'Piquage trappe malaxeur',on:false,by:'Thomas, fermeture'},{t:'État stocks colorants',on:false,by:'Thomas, fermeture'}],
       events:[{t:'Jeudi : changement 6/16 → 4/10'}],labo:[{h:'14:00',t:'Nadia : réglage formule BQA'}],
       ech:[{sens:'donne',c:'Vallauris',n:1,per:'Après-midi'}],
@@ -1314,8 +1314,8 @@ function buildDemo(){
              {nom:'Semi 2',ch:'Didier',h:'07:45',tours:[T('0/4L','GOURDON',1),T('0/4L','GOURDON',1),T('6/16','CALLAS',0)]},
              {nom:'Semi 3',ch:'',h:'09:00',tours:[T('10/20','CALLAS',1),T('4/10','CALLAS',0)]}],
       ciments:[{prod:'42,5R',rec:[R('07:00',1),R('09:00',1),R('14:00',0)]},{prod:'FILLER',rec:[R('10:00',1)]},{prod:'SRPM',rec:[R('16:00',0)]}]}),
-    '2026-11-04':day({presents:[{n:'Karim',pl:'6 h – 14 h'},{n:'Sébastien',pl:'10 h – 18 h'}]}),
-    '2026-11-05':day({presents:[{n:'Karim',pl:'5 h 30 – 14 h'},{n:'Sébastien',pl:'10 h – 18 h'}],
+    '2026-11-04':day({presents:[{n:'Karim',pl:'Matin'},{n:'Sébastien',pl:'Après-midi'}]}),
+    '2026-11-05':day({presents:[{n:'Karim',pl:'Matin'},{n:'Sébastien',pl:'Après-midi'}],
       passation:[{t:'Graissage malaxeur',on:false,by:'Karim'}],
       events:[{t:'Changement 6/16 → 4/10'},{t:'Vider les fosses en fin de journée'}],labo:[{h:'06:00',t:'Nadia : éprouvettes radier Les Oliviers'}],
       ech:[{sens:'recu',c:'Grasse',n:2,per:'Journée'},{sens:'recu',c:'Nice',n:1,per:'Matin'}]})
@@ -1505,12 +1505,12 @@ function headHTML(iso){
     <div class="hb-w" data-box="vie"><div class="hb" data-act="hb">
       <div class="hb-h"><span class="lbl" title="Rester appuyé sur le bord ou le titre pour déplacer">// Journal de bord</span>${etChip}</div>
       <div class="hb-body">
-      ${dd.presents.length?`<div class="chips">${dd.presents.map((p,i)=>`<span class="chip ${p.rempl?'warn':''}" title="${p.rempl?'Remplaçant':'Centraliste'}"><b>${esc(p.n)}</b><small>${esc(p.pl)}${p.rempl?' · remplaçant':''}</small>${chipX('pres-x',i,p.n)}</span>`).join('')}</div>`:''}
+      ${dd.presents.length?`<div class="chips">${dd.presents.map((p,i)=>`<span class="chip ${p.rempl?'warn':''}" title="${p.rempl?'Remplaçant':'Centraliste'}"><b>${esc(p.n)}</b><small>${esc(p.pl)}${p.rempl?' · remplaçant':''}</small>${role()==='centraliste'?chipX('pres-x',i,p.n):''}</span>`).join('')}</div>`:''}
       ${dd.passation.length?`<div class="chips">${dd.passation.map((p,i)=>`<button class="chip ${p.on?'on':''}" data-act="pass" data-i="${i}" title="Posé par ${esc(p.by||'?')} · clic : fait / à faire">${esc(p.t)}<small>${esc(p.by||'')}</small><span class="x" data-act="pass-x" data-i="${i}" role="button" aria-label="Retirer">×</span></button>`).join('')}</div>`:''}
       ${dd.events.length||dd.labo.length?`<div class="chips">${dd.events.map((e,i)=>`<span class="chip ${e.k==='prod'?'prod':'dash'}">${e.h?`<b>${esc(hm(e.h))}</b> `:''}${esc(e.t)}${chipX('ev-x',i,e.t)}</span>`).join('')}${dd.labo.map((l,i)=>`<span class="chip ok">Labo ${esc(hm(l.h))} · ${esc(l.t)}${chipX('labo-x',i,l.t)}</span>`).join('')}</div>`:''}
       ${!dd.presents.length&&!dd.passation.length&&!dd.events.length&&!dd.labo.length?'<span class="muted">Rien de noté.</span>':''}
       </div>
-      <div class="hb-add"><button class="chip add" data-act="pres-add">+ Présent</button><button class="chip add" data-act="pass-add">+ Passation</button><button class="chip add" data-act="ev-add">+ Événement</button><button class="chip add" data-act="prod-chg">+ Changement produit</button><button class="chip add" data-act="labo-add">+ RDV labo</button></div>
+      <div class="hb-add">${role()==='centraliste'?'<button class="chip add" data-act="pres-add">+ Présent</button>':''}<button class="chip add" data-act="pass-add">+ Passation</button><button class="chip add" data-act="ev-add">+ Événement</button><button class="chip add" data-act="prod-chg">+ Changement produit</button><button class="chip add" data-act="labo-add">+ RDV labo</button></div>
     </div></div>
     <div class="hb-w agg" data-box="agg"><div class="hb" data-act="hb" data-day="${iso}">
       <div class="hb-h"><span class="lbl" title="Rester appuyé sur le bord ou le titre pour déplacer">// Agrégats · ciments</span></div>
@@ -1982,17 +1982,18 @@ function openMap(o){
   google();
   if(!ch.geo&&!geoCache[q.toLowerCase()])fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=fr&q='+encodeURIComponent(q+', Alpes-Maritimes')).then(r=>r.json()).then(j=>{if(j&&j[0]){geoCache[q.toLowerCase()]=[+j[0].lat,+j[0].lon];lsSet('planning-bocca-geo-v1',geoCache)}}).catch(()=>{});
 }
-const NAV_IC={planning:'<path d="M3 21h18"/><path d="M5 21V9h5v12"/><path d="M5 9l2.5-4L10 9"/><path d="M10 13h10v8"/><path d="M13 13v-3h5v3"/><path d="M14 21v-4h3v4"/>',demandes:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',agregats:'<path d="M2 20h20"/><circle cx="8" cy="16" r="3.2"/><circle cx="15.8" cy="16.6" r="2.6"/><circle cx="12.2" cy="10.6" r="2.6"/><circle cx="18.6" cy="11.4" r="1.6"/><circle cx="5.6" cy="10.4" r="1.3"/>',camions:'<path d="M2 17v-5h3.5l2-3.5H10V17"/><ellipse cx="16" cy="11" rx="6" ry="3.6" transform="rotate(-14 16 11)"/><path d="M12.6 8.6l5.6 4.6"/><path d="M10 17h12"/><circle cx="6" cy="18.2" r="2"/><circle cx="18" cy="18.2" r="2"/>',adjuvants:'<path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z"/><path d="M9.2 14.5a2.8 2.8 0 0 0 2.8 2.8"/>',aide:'<circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.2h.01"/>',liens:'<path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>'};
-const NAV_C={planning:'#151515',demandes:'#FF4D00',agregats:'#FFC21A',camions:'#00B140',adjuvants:'#1E8CFF',liens:'#FF2E93'};
+const NAV_IC={chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',planning:'<path d="M3 21h18"/><path d="M5 21V9h5v12"/><path d="M5 9l2.5-4L10 9"/><path d="M10 13h10v8"/><path d="M13 13v-3h5v3"/><path d="M14 21v-4h3v4"/>',demandes:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',agregats:'<path d="M2 20h20"/><circle cx="8" cy="16" r="3.2"/><circle cx="15.8" cy="16.6" r="2.6"/><circle cx="12.2" cy="10.6" r="2.6"/><circle cx="18.6" cy="11.4" r="1.6"/><circle cx="5.6" cy="10.4" r="1.3"/>',camions:'<path d="M2 17v-5h3.5l2-3.5H10V17"/><ellipse cx="16" cy="11" rx="6" ry="3.6" transform="rotate(-14 16 11)"/><path d="M12.6 8.6l5.6 4.6"/><path d="M10 17h12"/><circle cx="6" cy="18.2" r="2"/><circle cx="18" cy="18.2" r="2"/>',adjuvants:'<path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z"/><path d="M9.2 14.5a2.8 2.8 0 0 0 2.8 2.8"/>',aide:'<circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.2h.01"/>',liens:'<path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>'};
+const NAV_C={chat:'#2f5d55',planning:'#151515',demandes:'#FF4D00',agregats:'#FFC21A',camions:'#00B140',adjuvants:'#1E8CFF',liens:'#FF2E93'};
 function sideHTML(){
   const nd=S.orders.filter(o=>o.kind==='aplacer').length+S.demandes.filter(r=>!r.done).length;
   const mine=S.demandes.filter(r=>!r.done&&r.pour===role()).length;
   const nd2=role()==='centraliste'?nd:mine;
   const all=[['planning',role()==='centraliste'?'Aujourd\'hui':'Commandes',role()==='centraliste'?'Aujourd.':'Commandes'],['demandes','Demandes','Demandes'],['agregats','Agrégats','Agrégats'],['camions','Camions','Camions'],['adjuvants','Adjuvants','Adjuv.'],['liens','Raccourcis','Liens']];
-  const it=(role()==='centraliste'?all:all.slice(0,2)).concat(prefs.aideOn?[['aide','Mode d\'emploi','Aide']]:[]);
+  const it=(role()==='centraliste'?all:all.slice(0,2)).concat(prefs.aideOn?[['aide','Mode d\'emploi','Aide']]:[]).concat(isPhone()?[['chat','Chat','Chat']]:[]);
+  const nChat=chatUnread();
   return `<div class="brand"><b>La Bocca</b><span>// Planning centrale</span></div>
   <div class="nav-wrap"><span class="nav-ind" aria-hidden="true"></span><span class="nav-hov" aria-hidden="true"></span>
-  ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${i===0?'main':''} ${view.tab===k?'on':''}" data-act="tab" data-v="${k}" title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}</button>`).join('')}
+  ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${i===0?'main':''} ${view.tab===k?'on':''}" ${k==='chat'?'data-act="chat"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
   </div><div class="side-rz" title="Glisser pour élargir ou réduire le menu · double-clic : carrés / normal" aria-hidden="true"></div>
   <div class="grow"></div>
   <div class="mini"><span class="lbl">// ${MODE==='local'?'Démo':'Données'}</span><span>${MODE==='local'?'Données fictives sur cet appareil':'Partagées en direct'}</span><button class="btn sm" data-act="demo-pdf">Exemple PDF</button>${MODE==='local'?'<button class="btn sm" data-act="reset">Recharger la démo</button>':''}</div>`;
@@ -2090,7 +2091,7 @@ function tourPop(o,i,anchor){const id=o.id;const t=o.tours[i];const fl=FLEET().c
   <form data-pa="vol"><label class="fl">Volume du tour (m³)<input id="pv" type="number" step="0.5" min="0.5" max="${capOf(o.cam)}" value="${t.v}"></label><button class="btn" type="submit">Changer le volume</button></form>
   <button class="pop-b danger" data-pa="del">Supprimer ce tour</button>`;
   const T=()=>byId(id).tours[i];
-  openPop(anchor,html,{typed(f){const v=f.querySelector('#pk-t').value;if(!plN(v))return 'keep';const c=plateOf(v,byId(id));return early(o,null,()=>{const x=T();x.p=c;x.s=1})},toggle(){const x=T();if(!x.s)return early(o,null,()=>{T().s=1});return confirmPop(null,'Retirer le stabilo ?',`Tour ${i+1}${x.p?' · '+x.p:''} · ${fmt(x.v)} m³ est noté chargé.`,'Oui, pas chargé',()=>{T().s=0},true)},plaque(el){const c=el.dataset.v;if(!c||T().s){const x=T();x.p=c;if(c)x.s=1;return}return early(o,null,()=>{const x=T();x.p=c;x.s=1})},ext(el){const c=el.dataset.v;if(!c){delete T().c;return}return early(o,null,()=>{const x=T();x.c=c;x.s=1})},vol(f){const v=num(f.querySelector('#pv').value);if(v>0)T().v=v},del(){return confirmPop(null,'Supprimer ce tour ?',`Tour ${i+1} · ${fmt(T().v)} m³`,'Oui, supprimer',()=>{unmove(id,i);byId(id).tours.splice(i,1)},true)},
+  openPop(anchor,html,{typed(f){const v=f.querySelector('#pk-t').value;if(!plN(v))return 'keep';const c=plateOf(v,byId(id));return early(o,null,()=>{const x=T();x.p=c;x.s=1})},toggle(){const x=T();if(!x.s)return early(o,null,()=>{T().s=1});return confirmPop(null,'Retirer le stabilo ?',`Tour ${i+1}${x.p?' · '+x.p:''} · ${fmt(x.v)} m³ est noté chargé.`,'Oui, pas chargé',()=>{T().s=0},true)},plaque(el){const c=el.dataset.v;if(!c||T().s){const x=T();x.p=c;if(c)x.s=1;return}return early(o,null,()=>{const x=T();x.p=c;x.s=1})},ext(el){const c=el.dataset.v;const x=T();if(!c){delete x.c;x.s=0;return}x.c=c;x.s=1},vol(f){const v=num(f.querySelector('#pv').value);if(v>0)T().v=v},del(){return confirmPop(null,'Supprimer ce tour ?',`Tour ${i+1} · ${fmt(T().v)} m³`,'Oui, supprimer',()=>{unmove(id,i);byId(id).tours.splice(i,1)},true)},
     move(){const os=ordersOn(byId(id).date).filter(x=>x.id!==id&&statut(x)!=='annulee'&&x.kind!=='pour'&&x.kind!=='demande');
       if(!os.length){toast('Aucun autre chantier ce jour');return 'keep'}
       popEl.innerHTML=`<div class="pop-h">Replacer ${esc(T().p||'le camion')} · ${fmt(T().v)} m³</div><p class="muted" style="margin:0;font-size:12.5px">Vers quel chantier ?</p><div class="pop-list">${os.map(x=>`<button class="pop-b" data-pa="mvto" data-v="${x.id}"><b>${esc(x.h)}</b> ${esc(cl(x.cl).n)} · ${esc(siteName(x))}</button>`).join('')}</div><label class="ck"><input type="checkbox" id="mv-re" checked> Prévoir un nouveau tour pour ${esc(siteName(byId(id)))}</label><button class="btn" data-pa="cfno">Annuler</button>`;
@@ -2179,8 +2180,8 @@ function act(a,el,o,e){
     case 'dem-rep':{const r=S.demandes[i];return formPop(el,'Répondre',[{k:'t',label:'Réponse',val:'',ph:'Ex. formule créée, SAP 60012481'}],v=>{if(!v.t)return 'keep';(r.rep=r.rep||[]).push({by:author(),t:v.t,at:TODAY});chatSend(v.t,{t:String(r.t).slice(0,70),dem:i});toast('Réponse envoyée · visible dans le chat (en bas à droite)');setTimeout(chatOpen,60)})}
     case 'dem-add':return demPop(el,null);
     // en-tête du jour
-    case 'pres-add':{const d=dayOf(el);return formPop(el,'Centraliste présent',[{k:'n',label:'Prénom',val:prefs.user&&prefs.user.role==='centraliste'?prefs.user.nom:''},{k:'pl',label:'Poste',type:'select',opts:['6 h – 14 h','10 h – 18 h','5 h 30 – 14 h','Journée'],val:'6 h – 14 h'},{k:'r',label:'Remplaçant',type:'check',val:false}],v=>{if(!v.n)return 'keep';day(d).presents.push({n:v.n,pl:v.pl,rempl:v.r})})}
-    case 'pres-x':day(dayOf(el)).presents.splice(i,1);break;
+    case 'pres-add':{if(role()!=='centraliste'){toast('La présence est remplie par le centraliste');return}const d=dayOf(el);return formPop(el,'Centraliste présent',[{k:'n',label:'Prénom',val:prefs.user&&prefs.user.role==='centraliste'?prefs.user.nom:''},{k:'pl',label:'Présence',type:'select',opts:['Matin','Après-midi','Journée'],val:'Journée'},{k:'r',label:'Remplaçant',type:'check',val:false}],v=>{if(!v.n)return 'keep';day(d).presents.push({n:v.n,pl:v.pl,rempl:v.r})})}
+    case 'pres-x':if(role()!=='centraliste'){toast('La présence est remplie par le centraliste');return}day(dayOf(el)).presents.splice(i,1);break;
     case 'pass':day(dayOf(el)).passation[i].on=!day(dayOf(el)).passation[i].on;break;
     case 'pass-x':{e.stopPropagation();const d=dayOf(el);return confirmPop(el,'Supprimer cette passation ?',day(d).passation[i].t,'Oui, supprimer',()=>{day(d).passation.splice(i,1)},true)}
     case 'pass-add':{const d=dayOf(el);return listPop(el,'Pastille de passation',P_ENTRETIEN.concat(ZONES.map(z=>'Nettoyage : '+z)),v=>{day(d).passation.push({t:v,on:false,by:author()})},'Ou consigne libre')}
@@ -2230,7 +2231,7 @@ function act(a,el,o,e){
     case 'aide-q':return;
     case 'aide-close':return closeAide();
     case 'aide-all':document.querySelectorAll('.aide-d:not([hidden])').forEach(d=>d.open=el.dataset.v==='1');return;
-    case 'clo-rep':{const d=view.date;return listPop(el,'Replacer les tours non chargés vers…',AG(),c=>{const w=closedWin(d);let n=0,m=0;ordersOn(d).filter(o=>statut(o)!=='annulee'&&inWin(o.h,w)).forEach(o=>TR(o).forEach(t=>{if(!t.s&&!t.c){t.c=c;n++;m+=t.v}}));if(n)jlog(d,`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c} (${fmt(m)} m³) · centrale fermée`);toast(n?`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c}`:'Aucun tour à replacer')})}
+    case 'clo-rep':{const d=view.date;return listPop(el,'Replacer les tours non chargés vers…',AG(),c=>{const w=closedWin(d);let n=0,m=0;ordersOn(d).filter(o=>statut(o)!=='annulee'&&inWin(o.h,w)).forEach(o=>TR(o).forEach(t=>{if(!t.s&&!t.c){t.c=c;t.s=1;n++;m+=t.v}}));if(n)jlog(d,`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c} (${fmt(m)} m³) · centrale fermée`);toast(n?`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c}`:'Aucun tour à replacer')})}
     case 'map':{if(!(window.L&&window.STANDALONE))return;e.preventDefault();return openMap(o)}
     case 'demo-pdf':return demoPDF();
     case 'liens-cfg':return openConfig('cfg-liens');
@@ -2632,7 +2633,11 @@ function summarize(a,b){
   return r.join(', ')||'modifiée';
 }
 function logLine(o,txt,stamp){const d=day(o.date);d.journal=d.journal||[];d.journal.push({at:stamp,by:author(),t:`${cl(o.cl).n} · ${siteName(o)} : ${txt}`});if(d.journal.length>400)d.journal.splice(0,d.journal.length-400)}
+function extValides(){(S&&S.orders||[]).forEach(o=>(o.tours||[]).forEach(t=>{if(t.c&&!t.s)t.s=1}))}
+// chat : messages gardés 7 jours (les plus anciens sont effacés de la base au prochain enregistrement)
+function purgeChat(){if(!S||!Array.isArray(S.chat))return;const lim=Date.now()-7*864e5;S.chat=S.chat.filter(c=>!(c&&c.ts&&c.ts<lim))}
 function commit(){
+  extValides();purgeChat();
   const now=new Date();const stamp=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
   // journal : chaque changement de commande est tracé dans la journée concernée
   {const cur={};S.orders.forEach(o=>cur['orders/'+o.id]=o);
@@ -2668,6 +2673,7 @@ function flush(){
   });
 }
 function overlayPending(){
+  extValides();
   Object.keys(pending).forEach(p=>{const [col,id]=p.split('/');const b=pending[p].body;
     if(col==='orders'){S.orders=S.orders.filter(o=>o.id!==id);if(b)S.orders.push(clone(b))}
     else if(col==='chat'){S.chat=(S.chat||[]).filter(c=>c.id!==id);if(b)S.chat.push(clone(b))}
