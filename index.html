@@ -637,6 +637,7 @@ body{background-color:var(--bg);background-image:radial-gradient(var(--dot) 1px,
   .nav-b.on,.nav-b.main.on{background:var(--ink);color:var(--bg)}
   .nav-b .ix{display:block;font-size:9px}
   .nav-b .nt{display:none!important}.nav-b .ic{display:inline!important}
+  .nav-b.named .nt{display:block!important;font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase}
   .nav-b .n{position:absolute;top:4px;right:4px;margin:0;font-size:9.5px;padding:0 4px;min-width:0}
   .nav-b::before{display:none}
   .work{padding-bottom:calc(54px + env(safe-area-inset-bottom,0px))}
@@ -1994,12 +1995,12 @@ function sideHTML(){
   const nd=S.orders.filter(o=>o.kind==='aplacer').length+S.demandes.filter(r=>!r.done).length;
   const mine=S.demandes.filter(r=>!r.done&&r.pour===role()).length;
   const nd2=role()==='centraliste'?nd:mine;
-  const all=[['planning',role()==='centraliste'?'Aujourd\'hui':'Commandes',role()==='centraliste'?'Aujourd.':'Commandes'],['demandes','Demandes','Demandes'],['agregats','Agrégats','Agrégats'],['camions','Camions','Camions'],['adjuvants','Adjuvants','Adjuv.'],['liens','Raccourcis','Liens']];
+  const all=[['planning',role()==='centraliste'?'Aujourd\'hui':(isPhone()?'Planning':'Commandes'),role()==='centraliste'?'Aujourd.':'Commandes'],['demandes','Demandes','Demandes'],['agregats','Agrégats','Agrégats'],['camions','Camions','Camions'],['adjuvants','Adjuvants','Adjuv.'],['liens','Raccourcis','Liens']];
   const it=(role()==='centraliste'?all:all.slice(0,2)).concat(prefs.aideOn?[['aide','Mode d\'emploi','Aide']]:[]).concat(isPhone()?[['chat','Chat','Chat']]:[]);
   const nChat=chatUnread();
   return `<div class="brand"><b>La Bocca</b><span>// Planning centrale</span></div>
   <div class="nav-wrap"><span class="nav-ind" aria-hidden="true"></span><span class="nav-hov" aria-hidden="true"></span>
-  ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${i===0?'main':''} ${(k==='chat'?chatOn():view.tab===k&&!(isPhone()&&chatOn()))?'on':''}" ${k==='chat'?'data-act="chat"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
+  ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${role()!=='centraliste'?'named':''} ${i===0?'main':''} ${(k==='chat'?chatOn():view.tab===k&&!(isPhone()&&chatOn()))?'on':''}" ${k==='chat'?'data-act="chat"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
   </div><div class="side-rz" title="Glisser pour élargir ou réduire le menu · double-clic : carrés / normal" aria-hidden="true"></div>
   <div class="grow"></div>
   <div class="mini"><span class="lbl">// ${MODE==='local'?'Démo':'Données'}</span><span>${MODE==='local'?'Données fictives sur cet appareil':'Partagées en direct'}</span><button class="btn sm" data-act="demo-pdf">Exemple PDF</button>${MODE==='local'?'<button class="btn sm" data-act="reset">Recharger la démo</button>':''}</div>`;
