@@ -1016,6 +1016,10 @@ body.hb-dragging .hb:hover{max-height:var(--headH)!important;overflow:hidden!imp
 @keyframes chatpulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--orange) 35%,transparent)}}
 .chatwin{position:fixed;right:16px;bottom:56px;width:min(400px,calc(100vw - 24px));height:min(540px,calc(100vh - 110px));z-index:60;background:var(--panel);border:1px solid var(--ink);box-shadow:6px 6px 0 var(--orange),var(--shadow);display:flex;flex-direction:column}
 .chatwin[hidden]{display:none!important}
+@media (max-width:760px){
+  html body .chatwin{left:0;right:0;top:0;bottom:calc(54px + env(safe-area-inset-bottom,0px));width:auto;height:auto;border:0;border-bottom:1px solid var(--ink);box-shadow:none!important;padding-top:env(safe-area-inset-top,0px);z-index:31}
+  .chatwin .cw-l{flex:1}
+}
 .cw-h{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;background:var(--ink);color:var(--bg)}
 .cw-h>div{flex:1;min-width:0;font-size:14px}.cw-who{font-size:12px;opacity:.75}
 .cw-x{width:34px;height:34px;background:var(--orange);color:#fff;border:0;font:700 22px/1 var(--ui);cursor:pointer}
@@ -1839,21 +1843,23 @@ const chatList=()=>{const lim=Date.now()-CHAT_DAYS*864e5;return (S.chat||[]).fil
 function chatPurge(){const lim=Date.now()-CHAT_DAYS*864e5;const n=(S.chat||[]).length;S.chat=(S.chat||[]).filter(m=>m.ts>=lim);return S.chat.length!==n}
 function chatSend(t,ref){t=String(t||'').trim();if(!t)return false;S.chat=S.chat||[];S.chat.push({id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ts:Date.now(),by:author(),role:role(),t:t.slice(0,1000),ref:ref||null});chatPurge();prefs.chatSeen=Date.now();savePrefs();commit();return true}
 function chatUnread(){const me=author();return chatList().filter(m=>m.ts>(prefs.chatSeen||0)&&m.by!==me).length}
-function chatToggle(){if(chatWin&&!chatWin.hidden){chatWin.hidden=true;return}chatOpen()}
+const chatOn=()=>!!(chatWin&&!chatWin.hidden);
+function chatNav(){if(isPhone()&&S)renderChrome()}
+function chatToggle(){if(chatWin&&!chatWin.hidden){chatWin.hidden=true;chatNav();return}chatOpen();chatNav()}
 function chatOpen(){
   if(!chatWin){chatWin=document.createElement('div');chatWin.className='chatwin';chatWin.setAttribute('role','dialog');chatWin.setAttribute('aria-label','Chat de la centrale');
     chatWin.innerHTML=`<div class="cw-h"><div><b>Chat · La Bocca</b><span class="cw-who"></span></div><button class="cw-x" aria-label="Fermer le chat" title="Fermer">×</button></div><div class="cw-l" aria-live="polite"></div>
       <form class="cw-f"><textarea rows="2" placeholder="Écrire un message… (Entrée pour envoyer)" aria-label="Message" maxlength="1000"></textarea><button class="btn primary" type="submit">Envoyer</button></form>
       <p class="cw-note">Messages gardés 7 jours, visibles par toutes les personnes connectées au planning.</p>`;
     document.body.appendChild(chatWin);
-    chatWin.querySelector('.cw-x').onclick=()=>{chatWin.hidden=true};
+    chatWin.querySelector('.cw-x').onclick=()=>{chatWin.hidden=true;chatNav()};
     const f=chatWin.querySelector('.cw-f'),ta=f.querySelector('textarea');
     f.addEventListener('submit',e=>{e.preventDefault();if(chatSend(ta.value)){ta.value='';render()}ta.focus()});
-    ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();f.requestSubmit()}if(e.key==='Escape')chatWin.hidden=true});
+    ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();f.requestSubmit()}if(e.key==='Escape'){chatWin.hidden=true;chatNav()}});
   }
   chatWin.hidden=false;if(chatPurge())commit();chatRender(true);prefs.chatSeen=Date.now();savePrefs();
   const fb=document.querySelector('.chat-b');if(fb){fb.classList.remove('has');const b=fb.querySelector('b');if(b)b.remove()}
-  setTimeout(()=>chatWin.querySelector('textarea').focus(),30);
+  if(!isPhone())setTimeout(()=>chatWin.querySelector('textarea').focus(),30);
 }
 function chatRender(force){if(!chatWin||chatWin.hidden)return;const box=chatWin.querySelector('.cw-l');const atEnd=force||box.scrollTop+box.clientHeight>=box.scrollHeight-40;
   const me=author();let last='';const L=chatList();
@@ -1993,7 +1999,7 @@ function sideHTML(){
   const nChat=chatUnread();
   return `<div class="brand"><b>La Bocca</b><span>// Planning centrale</span></div>
   <div class="nav-wrap"><span class="nav-ind" aria-hidden="true"></span><span class="nav-hov" aria-hidden="true"></span>
-  ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${i===0?'main':''} ${view.tab===k?'on':''}" ${k==='chat'?'data-act="chat"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
+  ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${i===0?'main':''} ${(k==='chat'?chatOn():view.tab===k&&!(isPhone()&&chatOn()))?'on':''}" ${k==='chat'?'data-act="chat"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
   </div><div class="side-rz" title="Glisser pour élargir ou réduire le menu · double-clic : carrés / normal" aria-hidden="true"></div>
   <div class="grow"></div>
   <div class="mini"><span class="lbl">// ${MODE==='local'?'Démo':'Données'}</span><span>${MODE==='local'?'Données fictives sur cet appareil':'Partagées en direct'}</span><button class="btn sm" data-act="demo-pdf">Exemple PDF</button>${MODE==='local'?'<button class="btn sm" data-act="reset">Recharger la démo</button>':''}</div>`;
@@ -2143,7 +2149,7 @@ function act(a,el,o,e){
     case 'next':return go(view.mode==='semaine'&&view.tab==='planning'?addDays(mondayOf(view.date),7):step(view.date,1));
     case 'today':{let d=TODAY;while(isWE(d)&&!hasOrders(d))d=addDays(d,1);return go(d)}
     case 'mode':view.mode=el.dataset.v;view.tab='planning';return render(true);
-    case 'tab':view.tab=el.dataset.v;return render(true);
+    case 'tab':if(isPhone()&&chatOn())chatWin.hidden=true;view.tab=el.dataset.v;return render(true);
     case 'goto':view.date=el.dataset.d;view.mode='jour';view.tab='planning';document.getElementById('qres').hidden=true;return render(true);
     case 'focus':{e.preventDefault();document.getElementById('qres').hidden=true;const x=byId(el.dataset.oid);if(!x)return;view.tab='planning';view.mode='jour';view.date=x.date;view.focus=x.id;return render(true)}
     case 'new':return openOrderForm(null);
@@ -2634,10 +2640,8 @@ function summarize(a,b){
 }
 function logLine(o,txt,stamp){const d=day(o.date);d.journal=d.journal||[];d.journal.push({at:stamp,by:author(),t:`${cl(o.cl).n} · ${siteName(o)} : ${txt}`});if(d.journal.length>400)d.journal.splice(0,d.journal.length-400)}
 function extValides(){(S&&S.orders||[]).forEach(o=>(o.tours||[]).forEach(t=>{if(t.c&&!t.s)t.s=1}))}
-// chat : messages gardés 7 jours (les plus anciens sont effacés de la base au prochain enregistrement)
-function purgeChat(){if(!S||!Array.isArray(S.chat))return;const lim=Date.now()-7*864e5;S.chat=S.chat.filter(c=>!(c&&c.ts&&c.ts<lim))}
 function commit(){
-  extValides();purgeChat();
+  extValides();
   const now=new Date();const stamp=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
   // journal : chaque changement de commande est tracé dans la journée concernée
   {const cur={};S.orders.forEach(o=>cur['orders/'+o.id]=o);
