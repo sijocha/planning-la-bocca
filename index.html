@@ -635,7 +635,10 @@ body{background-color:var(--bg);background-image:radial-gradient(var(--dot) 1px,
   .side{height:calc(50px + env(safe-area-inset-bottom,0px));display:grid;grid-auto-flow:column;grid-auto-columns:minmax(64px,1fr);overflow-x:auto}
   .nav-b,.nav-b.main{height:50px;padding:0 6px;font-size:10px;letter-spacing:.04em;justify-content:center;flex-direction:column;gap:2px;white-space:nowrap;border:0!important;background:transparent;color:var(--muted)}
   .nav-b.on,.nav-b.main.on{background:var(--ink);color:var(--bg)}
-  .nav-b .ix{display:block;font-size:9px}
+  .nav-b .ix{display:none!important}
+  .nav-b .sq{display:flex!important;align-items:center;justify-content:center}.nav-b .sq i{display:none}.nav-b .sq svg{width:22px;height:22px}
+  .nav-b.named .sq svg{width:19px;height:19px}
+  .side:not(:has(.named)){grid-auto-columns:minmax(44px,1fr)}
   .nav-b .nt{display:none!important}.nav-b .ic{display:inline!important}
   .nav-b.named .nt{display:block!important;font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase}
   .nav-b .n{position:absolute;top:4px;right:4px;margin:0;font-size:9.5px;padding:0 4px;min-width:0}
@@ -1154,6 +1157,15 @@ button.tag{cursor:pointer}
 .t.t-plus{border:1.5px dashed #FF8A00;color:#c46500;background:rgba(255,138,0,.12);font-family:var(--mono);font-weight:700}
 .t.t-plus:hover{border-style:solid}
 .mo.t-plus{border:1px dashed #FF8A00;color:#c46500;background:rgba(255,138,0,.12)}
+.t.t2{height:31px;min-width:36px;padding:0 6px;border-radius:15px!important;display:inline-flex;flex-direction:column;justify-content:center;gap:0;line-height:1.05}
+.t.t2 b{font:700 11.5px var(--mono)}
+.t.t2 small{font:500 9.5px var(--mono);opacity:.85;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t.t2.cp::after{content:none}
+.t-plus.t2 b{font-size:12px}
+.row.det2{grid-template-rows:28px 37px auto}
+.row.det2>.r-tours{height:37px!important;align-items:center}
+.row.det2 .t-add{height:31px;width:31px}
+.pk-v input{font-weight:700}
 </style>
 
 <div class="app" id="app">
@@ -1452,13 +1464,15 @@ function early(o,anchor,fn){const x=byId(o.id)||o;if(!(x.date>TODAY))return fn()
 function platePick(o,i,anchor){const id=o.id;setEditing(id);const t=i==null?null:o.tours[i];const cap=capOf(o.cam);
   const btn=p=>{const ab=absentOn(o.date,p.c);return `<button class="pop-c ${t&&t.p===p.c?'on':''} ${ab?'off':''}" data-pa="pk" data-v="${esc(p.c)}" title="${esc(p.p||'')}${ab?' · absent ce jour':''}">${esc(p.c)}</button>`};
   const mine=FLEET(),oth=onSite(o);
-  openPop(anchor,`<div class="pop-h">${t?`Tour ${i+1} · ${fmt(t.v)} m³`:`Nouvelle bulle · ${fmt(cap)} m³`}</div>
+  openPop(anchor,`<div class="pop-h">${t?`Tour ${i+1}`:'Nouveau tour'}</div>
+    <label class="fl pk-v">Cubage chargé (m³)<input id="pk-v" type="number" step="0.5" min="0.5" max="${cap}" value="${t?t.v:cap}" inputmode="decimal"></label>
     <div class="pop-l">Mes camions</div><div class="pop-grid">${mine.map(btn).join('')}</div>
     ${oth.length?`<div class="pop-l">Sur ce chantier</div><div class="pop-grid">${oth.map(btn).join('')}</div>`:''}
     <form data-pa="typed" class="pk-f"><input id="pk-t" placeholder="Noter la plaque (ex. EF507VT)" aria-label="Plaque" autocomplete="off"><button class="btn primary" type="submit">OK</button></form>
     <button class="pop-b" data-pa="none">${t?'Chargé sans plaque':'Ajouter sans plaque'}</button>`,
-  {pk(el){const c=el.dataset.v;return early(o,null,()=>put(c))},typed(f){const v=f.querySelector('#pk-t').value;if(!plN(v))return 'keep';const c=plateOf(v,byId(id));return early(o,null,()=>put(c))},none(){return i==null?put(''):early(o,null,()=>put(''))}});
-  function put(c){const x=byId(id);if(i==null){x.tours.push(c?{v:cap,s:1,x:1,p:c}:{v:cap,s:0,x:1});toast(c?`Bulle ${c} ajoutée (chargée)`:'Bulle ajoutée')}else{const u=x.tours[i];u.p=c;u.s=1;toast(c?`Tour ${i+1} chargé · ${c}`:`Tour ${i+1} chargé`)}}
+  {pk(el){if(!vol())return 'keep';const c=el.dataset.v;return early(o,null,()=>put(c))},typed(f){if(!vol())return 'keep';const v=f.querySelector('#pk-t').value;if(!plN(v))return 'keep';const c=plateOf(v,byId(id));return early(o,null,()=>put(c))},none(){if(!vol())return 'keep';return i==null?put(''):early(o,null,()=>put(''))}});
+  function vol(){const e=popEl.querySelector('#pk-v');const v=e?num(e.value):cap;if(!(v>0)||v>cap+.01){toast(`Cubage entre 0,5 et ${fmt(cap)} m³`);e&&e.focus();return 0}return v}
+  function put(c){const x=byId(id);const v=vol()||cap;if(i==null){x.tours.push(c?{v,s:1,x:1,p:c}:{v,s:0,x:1});toast(c?`Bulle ${c} ajoutée (chargée)`:'Bulle ajoutée')}else{const u=x.tours[i];u.p=c;u.s=1;u.v=v;toast(c?`Tour ${i+1} chargé · ${c} · ${fmt(v)} m³`:`Tour ${i+1} chargé · ${fmt(v)} m³`)}}
   setTimeout(()=>{const n=popEl.querySelector('#pk-t');if(n&&window.matchMedia('(pointer:fine)').matches)n.focus()},20);
 }
 function author(){const u=prefs.user;if(!u)return 'Anonyme';return u.role==='centraliste'?u.nom:`${u.nom} (${u.role==='labo'?'labo':'commercial'})`}
@@ -1599,17 +1613,17 @@ function rowHTML(o,editors){
   const siteTxt=ch?(ch.nom||ch.adr):'Chantier ?';
   const siteTitle=ch?(ch.nom&&ch.adr?ch.adr:(ch.nom?'Chantier de fond':'Adresse seule'))+' · ouvrir la carte':'';
   const mapQ=ch?(ch.adr||ch.nom):'';
-  const cap=capOf(o.cam);
+  const cap=capOf(o.cam);const DET2=prefs.vue==='detail'&&!SIM;
   const tours=o.tours.map((t,i)=>{const cp=t.v<cap-0.01;
-    const lab=t.c?esc(t.c):`${t.p?esc(t.p):''}${cp?(t.p?`<sub>${fmt(t.v)}</sub>`:fmt(t.v)):''}`;
+    const lab=DET2?`<b>${fmt(t.v)}</b><small>${t.c?esc(t.c):t.p?esc(t.p):'—'}</small>`:t.c?esc(t.c):`${t.p?esc(t.p):''}${cp?(t.p?`<sub>${fmt(t.v)}</sub>`:fmt(t.v)):''}`;
     const tl=`Tour ${i+1} · ${fmt(t.v)} m³ · ${t.s?'chargé':'prévu'}${t.p?' · '+t.p:''}${t.c?' · chargé par '+t.c:''}${t.x?' · tour ajouté':''}${t.mv&&byId(t.mv)?' · replacé vers '+siteName(byId(t.mv)):''}${t.plein?' · toupie rechargée pleine':''}${t.rf&&byId(t.rf)?' · venu de '+siteName(byId(t.rf)):''}`;
-    return `<button class="t ${t.s?'on':''} ${cp?'cp':''} ${t.c?'ext':''} ${t.x&&!t.rf?'xtra':''} ${t.mv?'mv':''} ${t.rf?'rf':''} ${t.plein?'plein':''}" data-act="tour" data-i="${i}" data-long="1" title="${esc(tl)} · clic long : plaque, centrale, volume" aria-label="${esc(tl)}">${lab}</button>`}).join('');
+    return `<button class="t ${DET2?'t2':''} ${t.s?'on':''} ${cp?'cp':''} ${t.c?'ext':''} ${t.x&&!t.rf?'xtra':''} ${t.mv?'mv':''} ${t.rf?'rf':''} ${t.plein?'plein':''}" data-act="tour" data-i="${i}" data-long="1" title="${esc(tl)} · clic long : plaque, centrale, volume" aria-label="${esc(tl)}">${lab}</button>`}).join('');
   const cam=[o.cam,o.camNote].filter(Boolean).join(' ');
   const pom=o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe envoyé':'Bon de pompe à faire la veille'} · clic pour changer">${esc(pompeLabel(o.pompe))}</button>${pompeResa(o)}${o.pompe.t==='BQA'&&!/bqa/i.test(o.f)?'<span class="mo bad">BQA ?</span>':''}`:'<span class="faint">—</span>';
   const ed=editors[o.id];
   const ouv=o.ouv?`${o.ouv} · `:'';
   const nC=TR(o).filter(t=>t.s).length,nT=TR(o).length;
-  return `<article class="row st-${st} kind-${o.kind} ${ed?'editing':''}" data-id="${o.id}" id="row-${o.id}">
+  return `<article class="row ${DET2?'det2':''} st-${st} kind-${o.kind} ${ed?'editing':''}" data-id="${o.id}" id="row-${o.id}">
     ${ed?`<span class="editby">En cours de modification · ${esc(ed)}</span>`:''}
     <div class="r-time">${esc(o.h)}</div>
     <div class="c r-cl"><button class="r-client" data-act="edit" title="${esc(ouv+(c.note||(c.t==='comptant'?'Client comptant':'Client en compte')))} · modifier">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" title="Client comptant · clic : payé / en attente">${o.pay.paye?'PAYÉ':'€ ATTENTE'}</button>`:''}${o.spec?'<span class="tag spec" title="Mise en avant par le commercial">SPÉCIALE</span>':''}${o.modv?`<button class="tag modv" data-act="modv" title="Modifiée par ${esc(o.modv.by)} à ${esc(o.modv.at)}${role()==='centraliste'?' · clic : valider':''}">MODIF. À VALIDER</button>`:''}</div>
@@ -1620,7 +1634,7 @@ function rowHTML(o,editors){
     <div class="r-pom">${pom}</div>
     <div class="r-pills" ${o.pills.length>1?'data-more="1"':''}>${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${o.pompe&&o.pompe.city?'<span class="mo bag" title="Citybag à prévoir (chantier avec pompe)">Citybag</span>':''}${pillsRow(o)}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande" title="Statut, modifier, dupliquer…">⋯</button>
-    ${SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?'<button class="t t-plus" data-act="plus" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">+?</button>':''}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button></div>`}
+    ${SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button></div>`}
     ${prefs.vue==='detail'?detLine(o,c,ch,sap):''}
   </article>`;
 }
@@ -1831,7 +1845,7 @@ function adjHTML(){
 /* ---- Mode d'emploi : un dépliant par élément ---- */
 const AIDE=[
  ['Pour commencer',[
-  ['tous','Se connecter et changer d\'utilisateur',`<p>À l'ouverture : le <b>code centrale</b>, puis votre <b>nom</b> et votre <b>rôle</b> (centraliste, commercial ou labo). Le code n'est pas redemandé à chaque action.</p><ul><li>Pour passer la main : <b>badge du compte</b> (rond en haut à droite) → <b>Changer d'utilisateur</b>.</li><li>Quand quelqu'un modifie une commande, les autres voient « En cours de modification » avec son nom.</li></ul>`],
+  ['tous','Se connecter et changer d\'utilisateur',`<p>À l'ouverture : <b>Se connecter avec Google</b>, avec une adresse inscrite par la centrale. Le <b>rôle</b> (centraliste, commercial, labo, lecture seule) est donné par cette liste. Puis votre <b>prénom</b>, affiché auprès des autres et dans le journal.</p><ul><li>Au poste de la centrale (compte commun) : <b>badge du compte</b> (rond en haut à droite) → <b>Changer de prénom au poste</b> à chaque prise de poste.</li><li>Se déconnecter : badge du compte → <b>Se déconnecter</b>.</li><li>Quand quelqu'un modifie une commande, les autres voient « En cours de modification » avec son nom.</li></ul>`],
   ['tous','Lire l\'écran du jour',`<p>Une ligne par chantier, de haut en bas dans l'ordre des heures, regroupées en <b>Matin</b> et <b>Après-midi</b>. Le trait rouge marque l'heure actuelle.</p><ul><li><b>Ligne 1</b> : heure, client, m³ livrés / total, chantier, formule, type de camion, pompe, commentaires à droite.</li><li><b>Ligne 2</b> : les bulles des tours (une bulle = un camion).</li><li>Au-dessus du premier chantier : nombre de camions et de chantiers, et la légende prévu · chargé · complément.</li><li>Une ligne sur deux est sur fond gris pour mieux suivre.</li><li><b>Barre à gauche</b> de la ligne = statut : orange en attente, vert en cours, bleu terminée.</li></ul>`],
   ['tous','Changer de jour, de semaine ou de vue',`<ul><li><b>‹ ›</b> autour de la date, ou les flèches <b>← →</b> du clavier. Sur tablette : glisser vers la gauche ou la droite.</li><li>Clic sur la <b>grande date</b> : calendrier ou date tapée pour aller à un jour précis. <b>Aujourd'hui</b> pour revenir.</li><li><b>Jour / Semaine</b> en haut à gauche.</li><li>En bas : <b>Simple</b> (lignes serrées), <b>Normal</b>, <b>Détaillé</b> (téléphone, notes, commandes annulées).</li><li><b>Recherche</b> « Client ou chantier » en haut : clic sur un résultat pour y aller.</li></ul>`]]],
  ['Commandes',[
@@ -1856,6 +1870,7 @@ const AIDE=[
   ['tous','Ligne « À surveiller »',`<p>Au-dessus des vues, en bas : bons de pompe, réservations, paiements, commandes à valider, demandes. Le nombre est à côté du titre.</p><ul><li>Clic sur une alerte → la ligne concernée.</li><li><b>Molette</b> de la souris pour faire défiler s'il y en a beaucoup.</li><li>Quand tout est réglé, la ligne disparaît.</li></ul>`],
   ['tous','Page À traiter (02 Demandes)',`<p>Tout ce qui attend une action, rangé par thème, du plus urgent en haut au moins urgent en bas. Une catégorie n'apparaît que si elle a quelque chose à traiter :</p><ol><li>Placement de chantier (commandes du commercial)</li><li>Modifications à valider</li><li>Pompes (réservation, bon de pompe, BQA)</li><li>Camions à réserver (SP4, SP6)</li><li>Paiements comptant</li><li>Formules et labo</li><li>Modifications de commande, chantiers et clients, autres demandes</li></ol><p>Chaque ligne a son bouton d'action (Réservée, Bon fait, Paiement reçu, Traité…). Les demandes traitées passent <b>en gris tout en bas</b>. Filtres : Tout, Pour moi, Envoyées.</p>`],
   ['tous','Chat de la centrale',`<p>Bouton <b>Chat</b> en bas à droite : une fenêtre s'ouvre. Toutes les personnes connectées au planning y écrivent (Entrée pour envoyer, Maj + Entrée pour aller à la ligne). Un chiffre orange signale les nouveaux messages.</p><ul><li>Une <b>réponse à une demande</b> est aussi envoyée dans le chat.</li><li>Les messages sont gardés <b>7 jours</b> puis s'effacent ; les réponses restent attachées à leur demande.</li></ul>`],
+  ['tous','Lire une bulle de tour',`<p>En vue <b>Détaillé</b> et à l'impression, chaque bulle montre le <b>cubage chargé en haut</b> et la <b>plaque en bas</b>.</p><ul><li><b>Vert plein</b> : chargé · <b>contour</b> : prévu · <b>pointillé</b> : complément (moins qu'un camion plein).</li><li><b>Gris-vert</b> : chargé par une autre centrale (son nom en bas) · <b>bleu</b> : camion replacé.</li><li><b>Orange « ? / +1T »</b> : le client prendra sans doute 1 tour de plus ([+] à la saisie).</li><li><b>+</b> au bout des bulles : ajouter un tour. Le cubage est prérempli à un camion plein (7,5 m³ ou le maximum du camion) ; corrigez-le pour un complément.</li></ul><p><button class="btn sm" data-act="demo-pdf">Voir un exemple de PDF (données fictives)</button></p>`],
   ['tous','Commentaires (pastilles)',`<ul><li><b>+ Info</b> sur la ligne : pastilles toutes prêtes ou texte libre.</li><li>Clic sur une pastille pour la modifier ; <b>×</b> pour la supprimer (avec confirmation).</li></ul>`]]],
  ['Disposition de l\'écran',[
   ['centraliste','Déplacer les trois encadrés du haut',`<ol><li><b>Rester appuyé</b> un instant sur le bord ou le titre d'un encadré (Planning camions, Journal de bord, Agrégats). Le contour devient orange.</li><li>Sans relâcher, glisser à gauche ou à droite des autres encadrés.</li><li>Glisser vers le bas de l'écran : <b>les trois encadrés passent ensemble en bas</b> de la page ; vers le haut, ils remontent.</li><li>Relâcher. La disposition est gardée pour vous. <b>Échap</b> pendant le geste annule.</li></ol><p>Les lignes du planning ne bougent jamais.</p>`],
@@ -2045,7 +2060,7 @@ function sideHTML(){
   ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${role()!=='centraliste'?'named':''} ${i===0?'main':''} ${(k==='chat'?chatOn():view.tab===k&&!(isPhone()&&chatOn()))?'on':''}" ${k==='chat'?'data-act="chat"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
   </div><div class="side-rz" title="Glisser pour élargir ou réduire le menu · double-clic : carrés / normal" aria-hidden="true"></div>
   <div class="grow"></div>
-  <div class="mini"><span class="lbl">// ${MODE==='local'?'Démo':'Données'}</span><span>${MODE==='local'?'Données fictives sur cet appareil':'Partagées en direct'}</span><button class="btn sm" data-act="demo-pdf">Exemple PDF</button>${MODE==='local'?'<button class="btn sm" data-act="reset">Recharger la démo</button>':''}</div>`;
+  <div class="mini"><span class="lbl">// ${MODE==='local'?'Démo':'Données'}</span><span>${MODE==='local'?'Données fictives sur cet appareil':'Partagées en direct'}</span>${MODE==='local'?'<button class="btn sm" data-act="reset">Recharger la démo</button>':''}</div>`;
 }
 let lastDec='',decId=0;
 function decodeDate(dl){
@@ -2397,7 +2412,7 @@ function settingsPop(anchor){
   openPop(anchor,`<div class="pop-h">Réglages</div>
    <section class="ps"><div class="pop-l">Vous êtes</div><p class="ps-me"><b>${esc(u.nom||'?')}</b> · ${esc(ROLES[u.role]||'')}</p><button class="pop-b" data-pa="who">Changer de prénom au poste</button></section>
    <section class="ps"><div class="pop-l">Compte Google</div><p class="ps-me">${esc(ME?ME.email:'')} · ${esc(ME?(ROLE_NOM[ME.role]||''):'')}</p><button class="pop-b" data-pa="logout">Se déconnecter</button></section>
-   ${isAdmin()?`<section class="ps"><div class="pop-l">Administration</div><button class="pop-b" data-pa="importer">Importer une sauvegarde (.json)…</button><button class="pop-b" data-pa="demo">Charger les données de démo</button></section>`:''}
+   ${isAdmin()?`<section class="ps"><div class="pop-l">Administration</div><button class="pop-b" data-pa="importer">Importer une sauvegarde (.json)…</button></section>`:''}
    ${ce?`<section class="ps"><div class="pop-l">Journée du ${esc(dayShort(d).toLowerCase())}</div>${c?`<button class="pop-b" data-pa="clot">Clôturée à ${esc(hm(c.at))} · retélécharger le PDF</button>`:`<button class="pop-b strong" data-pa="clot">Clôturer la journée</button>`}
      <button class="pop-b" data-pa="print">Imprimer / PDF (A3 · A4)…</button>
      ${lastWD?`<p class="ps-note">Dernier jour ouvré du mois</p><button class="pop-b strong" data-pa="mois">Imprimer le mois de ${esc(moisN)} (convocations)</button>`:''}</section>
@@ -2799,32 +2814,40 @@ function exportDays(kind,from,to){
 }
 function printHTML(days,fmtP){
   const big=fmtP==='A3';
-  const css=`@page{size:${fmtP} landscape;margin:9mm}*{box-sizing:border-box}body{font-family:"Arial Narrow",Arial,sans-serif;font-size:${big?'12.5pt':'9.5pt'};color:#111;margin:0}
+  const css=`@page{size:${fmtP} landscape;margin:7mm}*{box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;font-size:${big?'10pt':'7.6pt'};color:#151515;margin:0}
   .pg{break-after:page;page-break-after:always}.pg:last-child{break-after:auto}
-  h1{font-size:${big?'22pt':'16pt'};margin:0 0 2mm}h1 small{font-size:${big?'12pt':'10pt'};font-weight:normal;color:#444;margin-left:4mm}
-  .hd{display:grid;grid-template-columns:1fr 1.4fr 1.1fr;gap:3mm;margin-bottom:3mm}.bx{border:1px solid #777;padding:2mm;min-height:${big?'30mm':'22mm'}}.bx b{display:block;font-size:8pt;text-transform:uppercase;letter-spacing:.06em;color:#555;margin-bottom:1mm}
-  table{width:100%;border-collapse:collapse}th,td{border:1px solid #888;padding:${big?'2mm':'1.3mm'} 1.6mm;vertical-align:top;text-align:left}th{background:#eee;font-size:8.5pt;text-transform:uppercase}
-  tr.half td{background:#222;color:#fff;font-weight:bold;letter-spacing:.08em}tr.blank td{height:${big?'14mm':'10mm'}}
-  .t{display:inline-block;width:${big?'7mm':'5.4mm'};height:${big?'7mm':'5.4mm'};border:1.3px solid #555;border-radius:50%;margin:0 .6mm .6mm 0;text-align:center;font-size:7pt;line-height:${big?'6.6mm':'5mm'};vertical-align:middle}.t.on{background:#ffcf8f;border-color:#c77d2a}.t.cp{border-style:dashed}.t.ext{width:auto;border-radius:3mm;padding:0 1.4mm}
-  .mono{font-family:"Courier New",monospace}.an td{color:#777;text-decoration:line-through}.small{font-size:8pt;color:#444}.foot{margin-top:2mm;font-size:8pt;color:#555}`;
-  const pg=d=>{const dd=dayRO(d),os=ordersOn(d);const t=totals(d);
-    const rows=list=>list.map(o=>{const c=cl(o.cl),ch=chan(o.ch);const st=statut(o);
-      const tours=o.tours.map(x=>{const cp=x.v<capOf(o.cam)-0.01;return `<span class="t ${x.s?'on':''} ${cp?'cp':''} ${x.c?'ext':''}">${x.c?esc(x.c):cp?fmt(x.v):(x.p||'')}</span>`}).join('');
-      return `<tr class="${st==='annulee'?'an':''}"><td class="mono">${esc(hm(o.h))}</td><td><b>${esc(c.n)}</b>${o.kind==='pour'?`<div class="small">Tour pour ${esc(o.pour)}</div>`:''}${o.pay?`<div class="small">${o.pay.paye?'Payé':'ATTENTE PAIEMENT'}</div>`:''}</td><td>${esc(ch?(ch.nom||ch.adr):'')}${ch&&ch.nom&&ch.adr?`<div class="small">${esc(ch.adr)}</div>`:''}${ch&&ch.ot?'<div class="small">OT</div>':''}</td>
-      <td class="mono">${esc(o.f)}${sapOf(o)?`<div class="small">SAP ${esc(sapOf(o))}</div>`:''}</td><td class="mono"><b>${fmt(livre(o))}</b> / ${fmt(total(o))}</td>
-      <td>${esc([o.cam,o.camNote].filter(Boolean).join(' '))}${o.pompe?`<div>${esc(pompeLabel(o.pompe))}${o.pompe.bon?' · bon envoyé':' · BON À FAIRE'}${o.pompe.beto?' · Betobag':''}${o.pompe.city?' · Citybag':''}</div>`:''}${o.am?'<div class="small">déborde l\'après-midi</div>':''}</td>
-      <td>${tours}</td><td class="small">${o.pills.map(p=>esc(p.t)+(p.on?' ✓':'')).join(' · ')}${st==='annulee'?' · ANNULÉE':''}</td></tr>`}).join('');
-    const blank=n=>Array.from({length:n},()=>'<tr class="blank"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>').join('');
+  .hd{display:flex;align-items:baseline;gap:4mm;border-bottom:.7mm solid #ff4d00;padding-bottom:1.2mm;margin-bottom:1.6mm}.hd b{font-size:${big?'17pt':'14pt'}}.hd span{font-size:${big?'10pt':'8.4pt'};color:#69695f;letter-spacing:.04em}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:.25mm solid #b9b9b4;padding:.7mm 1.2mm;vertical-align:middle;text-align:left;overflow-wrap:anywhere}
+  th{background:#e9e8e3;font-size:.8em;text-transform:uppercase}tbody{break-inside:avoid}
+  tr.half td{background:#151515;color:#fff;font-weight:bold;font-size:.9em}td.h{font-weight:bold;vertical-align:top}td.b{font-weight:bold}td.inf{font-size:.88em}
+  .tl{display:flex;flex-wrap:wrap;gap:.8mm;padding:.4mm 0}
+  .bu{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:${big?'9.4mm':'7.2mm'};height:${big?'8.4mm':'6.4mm'};padding:0 .8mm;border:.3mm solid #6e6e69;border-radius:3.2mm;line-height:1;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .bu b{font-size:${big?'8.6pt':'6.8pt'}}.bu i{font-style:normal;font-size:${big?'7.2pt':'5.6pt'}}
+  .bu.on{background:#12a150;border-color:#12a150;color:#fff}.bu.ext{background:#7fa39c;border-color:#2f5d55;color:#fff}.bu.mv{background:#78a0e2;border-color:#2f6fd6;color:#fff}.bu.cp{border-style:dashed}.bu.plus{border:.3mm dashed #ff8a00;background:#fff0e0;color:#c46500}
+  .foot{margin-top:1.5mm;font-size:6.5pt;color:#777}`;
+  const bulles=o=>{const cap=capOf(o.cam);return `<div class="tl">${o.tours.map(u=>{const cp=u.v<cap-.01;const cls=u.s?(u.mv||u.rf?'mv':u.c?'ext':'on'):'';return `<span class="bu ${cls} ${cp&&!u.s?'cp':''}"><b>${fmt(u.v)}</b><i>${esc(u.c||u.p||'—')}</i></span>`}).join('')}${o.plus?'<span class="bu plus"><b>?</b><i>+1T</i></span>':''}</div>`};
+  const pg=d=>{const t=totals(d),dt=D(d);const os=ordersOn(d).filter(o=>statut(o)!=='annulee');
     const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720);
-    const aggTxt=(dd.semis||[]).map(x=>`<b style="display:inline;font-size:inherit;text-transform:none;letter-spacing:0;color:#111">${esc(x.nom)}</b> ${esc(hm(x.h))} ${x.tours.map(t=>(t.s?'[x] ':'[ ] ')+esc(t.prod)+(t.carr?' '+esc(t.carr):'')).join(' · ')}`).concat((dd.ciments||[]).map(c=>`${esc(c.prod)} ${c.rec.map(r=>(r.s?'[x] ':'[ ] ')+esc(hm(r.h))).join(' ')}`));
-    return `<section class="pg"><h1>${esc(dayLong(d))}<small>Semaine ${isoWeek(d)} · ${CENTRALE} · ${fmt(t.m3)} m³ · ${t.n} camions</small></h1>
-    <div class="hd"><div class="bx"><b>Planning camions</b>${dd.ech.map(e=>`${e.sens==='recu'?'Renfort':'Détachement'} : ${esc(e.c)} ×${e.n} (${esc(e.per)})`).join('<br>')||'—'}</div>
-    <div class="bx"><b>Journal de bord</b>${dd.presents.map(p=>esc(p.n)+' '+esc(p.pl)+(p.rempl?' (remplaçant)':'')).join(' · ')}<br>${dd.passation.map(p=>(p.on?'[x] ':'[ ] ')+esc(p.t)).join(' · ')}${dd.events.length?'<br>'+dd.events.map(e=>esc(e.t)).join(' · '):''}${dd.labo.length?'<br>'+dd.labo.map(l=>'RDV labo '+esc(hm(l.h))+' '+esc(l.t)).join(' · '):''}${dd.etat&&dd.etat.k!=='ouverte'?'<br><b>'+(dd.etat.k==='fermee'?'FERMÉE':'PANNE')+' '+esc(dd.etat.t)+'</b>':''}</div>
-    <div class="bx"><b>Agrégats · ciments</b>${aggTxt.join('<br>')||'—'}</div></div>
-    <table><thead><tr><th style="width:6%">Heure</th><th style="width:13%">Client</th><th style="width:15%">Chantier</th><th style="width:15%">Formule</th><th style="width:7%">m³</th><th style="width:11%">Camion · pompe</th><th style="width:19%">Tours</th><th>Infos</th></tr></thead><tbody>
-    <tr class="half"><td colspan="8">MATIN</td></tr>${rows(am)}${blank(big?3:2)}<tr class="half"><td colspan="8">APRÈS-MIDI</td></tr>${rows(pm)}${blank(big?3:2)}</tbody></table>
-    ${(dd.journal||[]).length?`<p class="foot"><b>Journal</b> · ${(dd.journal||[]).map(e=>esc(e.at+' '+e.by+' : '+e.t)).join(' · ')}</p>`:''}${dd.cloture?`<p class="foot">Journée clôturée par ${esc(dd.cloture.by)} à ${esc(hm(dd.cloture.at))}.</p>`:''}<p class="foot">Imprimé le ${esc(dayLong(TODAY))}. Cercle plein = chargé · pointillé = complément · nom = chargé par une autre centrale.</p></section>`};
+    const sub=l=>`${fmt(l.reduce((a,o)=>a+total(o),0))} m³ · ${l.reduce((a,o)=>a+TR(o).length,0)} tours`;
+    const rows=l=>l.map(o=>{const L=printLine(o,cl(o.cl),chan(o.ch));return `<tbody><tr><td class="h" rowspan="2">${esc(String(o.h||'').slice(0,5))}</td><td class="b">${esc(L.client).replace(/\n/g,'<br>')}</td><td class="b">${esc(L.m3)}</td><td>${esc(L.adr)}</td><td>${esc(L.formule)}</td><td>${esc(L.cam)}</td><td>${esc(L.pompe)}</td><td class="inf">${esc(L.infos)}</td></tr><tr><td colspan="7">${bulles(o)}</td></tr></tbody>`}).join('');
+    return `<section class="pg"><div class="hd"><b>${esc(`${JOURS[dt.getUTCDay()]} ${dt.getUTCDate()} ${MOIS[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`)}</b><span>SEMAINE ${isoWeek(d)}  ·  ${esc(CENTRALE.toUpperCase())}  ·  ${fmt(t.m3)} m³  ·  ${t.n} TOURS${t.k?'  ·  '+t.k+' CAMIONS':''}</span></div>
+    <table><colgroup><col style="width:4.8%"><col style="width:13%"><col style="width:7%"><col style="width:19%"><col style="width:12.5%"><col style="width:7.5%"><col style="width:12%"><col></colgroup>
+    <thead><tr><th>Heure</th><th>Client</th><th>m³</th><th>Adresse</th><th>Formule</th><th>Camion</th><th>Pompe / réservé</th><th>Infos</th></tr></thead>
+    <tbody><tr class="half"><td colspan="8">MATIN · ${sub(am)}</td></tr></tbody>${rows(am)||'<tbody><tr><td colspan="8">Aucune commande le matin</td></tr></tbody>'}
+    <tbody><tr class="half"><td colspan="8">APRÈS-MIDI · ${sub(pm)}</td></tr></tbody>${rows(pm)||'<tbody><tr><td colspan="8">Aucune commande l\'après-midi</td></tr></tbody>'}</table>
+    <p class="foot">Bulle : cubage en haut, plaque en bas · vert = chargé · contour = prévu (pointillé = complément) · gris-vert = autre centrale · orange = 1 tour à confirmer · imprimé le ${esc(dayLong(TODAY))}</p></section>`};
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Planning ${CENTRALE} ${days[0]||''}</title><style>${css}</style></head><body>${days.map(pg).join('')}</body></html>`;
+}
+
+// une ligne d'impression : client | m³ | adresse | formule | camion | pompe / réservé | infos
+function printLine(o,c,ch){const sap=sapOf(o);
+  return {client:c.n+(o.spec?' · SPÉCIALE':'')+(o.kind==='pour'?'\nTour pour '+o.pour:''),
+    m3:`${fmt(livre(o))}/${fmt(total(o))}${o.plus?' +':''}`,
+    adr:ch?[ch.nom,ch.adr].filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).join(' — ')+(ch.ot?' (OT)':''):'',
+    formule:o.f,
+    cam:(o.cam||CFG().camions[0].t)+(o.cam&&o.resa?(o.resa==='ok'?' · réservé':' · À RÉSERVER'):''),
+    pompe:o.pompe?pompeLabel(o.pompe)+(o.pompe.resa==='todo'?' · À RÉSERVER':o.pompe.resa==='ok'?' · réservée':'')+(o.pompe.bon?'':' · bon à faire'):'—',
+    infos:[o.tel?'Tél. '+o.tel:'',o.pay?(o.pay.paye?'Payé':'ATTENTE PAIEMENT'):'',o.plus?'+1 tour à confirmer':'',o.am?"Déborde l'après-midi":'',o.ouv?o.ouv:'',sap?'SAP '+sap:''].concat(o.pills.map(p=>(p.on?'[x] ':'')+p.t)).filter(Boolean).join(' · ')};
 }
 let PDFLIB=null;
 function loadPdf(){if(PDFLIB)return PDFLIB;
@@ -2867,27 +2890,19 @@ function dayPage(doc,d,k,part,big,nParts){
   doc.setDrawColor(...OR);doc.setLineWidth(.7);doc.line(M,M+6.6,W-M,M+6.6);
   // tableau, comme la vue détaillée : ligne principale, puis tours + détails
   const os=ordersOn(d).filter(o=>statut(o)!=='annulee');
-  const head=[['Heure','Client','m³','Chantier · adresse','Formule','Camion','Pompe','Commentaires'].map(pdfT)];
+  const head=[['Heure','Client','m³','Adresse','Formule','Camion','Pompe / réservé','Infos'].map(pdfT)];
   const body=[],meta=[];
   const sec=l=>{body.push([{content:pdfT(l),colSpan:8,styles:{fillColor:INK,textColor:255,fontStyle:'bold',fontSize:fs*.88,cellPadding:{top:.8*k,bottom:.8*k,left:2,right:2}}}]);meta.push(null)};
-  const row=o=>{const c=cl(o.cl),ch=chan(o.ch);const sap=sapOf(o);
-    body.push([{content:pdfT(String(o.h||'').slice(0,5)),rowSpan:3,styles:{fontStyle:'bold',valign:'top'}},
-      pdfT(c.n+(o.spec?'  · SPÉCIALE':'')+(o.kind==='pour'?'\nTour pour '+o.pour:'')),
-      pdfT(`${fmt(livre(o))}/${fmt(total(o))}${o.plus?' +':''}`),
-      pdfT((ch?(ch.nom||ch.adr):'')+(ch&&ch.ot?' (OT)':'')),
-      pdfT(o.f),
-      pdfT((o.cam||CFG().camions[0].t)+(o.cam&&o.resa?(o.resa==='ok'?' · réservé':' · À RÉSERVER'):'')),
-      pdfT(o.pompe?pompeLabel(o.pompe)+(o.pompe.resa==='todo'?' · À RÉSERVER':o.pompe.resa==='ok'?' · réservée':'')+(o.pompe.bon?' · bon envoyé':' · BON À FAIRE'):'—'),
-      pdfT(o.pills.map(p=>(p.on?'[x] ':'')+p.t).join('\n'))]);meta.push({o,ty:'main'});
-    const det=[ch&&ch.nom&&ch.adr?'Adresse '+ch.adr:'',o.ouv?'Ouvrage '+o.ouv:'',sap?'SAP '+sap:'',o.tel?'Tél. '+o.tel:'',c.t?'Client '+(c.t==='comptant'?'comptant':'en compte'):'',o.pay?(o.pay.paye?'Payé':'ATTENTE PAIEMENT'):'',o.plus?'+ 1 tour à confirmer':'',o.am?"Déborde l'après-midi":''].filter(Boolean).join('   ·   ');
-    body.push([{content:'',colSpan:7,styles:{cellPadding:{top:.5*k,bottom:.5*k,left:1,right:1}}}]);meta.push({o,ty:'tours'});
-    body.push([{content:pdfT(det||' '),colSpan:7,styles:{fontSize:fs*.8,textColor:MUTE,cellPadding:{top:.35*k,bottom:.35*k,left:1.2,right:1.2}}}]);meta.push({o,ty:'det'})};
+  const row=o=>{const c=cl(o.cl),ch=chan(o.ch);const L=printLine(o,c,ch);
+    body.push([{content:pdfT(String(o.h||'').slice(0,5)),rowSpan:2,styles:{fontStyle:'bold',valign:'top'}},
+      pdfT(L.client),pdfT(L.m3),pdfT(L.adr),pdfT(L.formule),pdfT(L.cam),pdfT(L.pompe),{content:pdfT(L.infos),styles:{fontSize:fs*.86}}]);meta.push({o,ty:'main'});
+    body.push([{content:'',colSpan:7,styles:{cellPadding:{top:.5*k,bottom:.5*k,left:1,right:1}}}]);meta.push({o,ty:'tours'})};
   const sub=l=>`${fmt(l.reduce((a,o)=>a+total(o),0))} m³ · ${l.reduce((a,o)=>a+TR(o).length,0)} tours`;
   const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720);
   if(part!=='pm'){sec('MATIN  ·  '+sub(am));am.forEach(row);if(!am.length){body.push([{content:pdfT('Aucune commande le matin'),colSpan:8,styles:{textColor:MUTE}}]);meta.push(null)}}
   if(part!=='am'){sec('APRÈS-MIDI  ·  '+sub(pm));pm.forEach(row);if(!pm.length){body.push([{content:pdfT("Aucune commande l'après-midi"),colSpan:8,styles:{textColor:MUTE}}]);meta.push(null)}}
   const tw=W-2*M;const BW=(big?9.4:7.2)*k,BH=(big?8.4:6.4)*k,G=(big?1.1:.8)*k;
-  const colW=[.05,.145,.08,.185,.135,.09,.12,.195].map(x=>x*tw);
+  const colW=[.048,.13,.07,.19,.125,.075,.12,.242].map(x=>x*tw);
   const per=w=>Math.max(1,Math.floor((w-2)/(BW+G)));
   doc.autoTable({head,body,startY:M+8.4,margin:{left:M,right:M,top:M,bottom:6},theme:'grid',rowPageBreak:'avoid',
     styles:{font:'helvetica',fontSize:fs,cellPadding:{top:.6*k,bottom:.6*k,left:1.2,right:1.2},lineColor:[185,185,180],lineWidth:.15,textColor:INK,valign:'middle',overflow:'linebreak'},
@@ -2921,7 +2936,8 @@ async function convPDF(month,filled,fm){
     styles:{fontSize:big?10:7.8,cellPadding:big?2.2:1.4,lineColor:[180,180,175],lineWidth:.15,textColor:[21,21,21],minCellHeight:big?11:7.5},headStyles:{fillColor:[233,232,227],textColor:[21,21,21],fontStyle:'bold'},columnStyles:{0:{fontStyle:'bold',cellWidth:big?26:20}}});
   return doc.output('arraybuffer');
 }
-function demoPDF(){savePDF('exemple-planning-la-bocca-A3.pdf',()=>planningPDF(['2026-11-03','2026-11-05'],'A3'))}
+// exemple fictif pour le mode d'emploi : n'écrit rien dans les données partagées
+function demoPDF(){savePDF('exemple-planning-la-bocca.pdf',async()=>{await loadPdf();const keep=S;try{S=buildDemo();const ds=[...new Set(S.orders.map(o=>o.date))].sort();const c={};S.orders.forEach(o=>c[o.date]=(c[o.date]||0)+1);const d=ds.sort((a,b)=>c[b]-c[a])[0];return await planningPDF([d],'A4')}finally{S=keep}})}
 async function savePDF(name,make){toast('Préparation du PDF…');try{const buf=await make();saveFile(name,new Blob([buf],{type:'application/pdf'}))}catch(e){toast('PDF impossible pour l\'instant (bibliothèque non chargée, vérifiez la connexion)')}}
 function exportPop(anchor){
   const mon=mondayOf(view.date);
@@ -2933,7 +2949,6 @@ function exportPop(anchor){
       <button class="btn primary" type="submit">Télécharger le PDF</button>
       <p class="muted" style="margin:0;font-size:12.5px">Un fichier PDF, une page par jour, avec des lignes vides pour écrire à la main. Prêt à imprimer.</p>
     </form>
-    <button class="pop-b" data-pa="demo">Exemple de la démo : mardi 3 et jeudi 5 novembre, A3 (.pdf)</button>
     <button class="pop-b" data-pa="html">Version page web (.html), sans PDF</button>
     <button class="pop-b" data-pa="json">Sauvegarde complète des données (.json)</button>`,
   {go(f){const k=f.querySelector('#ex-k').value;const ds=exportDays(k,f.querySelector('#ex-a').value,f.querySelector('#ex-b').value);if(!ds.length){toast('Aucun jour dans cette période');return 'keep'}
