@@ -2833,62 +2833,76 @@ function loadPdf(){if(PDFLIB)return PDFLIB;
   return PDFLIB}
 const pdfT=t=>String(t==null?'':t).replace(/m³/g,'m3').replace(/→/g,'->').replace(/[✓✔]/g,'x').replace(/[‘’]/g,"'").replace(/[«»]/g,'"').replace(/[^\x00-\xFF€œŒ–—…·³]/g,'');
 async function planningPDF(days,fm){
-  const J=await loadPdf();const doc=new J({orientation:'landscape',unit:'mm',format:fm.toLowerCase()});
-  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=9,big=fm==='A3',fs=big?10:7.6;
-  const GREEN=[18,161,80],OR=[255,77,0],INK=[21,21,21];
-  days.forEach((d,pi)=>{if(pi)doc.addPage();
-    const dd=dayRO(d),t=totals(d);const os=ordersOn(d).filter(o=>statut(o)!=='annulee');
-    doc.setTextColor(...INK);doc.setFont('helvetica','bold');doc.setFontSize(big?24:17);doc.text(pdfT(dayLong(d)),M,M+7);
-    doc.setFont('helvetica','normal');doc.setFontSize(big?10:8);doc.setTextColor(90);
-    doc.text(pdfT(`SEMAINE ${isoWeek(d)}  ·  ${CENTRALE.toUpperCase()}  ·  ${fmt(t.m3)} m³  ·  ${t.n} TOURS${t.k?'  ·  '+t.k+' CAMIONS':''}`),M,M+12.5);
-    doc.text(pdfT('Imprimé le '+dayLong(TODAY)),W-M,M+12.5,{align:'right'});
-    doc.setDrawColor(...OR);doc.setLineWidth(.8);doc.line(M,M+15,W-M,M+15);
-    // trois cadres
-    const pl=FLEET().map(p=>p.c);const cv=S.convocs[d]||{};
-    const b1=dd.ech.map(e=>`${e.sens==='recu'?'Renfort':'Détachement'} : ${e.c} x${e.n} (${e.per})`).concat(Object.keys(cv).map(p=>{const x=cv[p];return x.st==='abs'?`${p} absent`:x.st==='pret'?`${p} prêté -> ${x.pc} (${x.per})`:x.dep&&x.dep!==CENTRALE?`${p} convoqué ${hm(x.h)} ${x.dep}`:''}).filter(Boolean));
-    const b2=[dd.presents.map(p=>p.n+' '+p.pl+(p.rempl?' (remplaçant)':'')).join('  ·  ')].concat(dd.passation.map(p=>(p.on?'[x] ':'[ ] ')+p.t)).concat(dd.events.map(e=>e.t)).concat(dd.labo.map(l=>'RDV labo '+hm(l.h)+' '+l.t)).concat(dd.etat&&dd.etat.k!=='ouverte'?[(dd.etat.k==='fermee'?'FERMÉE ':'PANNE ')+(dd.etat.t||'')]:[]);
-    const b3=(dd.semis||[]).map(x=>`${x.nom}${x.ch?' ('+x.ch+')':''} ${hm(x.h)} : ${x.tours.map(u=>(u.s?'[x] ':'[ ] ')+u.prod+(u.carr?' '+u.carr:'')).join('  ')}${x.note?' - '+x.note:''}`).concat((dd.ciments||[]).map(c=>`${c.prod} : ${c.rec.map(r=>(r.s?'[x] ':'[ ] ')+hm(r.h)).join('  ')}`));
-    const bw=(W-2*M-8)/3,by=M+18,bh=big?34:24;
-    [['PLANNING CAMIONS',b1],['JOURNAL DE BORD',b2],['AGRÉGATS · CIMENTS',b3]].forEach(([h,ls],k)=>{const x=M+k*(bw+4);
-      doc.setDrawColor(150);doc.setLineWidth(.2);doc.rect(x,by,bw,bh);doc.setDrawColor(...INK);doc.setLineWidth(.4);[[x,by],[x+bw,by],[x,by+bh],[x+bw,by+bh]].forEach(([cx,cy],q)=>{const sx=q%2?-3:3,sy=q>1?-3:3;doc.line(cx,cy,cx+sx,cy);doc.line(cx,cy,cx,cy+sy)});
-      doc.setFont('helvetica','bold');doc.setFontSize(big?7.5:6.3);doc.setTextColor(100);doc.text('// '+pdfT(h),x+2.5,by+4.2);
-      doc.setFont('helvetica','normal');doc.setTextColor(...INK);doc.setFontSize(fs-.6);let yy=by+8.6;const lh=(fs-.6)*.42;
-      (ls.length?ls:['—']).forEach(l=>doc.splitTextToSize(pdfT(l),bw-5).forEach(w=>{if(yy<by+bh-1.2){doc.text(w,x+2.5,yy);yy+=lh}}))});
-    // tableau des chantiers
-    const head=[['Heure','Client','m³','Chantier · adresse','Formule','Camion','Pompe','Tours','Commentaires']];
-    const body=[],meta=[];
-    const sec=(l)=>{body.push([{content:pdfT(l),colSpan:9,styles:{fillColor:INK,textColor:255,fontStyle:'bold',fontSize:fs-.8,cellPadding:{top:1,bottom:1,left:2,right:2}}}]);meta.push(null)};
-    const row=o=>{const c=cl(o.cl),ch=chan(o.ch);const sap=sapOf(o);
-      body.push([o.h,c.n+(o.pay?(o.pay.paye?'\nPayé':'\nATTENTE PAIEMENT'):'')+(o.kind==='pour'?'\nTour pour '+o.pour:'')+(o.spec?'\nSPÉCIALE':''),`${fmt(livre(o))} / ${fmt(total(o))}`,
-        (ch?(ch.nom||ch.adr):'')+(ch&&ch.nom&&ch.adr?'\n'+ch.adr:'')+(ch&&ch.ot?' (OT)':'')+(o.tel?'\nTél. '+o.tel:''),o.f+(sap?'\nSAP '+sap:''),
-        (o.cam||CFG().camions[0].t)+(o.cam&&o.resa?(o.resa==='ok'?'\nréservé':'\nÀ RÉSERVER'):''),
-        o.pompe?pompeLabel(o.pompe)+(o.pompe.resa==='todo'?'\nÀ RÉSERVER':o.pompe.resa==='ok'?'\nréservée':'')+(o.pompe.bon?'\nbon envoyé':'\nbon à faire'):'',
-        '',o.pills.map(p=>(p.on?'[x] ':'')+p.t).join('\n')].map(pdfT));meta.push(o)};
-    const blank=n=>{for(let i=0;i<n;i++){body.push(['','','','','','','','','']);meta.push('blank')}};
-    const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720);
-    const sub=l=>{const m=l.reduce((a,o)=>a+total(o),0),n=l.reduce((a,o)=>a+TR(o).length,0);return `${fmt(m)} m³ · ${n} tours`};
-    sec('MATIN  ·  '+sub(am));am.forEach(row);blank(big?3:2);sec('APRÈS-MIDI  ·  '+sub(pm));pm.forEach(row);blank(big?3:2);
-    const tw=W-2*M;const R=big?2:1.55,G=big?1.1:.8;
-    const colW=[.055,.12,.065,.15,.12,.075,.09,.16,.165].map(x=>x*tw);
-    doc.autoTable({head,body,startY:by+bh+4,margin:{left:M,right:M,bottom:10},theme:'grid',
-      styles:{font:'helvetica',fontSize:fs,cellPadding:big?1.6:1.1,lineColor:[180,180,175],lineWidth:.15,textColor:INK,valign:'top',overflow:'linebreak'},
-      headStyles:{fillColor:[233,232,227],textColor:INK,fontStyle:'bold',fontSize:fs-1},
-      columnStyles:Object.fromEntries(colW.map((w,i)=>[i,{cellWidth:w}])),
-      didParseCell:data=>{if(data.section!=='body')return;const m=meta[data.row.index];
-        if(m==='blank')data.cell.styles.minCellHeight=big?11:8;
-        if(m&&m.tours&&data.column.index===7){const per=Math.max(1,Math.floor((colW[7]-2)/(2*R+G)));const rows=Math.ceil(m.tours.length/per);data.cell.styles.minCellHeight=rows*(2*R+G)+2.5}
-        if(m&&m.tours&&data.column.index===1)data.cell.styles.fontStyle='bold'},
-      didDrawCell:data=>{if(data.section!=='body'||data.column.index!==7)return;const m=meta[data.row.index];if(!m||!m.tours)return;
-        const per=Math.max(1,Math.floor((data.cell.width-2)/(2*R+G)));const cap=capOf(m.cam);
-        m.tours.forEach((u,i)=>{const cx=data.cell.x+1.2+R+(i%per)*(2*R+G),cy=data.cell.y+1.3+R+Math.floor(i/per)*(2*R+G);
-          doc.setLineWidth(.25);if(u.s){const B=u.mv||u.rf;doc.setFillColor(...(B?[120,160,226]:u.c?[127,163,156]:GREEN));doc.setDrawColor(...(B?[47,111,214]:u.c?[47,93,85]:GREEN));doc.circle(cx,cy,R,'FD')}else{doc.setDrawColor(120);if(u.v<cap-.01)doc.setLineDashPattern([.5,.5],0);doc.circle(cx,cy,R,'S');doc.setLineDashPattern([],0)}
-          if(u.v<cap-.01){doc.setFontSize(big?5.5:4.3);doc.setTextColor(u.s?255:60);doc.text(fmt(u.v),cx,cy+.7,{align:'center'});doc.setTextColor(...INK)}})}});
-    let y=doc.lastAutoTable.finalY+4;doc.setFontSize(big?7.5:6.3);doc.setTextColor(90);
-    if(dd.journal&&dd.journal.length&&y<H-12){const txt=doc.splitTextToSize(pdfT('Journal : '+dd.journal.map(e=>e.at+' '+e.by+' - '+e.t).join('  ·  ')),W-2*M);doc.text(txt.slice(0,Math.max(1,Math.floor((H-6-y)/3))),M,y);y+=txt.length*3}
-    doc.text(pdfT('Cercle plein vert = chargé  ·  cercle pointillé = complément (m³)  ·  cercle gris-vert = chargé par une autre centrale'+(dd.cloture?'  ·  Journée clôturée par '+dd.cloture.by+' à '+hm(dd.cloture.at):'')),M,H-5);
-    doc.text(pdfT(`${CENTRALE} · page ${pi+1}/${days.length}`),W-M,H-5,{align:'right'});doc.setTextColor(...INK);
+  // Une journée = une page qui se remplit au mieux ; journée très chargée = 2 pages (matin, après-midi).
+  const J=await loadPdf();const opt={orientation:'landscape',unit:'mm',format:fm.toLowerCase()};
+  const doc=new J(opt);const big=fm==='A3';let first=true;
+  const KS=[2.1,1.9,1.75,1.6,1.5,1.4,1.3,1.22,1.15,1.08,1,.94,.88,.82,.76,.7];
+  const fits=(d,k,part)=>{const t=new J(opt);dayPage(t,d,k,part,big,null);return t.getNumberOfPages()===1};
+  const best=(d,part)=>{for(const k of KS)if(fits(d,k,part))return k;return null};
+  const SPLIT_UNDER=.9;  // en dessous, on passe à 2 pages pour rester lisible
+  days.forEach(d=>{
+    const os=ordersOn(d).filter(o=>statut(o)!=='annulee');
+    const hasAm=os.some(o=>mins(o.h)<720),hasPm=os.some(o=>mins(o.h)>=720);
+    const k=best(d,null);
+    const parts=(k!=null&&k>=SPLIT_UNDER)||!(hasAm&&hasPm)?[[null,k==null?KS[KS.length-1]:k]]:[['am',best(d,'am')||KS[KS.length-1]],['pm',best(d,'pm')||KS[KS.length-1]]];
+    parts.forEach(([part,kk])=>{if(!first)doc.addPage();first=false;dayPage(doc,d,kk,part,big,parts.length)});
   });
+  const n=doc.getNumberOfPages(),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+  for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(big?7:5.8);doc.setTextColor(120);
+    doc.text(pdfT('Cercle plein vert = chargé  ·  pointillé = complément (m³)  ·  gris-vert = autre centrale  ·  +? = 1 tour à confirmer  ·  imprimé le '+dayLong(TODAY)),7,H-3);
+    doc.text(pdfT(`${CENTRALE} · page ${i}/${n}`),W-7,H-3,{align:'right'})}
   return doc.output('arraybuffer');
+}
+function dayPage(doc,d,k,part,big,nParts){
+  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=7,fs=(big?9.6:7.2)*k;
+  const GREEN=[18,161,80],OR=[255,77,0],INK=[21,21,21],MUTE=[105,105,100];
+  const t=totals(d),dt=D(d);
+  // en-tête sur une seule ligne : date en gras + infos
+  const hs=big?17:14;doc.setTextColor(...INK);doc.setFont('helvetica','bold');doc.setFontSize(hs);
+  const dTxt=pdfT(`${JOURS[dt.getUTCDay()]} ${dt.getUTCDate()} ${MOIS[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`);
+  doc.text(dTxt,M,M+4.6);const dw=doc.getTextWidth(dTxt);
+  doc.setFont('helvetica','normal');doc.setFontSize(big?10:8.4);doc.setTextColor(...MUTE);
+  const partLbl=part?`  ·  ${part==='am'?'MATIN':'APRÈS-MIDI'} (${part==='am'?1:2}/2)`:'';
+  doc.text(pdfT(`SEMAINE ${isoWeek(d)}  ·  ${CENTRALE.toUpperCase()}  ·  ${fmt(t.m3)} m³  ·  ${t.n} TOURS${t.k?'  ·  '+t.k+' CAMIONS':''}${partLbl}`),M+dw+4,M+4.6);
+  doc.setDrawColor(...OR);doc.setLineWidth(.7);doc.line(M,M+6.6,W-M,M+6.6);
+  // tableau, comme la vue détaillée : ligne principale, puis tours + détails
+  const os=ordersOn(d).filter(o=>statut(o)!=='annulee');
+  const head=[['Heure','Client','m³','Chantier · adresse','Formule','Camion','Pompe','Commentaires'].map(pdfT)];
+  const body=[],meta=[];
+  const sec=l=>{body.push([{content:pdfT(l),colSpan:8,styles:{fillColor:INK,textColor:255,fontStyle:'bold',fontSize:fs*.88,cellPadding:{top:.8*k,bottom:.8*k,left:2,right:2}}}]);meta.push(null)};
+  const row=o=>{const c=cl(o.cl),ch=chan(o.ch);const sap=sapOf(o);
+    body.push([{content:pdfT(String(o.h||'').slice(0,5)),rowSpan:2,styles:{fontStyle:'bold'}},
+      pdfT(c.n+(o.spec?'  · SPÉCIALE':'')+(o.kind==='pour'?'\nTour pour '+o.pour:'')),
+      pdfT(`${fmt(livre(o))}/${fmt(total(o))}${o.plus?' +':''}`),
+      pdfT((ch?(ch.nom||ch.adr):'')+(ch&&ch.ot?' (OT)':'')),
+      pdfT(o.f),
+      pdfT((o.cam||CFG().camions[0].t)+(o.cam&&o.resa?(o.resa==='ok'?' · réservé':' · À RÉSERVER'):'')),
+      pdfT(o.pompe?pompeLabel(o.pompe)+(o.pompe.resa==='todo'?' · À RÉSERVER':o.pompe.resa==='ok'?' · réservée':'')+(o.pompe.bon?' · bon envoyé':' · BON À FAIRE'):'—'),
+      pdfT(o.pills.map(p=>(p.on?'[x] ':'')+p.t).join('\n'))]);meta.push({o,ty:'main'});
+    const det=[ch&&ch.nom&&ch.adr?'Adresse '+ch.adr:'',o.ouv?'Ouvrage '+o.ouv:'',sap?'SAP '+sap:'',o.tel?'Tél. '+o.tel:'',c.t?'Client '+(c.t==='comptant'?'comptant':'en compte'):'',o.pay?(o.pay.paye?'Payé':'ATTENTE PAIEMENT'):'',o.plus?'+ 1 tour à confirmer':'',o.am?"Déborde l'après-midi":''].filter(Boolean).join('   ·   ');
+    body.push([{content:'',colSpan:2},{content:pdfT(det),colSpan:5,styles:{fontSize:fs*.82,textColor:MUTE}}]);meta.push({o,ty:'sub'})};
+  const sub=l=>`${fmt(l.reduce((a,o)=>a+total(o),0))} m³ · ${l.reduce((a,o)=>a+TR(o).length,0)} tours`;
+  const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720);
+  if(part!=='pm'){sec('MATIN  ·  '+sub(am));am.forEach(row);if(!am.length){body.push([{content:pdfT('Aucune commande le matin'),colSpan:8,styles:{textColor:MUTE}}]);meta.push(null)}}
+  if(part!=='am'){sec('APRÈS-MIDI  ·  '+sub(pm));pm.forEach(row);if(!pm.length){body.push([{content:pdfT("Aucune commande l'après-midi"),colSpan:8,styles:{textColor:MUTE}}]);meta.push(null)}}
+  const tw=W-2*M;const R=(big?1.9:1.45)*k,G=(big?1:.75)*k;
+  const colW=[.05,.145,.08,.185,.135,.09,.12,.195].map(x=>x*tw);
+  const per=w=>Math.max(1,Math.floor((w-2)/(2*R+G)));
+  doc.autoTable({head,body,startY:M+8.4,margin:{left:M,right:M,top:M,bottom:6},theme:'grid',rowPageBreak:'avoid',
+    styles:{font:'helvetica',fontSize:fs,cellPadding:{top:.9*k,bottom:.9*k,left:1.2,right:1.2},lineColor:[185,185,180],lineWidth:.15,textColor:INK,valign:'middle',overflow:'linebreak'},
+    headStyles:{fillColor:[233,232,227],textColor:INK,fontStyle:'bold',fontSize:Math.max(6,fs*.78),cellPadding:{top:.8,bottom:.8,left:1.2,right:1.2}},
+    columnStyles:Object.fromEntries(colW.map((w,i)=>[i,{cellWidth:w}])),
+    didParseCell:x=>{if(x.section!=='body')return;const m=meta[x.row.index];if(!m)return;
+      if(m.ty==='main'&&(x.column.index===1||x.column.index===2))x.cell.styles.fontStyle='bold';
+      if(m.ty==='sub'&&x.column.index===1){const n=TR(m.o).length+(m.o.plus?1:0);x.cell.styles.minCellHeight=Math.ceil(Math.max(1,n)/per(colW[1]+colW[2]))*(2*R+G)+1.4}},
+    didDrawCell:x=>{if(x.section!=='body')return;const m=meta[x.row.index];if(!m||m.ty!=='sub'||x.column.index!==1)return;
+      const o=m.o,cap=capOf(o.cam),pp=per(x.cell.width),list=o.tours.slice();
+      const at=i=>[x.cell.x+1+R+(i%pp)*(2*R+G),x.cell.y+.7+R+Math.floor(i/pp)*(2*R+G)];
+      list.forEach((u,i)=>{const [cx,cy]=at(i);doc.setLineWidth(.25);
+        if(u.s){const B=u.mv||u.rf;doc.setFillColor(...(B?[120,160,226]:u.c?[127,163,156]:GREEN));doc.setDrawColor(...(B?[47,111,214]:u.c?[47,93,85]:GREEN));doc.circle(cx,cy,R,'FD')}
+        else{doc.setDrawColor(120);if(u.v<cap-.01)doc.setLineDashPattern([.5,.5],0);doc.circle(cx,cy,R,'S');doc.setLineDashPattern([],0)}
+        const lbl=u.c?u.c.slice(0,3):u.v<cap-.01?fmt(u.v):'';if(lbl){doc.setFontSize(Math.max(3.6,R*2.5));doc.setTextColor(u.s?255:60);doc.text(pdfT(lbl),cx,cy+R*.32,{align:'center'});doc.setTextColor(...INK)}});
+      if(o.plus){const [cx,cy]=at(list.length);doc.setDrawColor(255,138,0);doc.setLineWidth(.3);doc.setLineDashPattern([.6,.5],0);doc.circle(cx,cy,R,'S');doc.setLineDashPattern([],0);doc.setFontSize(Math.max(3.6,R*2.6));doc.setTextColor(196,101,0);doc.text('+?',cx,cy+R*.34,{align:'center'});doc.setTextColor(...INK)}}});
 }
 async function convPDF(month,filled,fm){
   const J=await loadPdf();const doc=new J({orientation:'landscape',unit:'mm',format:fm.toLowerCase()});const W=doc.internal.pageSize.getWidth(),M=9,big=fm==='A3';
