@@ -110,8 +110,8 @@ a{color:inherit}
 .hb-w{position:relative;height:var(--headH);min-width:0}
 .hb{position:absolute;inset:0 0 auto 0;max-height:var(--headH);overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:7px 10px 9px;display:flex;flex-direction:column;gap:5px;transition:max-height .18s ease .12s,box-shadow .18s;z-index:5}
 .hb::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18px;background:linear-gradient(transparent,var(--panel));pointer-events:none}
-.hb:hover,.hb.open,.hb:focus-within{max-height:72vh;overflow:auto;z-index:16;box-shadow:var(--shadow);border-color:var(--line-strong)}
-.hb:hover::after,.hb.open::after,.hb:focus-within::after{display:none}
+.hb:hover,.hb.open,.hb:has(:focus-visible){max-height:72vh;overflow:auto;z-index:16;box-shadow:var(--shadow);border-color:var(--line-strong)}
+.hb:hover::after,.hb.open::after,.hb:has(:focus-visible)::after{display:none}
 .hb-h{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .chip{display:inline-flex;align-items:center;gap:5px;min-height:23px;padding:1px 8px;border-radius:999px;border:1px solid var(--line-strong);font-size:12.5px;background:var(--panel);text-align:left;max-width:100%;white-space:nowrap}
@@ -876,7 +876,7 @@ button.bigdate:hover .d{color:var(--orange)}
 /* agrégats : en réduit, la dernière semi reçue, la suite et le [+] */
 .s-more{font:600 10.5px var(--mono);color:var(--muted);padding:0 4px;border:1px dashed var(--line-strong);align-self:center;white-space:nowrap}
 .hb:not(:hover):not(.open):not(:focus-within) .s-t.old{display:none}
-.hb:hover .s-more,.hb.open .s-more,.hb:focus-within .s-more{display:none}
+.hb:hover .s-more,.hb.open .s-more,.hb:has(:focus-visible) .s-more{display:none}
 /* centrale fermée */
 .closed-band{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:6px 0 4px;padding:8px 12px;background:#E10600;color:#fff;font-size:13.5px}
 .closed-band b{font-weight:700;text-transform:uppercase;letter-spacing:.04em}
@@ -1105,12 +1105,12 @@ a.lk-r:hover{background:color-mix(in srgb,var(--ink) 5%,var(--panel));border-col
 
 /* encadrés du haut : même hauteur, + en ligne au bas du cadre */
 .hb{height:var(--headH)}
-.hb:hover,.hb.open,.hb:focus-within{height:auto;min-height:var(--headH)}
+.hb:hover,.hb.open,.hb:has(:focus-visible){height:auto;min-height:var(--headH)}
 .hb-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:5px}
-.hb:hover .hb-body,.hb.open .hb-body,.hb:focus-within .hb-body{overflow:visible}
+.hb:hover .hb-body,.hb.open .hb-body,.hb:has(:focus-visible) .hb-body{overflow:visible}
 .hb-add{flex:none;display:flex;gap:4px;align-items:center;border-top:1px solid var(--line);padding-top:5px;margin-top:2px;overflow:hidden;white-space:nowrap}
 .hb-add .chip{flex:none;font-size:11.5px;padding:0 7px;height:24px}
-.hb:hover .hb-add,.hb.open .hb-add,.hb:focus-within .hb-add{flex-wrap:wrap;white-space:normal}
+.hb:hover .hb-add,.hb.open .hb-add,.hb:has(:focus-visible) .hb-add{flex-wrap:wrap;white-space:normal}
 .hb::after{display:none!important}
 .chip.prod{border:1px solid var(--orange);background:color-mix(in srgb,var(--orange) 10%,var(--panel))}
 .sl .semi-plus{margin-left:auto;align-self:start;flex:none;grid-column:4}
@@ -1166,6 +1166,26 @@ button.tag{cursor:pointer}
 .row.det2>.r-tours{height:37px!important;align-items:center}
 .row.det2 .t-add{height:31px;width:31px}
 .pk-v input{font-weight:700}
+/* bas de page : choix de vue centré ; haut : recherche et + Commande un peu décalés vers la gauche */
+@media (min-width:761px){.foot{position:relative}.foot .vue-c{position:absolute;left:50%;transform:translateX(-50%)}.t-r{padding-right:clamp(8px,1.6vw,26px)}}
+.lh{position:sticky;top:0}
+/* téléphone : barre du bas collée au bord */
+@media (max-width:760px){.side{bottom:0!important;padding-bottom:env(safe-area-inset-bottom,0px)!important;height:auto!important;min-height:calc(54px + env(safe-area-inset-bottom,0px))}.side .nav-b{height:54px}html,body{min-height:100%;background-color:var(--bg)}}
+.an{position:relative;height:var(--h,78px);margin:6px 0 10px;border:1px dashed var(--line-strong);background:var(--bg);overflow:hidden}
+.an-s{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:6px;opacity:0;animation:an2 5s infinite;animation-delay:calc(var(--i)*2.5s)}
+.an3 .an-s{animation-name:an3;animation-duration:7.2s;animation-delay:calc(var(--i)*2.4s)}
+.an4 .an-s{animation-name:an4;animation-duration:9.2s;animation-delay:calc(var(--i)*2.3s)}
+.an-v{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
+.an-s small{font:500 11px var(--mono);color:var(--muted);text-align:center;letter-spacing:.02em}
+.an .t,.an .chip,.an .mo,.an .tag{pointer-events:none}
+.an-row{display:flex;gap:12px;align-items:center;min-width:min(320px,90%);padding:7px 12px;border-left:4px solid var(--c);background:linear-gradient(90deg,color-mix(in srgb,var(--g,var(--c)) 18%,transparent),transparent 50%),var(--panel);font-size:14px}
+.an-list{display:flex;flex-direction:column;gap:4px;min-width:200px;padding:6px;border:1px solid var(--ink);background:var(--panel)}
+.an-q{font:700 15px var(--mono);border:1px solid var(--line-strong);padding:4px 10px;background:var(--panel)}
+.plus-t.on span{background:#FF8A00;color:#fff;border-style:solid}
+@keyframes an2{0%,44%{opacity:1;transform:none}50%,94%{opacity:0;transform:translateY(3px)}100%{opacity:1;transform:none}}
+@keyframes an3{0%,29%{opacity:1;transform:none}33.4%,96%{opacity:0;transform:translateY(3px)}100%{opacity:1;transform:none}}
+@keyframes an4{0%,21%{opacity:1;transform:none}25%,97%{opacity:0;transform:translateY(3px)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.an-s{animation:none;opacity:0}.an-s:last-child{opacity:1}}
 </style>
 
 <div class="app" id="app">
@@ -1496,7 +1516,7 @@ function aggInner(iso){
 }
 
 function convChips(iso,kind){const cv=S.convocs[iso]||{};return Object.keys(cv).map(p=>{const x=cv[p];
-    if(kind==='abs'&&x.st==='abs')return `<button class="chip bad" data-act="conv" data-d="${iso}" data-p="${esc(p)}" title="Camion absent · modifier">${esc(p)}</button>`;
+    if(kind==='abs'&&x.st==='abs')return `<button class="chip bad" data-act="conv" data-long="1" data-d="${iso}" data-p="${esc(p)}" title="Absent${x.raison?' · '+esc(x.raison):''} · clic : modifier · clic droit : menu"><b>${esc(p)}</b> <small>${esc(x.per||'Journée')}</small>${x.raison?` <small>· ${esc(x.raison)}</small>`:''}<span class="x" data-act="conv-x" data-d="${iso}" data-p="${esc(p)}" role="button" aria-label="Annuler l'absence de ${esc(p)}">×</span></button>`;
     if(kind==='pret'&&x.st==='pret')return `<button class="chip" data-act="conv" data-d="${iso}" data-p="${esc(p)}" title="Camion prêté · modifier"><b>${esc(p)}</b> → ${esc(x.pc)} <small>${esc(x.per)}</small></button>`;
     if(kind==='ailleurs'&&x.st!=='abs'&&x.dep&&x.dep!==CENTRALE)return `<button class="chip info" data-act="conv" data-d="${iso}" data-p="${esc(p)}" title="Convocation · modifier"><b>${esc(p)}</b> ${esc(hm(x.h))} ${esc(x.dep)}</button>`;
     return ''}).join('')}
@@ -1512,6 +1532,7 @@ function applyLayout(L){const hd=document.getElementById('head'),m=document.getE
   hd.querySelectorAll('.hb-w[data-box]').forEach(w=>{w.style.order=L.order.indexOf(w.dataset.box)})}
 function saveMyLayout(L){prefs.layouts=prefs.layouts||{};prefs.layouts[meKey()]={order:L.order.slice(),pos:L.pos};savePrefs()}
 let hbDrag=null,hbSwallow=0;
+document.addEventListener('pointerdown',e=>{if(!view.hbOpen||!view.hbOpen.length)return;if(e.target.closest&&(e.target.closest('#head .hb')||e.target.closest('#pop')))return;document.querySelectorAll('#head .hb.open').forEach(h=>h.classList.remove('open'));view.hbOpen=[];if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#head'))document.activeElement.blur()},true);
 document.addEventListener('click',e=>{if(hbSwallow&&Date.now()-hbSwallow<400){e.stopPropagation();e.preventDefault()}hbSwallow=0},true);
 document.addEventListener('pointerdown',e=>{
   const w=e.target.closest&&e.target.closest('#head .hb-w[data-box]');if(!w||e.button!==0||hbDrag)return;
@@ -1599,8 +1620,7 @@ function footHTML(iso){
     <div class="ft">chargés <b>${fmt(t.liv)}</b></div>
     <div class="ft">tours <b>${t.p}/${t.n}</b></div>
     <div class="grow"></div>
-    ${view.tab==='planning'&&view.mode==='jour'?`<div class="seg vue" role="group" aria-label="Affichage des chantiers">${[['simple','Simple','Une ligne par chantier, le strict minimum'],['normal','Normal','Infos, bulles et commentaires'],['detail','Détaillé','Tous les détails de chaque chantier']].map(([k,l,t])=>`<button class="${(prefs.vue||'normal')===k?'on':''}" data-act="vue" data-v="${k}" title="${t}">${l}</button>`).join('')}</div>`:''}
-    <button class="btn sm" data-act="journal" title="Journal de la journée">Journal ${(dd.journal||[]).length?`<small>${dd.journal.length}</small>`:''}</button>
+    ${view.tab==='planning'&&view.mode==='jour'?`<div class="seg vue vue-c" role="group" aria-label="Affichage des chantiers">${[['simple','Simple','Une ligne par chantier, le strict minimum'],['normal','Normal','Infos, bulles et commentaires'],['detail','Détaillé','Tous les détails de chaque chantier']].map(([k,l,t])=>`<button class="${(prefs.vue||'normal')===k?'on':''}" data-act="vue" data-v="${k}" title="${t}">${l}</button>`).join('')}</div>`:''}
     ${(()=>{const n=chatUnread();return `<button class="chat-b ${n?'has':''}" data-act="chat" title="Chat de la centrale${n?' · '+n+' nouveau'+(n>1?'x':''):''}" aria-label="Ouvrir le chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg><span>Chat</span>${n?`<b>${n}</b>`:''}</button>`})()}`;
 }
 
@@ -1701,9 +1721,9 @@ function dayHTML(iso){
   const conts=am.filter(o=>o.am&&statut(o)!=='annulee').map(o=>`<button class="cont" data-act="focus" data-oid="${o.id}"><span class="mono">↳</span><b>${esc(siteName(o))}</b>${esc(cl(o.cl).n)} · suite du coulage de ${esc(hm(o.h))} · ${fmt(livre(o))}/${fmt(total(o))} m³</button>`).join('');
   const SIM=simple();
   const CP=prefs.vue==='simple'&&!isPhone();
-  return `<div class="lh">${CP?'<span>Heure</span><span>Client</span><span class="r">m³</span><span>Chantier</span><span>Formule</span><span>Tours · pompe · infos</span><span></span>':'<span>Heure</span><span>Client</span><span class="r">m³</span><span>Chantier · adresse</span><span>Formule</span><span>Camion</span><span>Pompe</span><span>Commentaires</span><span></span>'}</div>
-  ${pend.length?`<p class="half-l val">À valider · ${pend.length} commande${pend.length>1?'s':''} du commercial</p>${pend.map(pendRow).join('')}`:''}
-  ${(()=>{const t=totals(iso);return `<div class="day-stats"><span class="ft">camions <b>${t.k}</b></span><span class="ft">chantiers <b>${t.c}</b></span>${role()==='centraliste'?'<span class="legend"><span><i></i>prévu</span><span><i class="on"></i>chargé</span><span><i class="cp"></i>complément</span></span>':''}</div>`})()}${band}<p class="half-l ${cw&&cw.de<=0&&cw.a>=720?'closed':''}">Matin · ${sub(am)}</p>${am.length?rows(am,0,720):'<p class="empty">Aucune commande le matin.</p>'}
+  const LH=`<div class="lh">${CP?'<span>Heure</span><span>Client</span><span class="r">m³</span><span>Chantier</span><span>Formule</span><span>Tours · pompe · infos</span><span></span>':'<span>Heure</span><span>Client</span><span class="r">m³</span><span>Chantier · adresse</span><span>Formule</span><span>Camion</span><span>Pompe</span><span>Commentaires</span><span></span>'}</div>`;
+  return `  ${pend.length?`<p class="half-l val">À valider · ${pend.length} commande${pend.length>1?'s':''} du commercial</p>${pend.map(pendRow).join('')}`:''}
+  ${(()=>{const t=totals(iso);return `<div class="day-stats"><span class="ft">camions <b>${t.k}</b></span><span class="ft">chantiers <b>${t.c}</b></span>${role()==='centraliste'?'<span class="legend"><span><i></i>prévu</span><span><i class="on"></i>chargé</span><span><i class="cp"></i>complément</span></span>':''}</div>`})()}${LH}${band}<p class="half-l ${cw&&cw.de<=0&&cw.a>=720?'closed':''}">Matin · ${sub(am)}</p>${am.length?rows(am,0,720):'<p class="empty">Aucune commande le matin.</p>'}
   <p class="half-l pm ${cw&&cw.de<=720&&cw.a>=1440?'closed':''}">Après-midi · ${sub(pm)}</p>${conts}${pm.length?rows(pm,720,1440):(conts?'':'<p class="empty">Aucune commande l\'après-midi.</p>')}`;
 }
 function nowLine(){const n=new Date();return `<div class="now" aria-label="Heure actuelle"><span>${pad(n.getHours())}:${pad(n.getMinutes())}</span></div>`}
@@ -1929,11 +1949,28 @@ function chatRender(force){if(!chatWin||chatWin.hidden)return;const box=chatWin.
 }
 function closeAide(){prefs.aideOn=false;savePrefs();if(view.tab==='aide')view.tab='planning';render(true);toast('Mode d\'emploi fermé · le rouvrir : badge du compte')}
 document.addEventListener('contextmenu',e=>{const b=e.target.closest&&e.target.closest('.nav-b[data-v=aide]');if(!b)return;e.preventDefault();closeAide()});
+
+/* Mode d'emploi : petites animations qui montrent le changement d'état */
+const anS=(states,h)=>`<div class="an an${states.length}" style="--h:${h||78}px" aria-hidden="true">${states.map(([v,c],i)=>`<div class="an-s" style="--i:${i}"><div class="an-v">${v}</div><small>${c}</small></div>`).join('')}</div>`;
+const bu=(v,p,cls)=>`<span class="t t2 ${cls||''}"><b>${v}</b><small>${p}</small></span>`;
+const anRow=(c,txt,grad)=>`<div class="an-row" style="--c:${c};${grad?'':'--g:transparent'}"><b>07:30</b> <b>BATISUD</b> <span>30/30</span> <span class="muted">${txt}</span></div>`;
+const AIDE_ANIM={
+  'Paiements comptant':()=>anS([[`<b>MARTIN Paul</b> <span class="tag pay">€</span>`,'Client comptant : paiement en attente · clic sur €'],[`<b>MARTIN Paul</b> <span class="tag pay ok">PAYÉ</span>`,'Confirmé : le paiement est reçu']]),
+  'Pompes, bon de pompe et réservations':()=>anS([[`<button class="mo warn">Fica 42 m</button> <button class="mo warn">À RÉSERVER</button>`,'Pompe à réserver, bon à faire'],[`<button class="mo warn">Fica 42 m</button> <button class="mo on">RÉSERVÉ</button>`,'Clic sur À RÉSERVER : pompe réservée'],[`<button class="mo on">Fica 42 m</button> <button class="mo on">RÉSERVÉ</button>`,'Clic sur la pompe : bon de pompe fait']]),
+  'Remplir une bulle (plaque du camion)':()=>anS([[bu('7,5','—')+bu('7,5','—'),'Tours prévus : cubage en haut'],[bu('7,5','GW','on')+bu('7,5','—'),'Clic sur la bulle, choix de la plaque : chargé'],[bu('7,5','GW','on')+bu('7,5','EF','on')+`<span class="t-add">+</span>`,'Tous chargés · + pour ajouter un tour (7,5 m³ prérempli)']]),
+  'Replacer un camion déjà chargé sur un autre chantier':()=>anS([[bu('7,5','GW','on'),'Camion chargé pour BATISUD'],[bu('7,5','GW','on mv')+` <span class="mono">→</span> `+bu('7,5','GW','on rf'),'Replacé : barré ici, ↪ bleu sur le nouveau chantier']]),
+  'Lire une bulle de tour':()=>anS([[bu('7,5','—'),'Prévu, pas encore chargé'],[bu('7,5','GW','on'),'Chargé : cubage en haut, plaque en bas'],[bu('5','V955','cp'),'Complément (moins qu\'un camion plein)'],[bu('7,5','Nice','on ext')+`<span class="t t2 t-plus"><b>?</b><small>+1T</small></span>`,'Autre centrale · 1 tour à confirmer']]),
+  'Saisir une commande':()=>anS([[`<span class="an-q">15 m³</span><span class="plus-t"><span>[+]</span></span>`,'Quantité · [+] si le client prendra un complément'],[`<span class="an-q">15 m³</span><span class="plus-t on"><span>[+]</span></span>`,'[+] coché : « 15 et plus »'],[bu('7,5','—')+bu('7,5','—')+`<span class="t t2 t-plus"><b>?</b><small>+1T</small></span>`,'Sur le planning : 15/15 + et la bulle orange']]),
+  'Modifier, dupliquer, annuler une commande':()=>anS([[anRow('#FF8A00','En attente',1),'Statut En attente : barre et dégradé orange'],[anRow('#1E9E4A','En cours',0),'En cours : barre verte'],[anRow('#2F6FD6','Terminée',1),'Terminée : barre et dégradé bleus']],70),
+  'Commentaires (pastilles)':()=>anS([[`<span class="chip on"><span class="pt">Appeler avant départ</span></span><span class="chip more">+2</span><span class="chip add">+ Info</span>`,'Plus de 2 infos : la première et un compteur'],[`<div class="an-list"><span class="chip on"><span class="pt">Appeler avant départ</span></span><span class="chip"><span class="pt">Accès étroit</span></span><span class="chip"><span class="pt">Prévoir 2 hommes</span></span></div>`,'Survol ou clic sur +2 : toutes les infos']],112),
+  'Planning camions : renforts, détachements, convocations':()=>anS([[`<span class="lbl">Absents</span> <span class="muted">—</span> <span class="chip add">+ Absent</span>`,'+ Absent : plaque, Matin / Après-midi / Journée, raison'],[`<span class="lbl">Absents</span> <span class="chip bad"><b>7656</b> <small>Matin</small> <small>· Congé</small><span class="x">×</span></span>`,'× pour annuler · clic droit : menu']]),
+  'Ligne « À surveiller »':()=>anS([[`<span class="chip bad">Paiement · MARTIN</span><span class="chip info">2 à placer</span>`,'Ce qui demande une action aujourd\'hui'],[`<span class="chip info">2 à placer</span><span class="chip warn">Pompe à réserver</span>`,'Clic sur une alerte : la ligne concernée s\'ouvre']])
+};
 function aideHTML(){const ce=role()==='centraliste';
   return `<div class="sec-h"><h2>Mode d'emploi</h2><p>Un dépliant par élément : cliquez sur un titre pour l'ouvrir.</p>
    <input class="aide-q" type="search" placeholder="Que voulez-vous faire ? (ex. plaque, paiement, réinitialiser)" aria-label="Chercher dans le mode d'emploi" data-act="aide-q">
    <button class="btn sm" data-act="aide-all" data-v="1">Tout ouvrir</button><button class="btn sm" data-act="aide-all" data-v="0">Tout fermer</button><button class="btn sm" data-act="aide-close" title="Le rouvrir : badge du compte → Mode d'emploi">× Fermer l'onglet</button></div>
-   <div class="aide">${AIDE.map(([g,L])=>{const it=L.filter(x=>ce||x[0]==='tous');return it.length?`<section class="aide-g"><h3>${esc(g)}</h3>${it.map(([w,t,b])=>`<details class="aide-d"><summary><span>${esc(t)}</span>${w==='centraliste'&&ce?'':''}</summary><div class="aide-b">${b}</div></details>`).join('')}</section>`:''}).join('')}
+   <div class="aide">${AIDE.map(([g,L])=>{const it=L.filter(x=>ce||x[0]==='tous');return it.length?`<section class="aide-g"><h3>${esc(g)}</h3>${it.map(([w,t,b])=>`<details class="aide-d"><summary><span>${esc(t)}</span>${w==='centraliste'&&ce?'':''}</summary><div class="aide-b">${AIDE_ANIM[t]?AIDE_ANIM[t]():''}${b}</div></details>`).join('')}</section>`:''}).join('')}
    <p class="aide-none muted" hidden>Rien trouvé : essayez un autre mot.</p></div>`}
 document.addEventListener('input',e=>{if(!e.target.matches||!e.target.matches('.aide-q'))return;const q=e.target.value.trim().toLowerCase();let n=0;
   document.querySelectorAll('.aide-d').forEach(d=>{const ok=!q||d.textContent.toLowerCase().includes(q);d.hidden=!ok;if(ok)n++;d.open=!!q&&ok});
@@ -2071,6 +2108,7 @@ function decodeDate(dl){
   requestAnimationFrame(tick);
 }
 function renderChrome(){
+  {const sg=document.getElementById('seg');if(sg)sg.hidden=view.tab!=='planning'}
   const wk=isoWeek(view.date),d=D(view.date);
   const dl=document.getElementById('dlabel');
   if(view.mode==='semaine'&&view.tab==='planning'){const mon=mondayOf(view.date),fri=addDays(mon,4);dl.innerHTML=`<span class="d">Semaine ${wk}</span><span class="w">${D(mon).getUTCDate()} – ${D(fri).getUTCDate()} ${MOISL[D(fri).getUTCMonth()]} ${D(fri).getUTCFullYear()}</span>`}
@@ -2264,7 +2302,7 @@ function act(a,el,o,e){
         const pl=FLEET().map(p=>p.c);
         if(v.startsWith('Camion prêté'))setTimeout(()=>formPop(a0,'Camion prêté',[{k:'p',label:'Plaque',type:'select',opts:pl,val:pl[0]},{k:'pc',label:'À quelle centrale',type:'select',opts:AG(),val:AG()[0]},{k:'per',label:'Période',type:'select',opts:['Journée','Matin','Après-midi'],val:'Journée'}],x=>{S.convocs[d]=S.convocs[d]||{};const o=S.convocs[d][x.p]||{h:'06:00',dep:CENTRALE};S.convocs[d][x.p]=Object.assign(o,{st:'pret',pc:x.pc,per:x.per})}));
         else if(v.startsWith('Convoqué'))setTimeout(()=>formPop(a0,'Convoqué dans une autre centrale',[{k:'p',label:'Plaque',type:'select',opts:pl,val:pl[0]},{k:'h',label:'Heure',type:'time',val:'07:45',step:900},{k:'dep',label:'Centrale',type:'select',opts:AG(),val:AG()[0]}],x=>{S.convocs[d]=S.convocs[d]||{};const o=S.convocs[d][x.p]||{};S.convocs[d][x.p]=Object.assign(o,{st:'conv',h:x.h,dep:x.dep})}));
-        else if(v.startsWith('Camion absent'))setTimeout(()=>formPop(a0,'Camion absent',[{k:'p',label:'Plaque',type:'select',opts:pl,val:pl[0]}],x=>{S.convocs[d]=S.convocs[d]||{};S.convocs[d][x.p]={st:'abs',h:'',dep:CENTRALE,aff:''}}));
+        else if(v.startsWith('Camion absent'))setTimeout(()=>formPop(a0,'Chauffeur / camion absent',[{k:'p',label:'Plaque',type:'select',opts:pl,val:pl[0]},{k:'per',label:'Absent',type:'select',opts:['Journée','Matin','Après-midi'],val:'Journée'},{k:'raison',label:"Raison de l'absence",val:'',ph:'Ex. congé, maladie, garage, formation'}],x=>{S.convocs[d]=S.convocs[d]||{};S.convocs[d][x.p]={st:'abs',h:'',dep:CENTRALE,aff:'',per:x.per,raison:x.raison};jlog(d,`Absent : ${x.p} · ${x.per}${x.raison?' · '+x.raison:''}`)}));
         else{const sens=/renfort/i.test(v)?'recu':'donne';setTimeout(()=>formPop(a0,sens==='recu'?'Renfort · camions qui viennent à la centrale':'Détachement · camions qui partent',[{k:'c',label:sens==='recu'?'Venant de':'Vers',type:'select',opts:AG(),val:AG()[0]},{k:'n',label:'Nombre de camions',type:'number',val:1},{k:'per',label:'Période',type:'select',opts:['Journée','Matin','Après-midi'],val:'Journée'}],x=>{day(d).ech.push({sens,c:x.c,n:Math.max(1,parseInt(x.n)||1),per:x.per})}))}
         return 'close'};
       if(el.dataset.v==='Renfort'||el.dataset.v==='Camion absent')return go(el.dataset.v);
@@ -2290,6 +2328,7 @@ function act(a,el,o,e){
     case 'conv-print':return convPrintPop(el);
     // camions
     case 'conv':{const d=el.dataset.d,p=el.dataset.p;return convPop(el,d,p)}
+    case 'conv-x':{const d=el.dataset.d,p=el.dataset.p,x=(S.convocs[d]||{})[p];if(!x)return;const lbl=x.st==='abs'?"l'absence":'cette ligne';return confirmPop(el,`Annuler ${lbl} de ${p} ?`,dayShort(d),'Oui, annuler',()=>{delete S.convocs[d][p];if(x.st==='abs')jlog(d,`Absence annulée : ${p}`);toast('Annulé')},true)}
     case 'plaque-add':return formPop(el,'Ajouter un camion',[{k:'c',label:'N° de parc ou repère (affiché sur les bulles)',val:'',ph:'7656 ou EF'},{k:'p',label:'Plaque entière (optionnel)',val:'',ph:'EF-507-VT'}],v=>{if(!v.c)return 'keep';if(!S.config)S.config=CONFIG0();S.config.flotte=FLEET().concat([{c:v.c.toUpperCase().slice(0,8),p:v.p}])});
     case 'export':return exportPop(el);
     case 'tours-print':return toursPop(el,false);
@@ -2329,6 +2368,7 @@ function pillEdit(o,i,anchor){const id=o.id;setEditing(id);const p=o.pills[i];
   setTimeout(()=>{const inp=popEl.querySelector('#pe-t');if(inp){inp.focus();inp.select()}},20);
 }
 function longAct(el){const a=el.dataset.act,i=+el.dataset.i;const row=el.closest('[data-id]');
+  if(a==='conv'){const d=el.dataset.d,p=el.dataset.p;return openPop(el,`<div class="pop-h">${esc(p)} · ${esc(dayShort(d))}</div><button class="pop-b" data-pa="mod">Modifier…</button><button class="pop-b danger" data-pa="del">Annuler l'absence</button>`,{mod(){setTimeout(()=>convPop(el,d,p));return 'close'},del(){const x=(S.convocs[d]||{})[p];delete S.convocs[d][p];if(x&&x.st==='abs')jlog(d,`Absence annulée : ${p}`);toast('Absence annulée')}})}
   if(a==='tour'&&row)return tourPop(byId(row.dataset.id),i,el);
   if(a==='pill'&&row)return pillEdit(byId(row.dataset.id),i,el);
   if(a==='semi-t')return semiTourPop(el,dayOf(el),i,+el.dataset.k);
@@ -2380,10 +2420,11 @@ function convPop(anchor,d,p){const x=(S.convocs[d]||{})[p]||{};
     {k:'h',label:'Heure de convocation',type:'time',val:x.h||'06:00',step:900},
     {k:'dep',label:'Convoqué à (centrale du 1er chargement)',type:'select',opts:[CENTRALE].concat(AG()),val:x.dep||CENTRALE},
     {k:'pc',label:'Si prêté : à quelle centrale',type:'select',opts:AG(),val:x.pc||AG()[0]},
-    {k:'per',label:'Si prêté : période',type:'select',opts:['Journée','Matin','Après-midi'],val:x.per||'Journée'},
+    {k:'per',label:'Période (prêté ou absent)',type:'select',opts:['Journée','Matin','Après-midi'],val:x.per||'Journée'},
+    {k:'raison',label:"Si absent : raison",val:x.raison||'',ph:'Ex. congé, maladie, garage'},
     {k:'aff',label:'Affecté au chantier (badge, accès…)',val:x.aff||'',list:S.chantiers.filter(c=>c.nom).map(c=>c.nom)}],
   v=>{S.convocs[d]=S.convocs[d]||{};if(v.st==='none'){delete S.convocs[d][p];return}
-    S.convocs[d][p]={st:v.st,h:v.st==='abs'?'':v.h,dep:v.dep,aff:v.aff,pc:v.st==='pret'?v.pc:'',per:v.st==='pret'?v.per:''}});
+    S.convocs[d][p]={st:v.st,h:v.st==='abs'?'':v.h,dep:v.dep,aff:v.aff,pc:v.st==='pret'?v.pc:'',per:v.st==='pret'||v.st==='abs'?v.per:'',raison:v.st==='abs'?v.raison:''}});
 }
 const convOf=(d,p)=>(S.convocs[d]||{})[p]||null;
 const absentOn=(d,p)=>{const x=convOf(d,p);return !!(x&&x.st==='abs')};
@@ -2420,8 +2461,9 @@ function settingsPop(anchor){
    <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button></section>
    <section class="ps"><div class="pop-l">Affichage</div><div class="pop-grid">${[['auto','Auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div></section>
    ${MODE==='local'?'<section class="ps"><div class="pop-l">Démo</div><button class="pop-b" data-pa="reset">Recharger les données de démo</button></section>':''}
+   <section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}${(dayRO(view.date).journal||[]).length?` (${dayRO(view.date).journal.length})`:''}</button></section>
    <section class="ps ps-sync"><div class="pop-l">Synchronisation et état</div><div class="sync-box">${syncDetail()}</div><button class="pop-b" data-pa="force">Forcer la synchronisation</button></section>`,
-  {aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
+  {journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
    'lay-reset'(){const k=meKey();const had=prefs.layouts&&prefs.layouts[k];if(had){delete prefs.layouts[k];savePrefs()}applyLayout();toast(had?'Disposition réinitialisée : '+(S.config&&S.config.layout?'celle de la centrale':'celle par défaut'):'Déjà sur la disposition de la centrale');return 'close'},
    'lay-set'(){const L=layoutGet();S.config.layout={order:L.order.slice(),pos:L.pos};const k=meKey();if(prefs.layouts&&prefs.layouts[k]){delete prefs.layouts[k];savePrefs()}toast('Disposition de la centrale enregistrée pour tous les centralistes')},
    clot(){const a=popAnchor;setTimeout(()=>act('clot',a,null,{}));return 'close'},mois(){const a=popAnchor;setTimeout(()=>act('conv-print',a,null,{}));return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'},demo(){setTimeout(chargerDemo);return 'close'},reset(){S=buildDemo();Object.keys(synced).forEach(p=>delete synced[p]);const m=docsOf();Object.keys(m).forEach(p=>synced[p]=stable(m[p]));lsSet(LS_DATA,S);render(true);return 'close'}});
