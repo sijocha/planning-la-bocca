@@ -1,7 +1,7 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Planning La Bocca</title>
 <script>window.STANDALONE=true;</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase-2.119.0.js"></script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1186,6 +1186,7 @@ button.tag{cursor:pointer}
 @keyframes an3{0%,29%{opacity:1;transform:none}33.4%,96%{opacity:0;transform:translateY(3px)}100%{opacity:1;transform:none}}
 @keyframes an4{0%,21%{opacity:1;transform:none}25%,97%{opacity:0;transform:translateY(3px)}100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.an-s{animation:none;opacity:0}.an-s:last-child{opacity:1}}
+.row.editing{cursor:not-allowed}.row.editing>*:not(.editby){opacity:.55}.row.editing .editby{opacity:1}
 </style>
 
 <div class="app" id="app">
@@ -1285,146 +1286,6 @@ function parseDate(s){
 const mins=h=>{const [a,b]=(h||'00:00').split(':').map(Number);return a*60+(b||0)};
 
 /* ---------- jeu de démonstration (fictif) ---------- */
-function buildDemo(){
-  let seq=0;
-  const clients=[
-    {id:'c1',n:'BATISUD',t:'compte'},{id:'c2',n:'AZUR CONSTRUCTION',t:'compte'},{id:'c3',n:'MONTI BTP',t:'compte'},
-    {id:'c4',n:'ESTÉREL TP',t:'compte'},{id:'c5',n:'RIVIERA GROS ŒUVRE',t:'compte'},{id:'c6',n:'COSTA MAÇONNERIE',t:'compte'},
-    {id:'c7',n:'LITTORAL BÂTIMENT',t:'compte'},
-    {id:'c8',n:'MARTIN Paul',t:'comptant',part:true,note:'Particulier, devis sur le bureau'},
-    {id:'c9',n:'LEROY Sandrine',t:'comptant',part:true,note:'Particulier, devis sur le bureau'},
-    {id:'c10',n:'DUPONT Marc',t:'comptant',part:true,note:'Particulier, devis sur le bureau'}];
-  const chantiers=[
-    ['h1','Résidence Les Oliviers','','c5'],['h2','Groupe scolaire Les Pins','2 av. des Pins, Cannes La Bocca','c1'],
-    ['h3','','8 chemin des Genêts, Cannes','c8',1],['h4','Villa Sainte-Anne','','c6'],
-    ['h5','Les Terrasses du Golfe','45 bd du Golfe, Mandelieu','c2'],['h6','ZA de la Siagne lot 4','Rue des Artisans, Mandelieu','c4'],
-    ['h7','Lotissement Le Clos','Route du Clos, Mouans-Sartoux','c3'],['h8','Hôtel Bellevue piscine','12 rue Bellevue, Cannes','c7'],
-    ['h9','','27 impasse des Lauriers, Le Cannet','c9',1],['h10','Parking Croisette niv. -2','','c5'],
-    ['h11','EHPAD Les Mimosas','3 allée des Mimosas, Théoule','c1'],['h12','Pôle sportif des Bréguières','','c4'],
-    ['h13','','5 chemin de la Source, Pégomas','c10',1],['h14','Immeuble Le Méridien','18 av. du Méridien, Cannes','c2'],
-    ['h15',"Station d'épuration Siagne",'','c4'],['h16','Villa Les Pins Parasols','Chemin des Crêtes, Super-Cannes','c6'],
-    ['h17','Résidence Le Vallon','','c7'],['h18','Voirie ZAC des Tourrades','ZAC des Tourrades, Mandelieu','c3'],
-    ['h19','Clinique du Parc','Av. du Parc, Le Cannet','c1'],['h20','Mur de soutènement RD 6098','','c4']
-  ].map(([id,nom,adr,cl,ot])=>({id,nom,adr,cl,ot:!!ot}));
-  const formules=[
-    {f:'C25/30 D20 S3 XC1',sap:'60012481'},{f:'C25/30 D14 S3',sap:'60012477'},{f:'C25/30 D14 S4',sap:'60012478'},
-    {f:'C25/30 D20 S4 XC2',sap:'60012490'},{f:'C30/37 D14 S4 XC4',sap:'60013102'},{f:'C30/37 D20 S3 XC4',sap:'60013110'},
-    {f:'C16/20 D20 S3 X0',sap:'60010256'},{f:'C35/45 D20 S3 XA1 HM',sap:'60014019'},{f:'BQA C25/30 D10 S4',sap:'60015330'},
-    {f:'Béton balayé C25 D16 S3 XF1',sap:'60013877'},{f:'CEMEXA C16',sap:'60016004'},{f:'Sable stabilisé 80 kg',sap:'60017112'}];
-  const orders=[];
-  const clById=Object.fromEntries(clients.map(c=>[c.id,c]));
-  function mk(x){
-    const cap=capOf(x.cam||'');const tours=genTours(x.m3,cap);
-    const n=x.charged==='all'?tours.length:(x.charged||0);
-    tours.forEach((t,i)=>{if(i<n)t.s=1;if(x.pl&&x.pl[i])t.p=x.pl[i];if(x.ext&&x.ext[i])t.c=x.ext[i]});
-    const by=x.by||'Karim';
-    const o={id:'o'+pad(++seq),seq,date:x.d,h:x.h,cl:x.cl,ch:x.ch,ouv:x.ouv||'',f:x.f,sap:'',cam:x.cam||'',camNote:x.cn||'',
-      pompe:x.pompe||null,am:!!x.am,spec:!!x.spec,kind:x.kind||'cmd',pour:x.pour||'',souhait:x.souhait||'',cre:x.cre||'',tel:x.tel||'',resa:x.resa||(/sp/i.test(x.cam||'')?'ok':null),st:x.st||null,
-      pills:(x.pills||[]).map(p=>typeof p==='string'?{t:p,on:false,by}:p),tours,by,
-      pay:clById[x.cl].t==='comptant'?(x.pay||{paye:false,note:''}):null};
-    orders.push(o);return o;
-  }
-  const P=PLAQUES.map(p=>p.c);
-  // Vendredi 30 octobre (passé)
-  mk({d:'2026-10-30',h:'07:00',cl:'c10',ch:'h13',ouv:'Dalle',f:'C25/30 D14 S3',m3:7,charged:'all',pl:['7656'],pay:{paye:true,note:'Payé CB'}});
-  mk({d:'2026-10-30',h:'08:00',cl:'c1',ch:'h19',ouv:'Voile',f:'C25/30 D20 S4 XC2',m3:22.5,charged:'all',pl:['V955','EF','EE']});
-  mk({d:'2026-10-30',h:'13:30',cl:'c4',ch:'h15',ouv:'Radier',f:'C35/45 D20 S3 XA1 HM',m3:15,charged:'all',pl:['GW','V874']});
-  // Lundi 2 novembre (passé) — deux chantiers du matin en SP4
-  mk({d:'2026-11-02',h:'07:00',cl:'c1',ch:'h2',ouv:'Dalle',f:'C25/30 D20 S3 XC1',m3:30,charged:'all',pl:['7656','V955','EF','EE'],pills:[{t:'Appeler avant départ',on:true,by:'Karim'}]});
-  mk({d:'2026-11-02',h:'07:30',tel:'06 45 90 12 33',cl:'c8',ch:'h3',ouv:'Dalle',f:'C25/30 D14 S3',m3:6,cam:'2SP4',charged:'all',pl:['FK218','FK218'],pay:{paye:true,note:'Payé CB'},pills:[{t:'Attendre le client',on:true,by:'Karim'}]});
-  mk({d:'2026-11-02',h:'08:30',cl:'c6',ch:'h4',ouv:'Fondations',f:'C25/30 D20 S3 XC1',m3:16,cam:'4SP4',charged:'all',pl:['HD470','FK218','HD470','FK218'],pills:[{t:'Accès étroit',on:false,by:'Julie (commercial)'}]});
-  mk({d:'2026-11-02',h:'10:00',cl:'c2',ch:'h5',ouv:'Voile',f:'C30/37 D14 S4 XC4',m3:22.5,pompe:{t:'32',f:'Lafarge',ml:0,bon:true},charged:'all',pl:['7656','','V955'],ext:{1:'Nice'},pills:[{t:'Bétobag 1er camion',on:true,by:'Julie (commercial)'}]});
-  mk({d:'2026-11-02',h:'13:00',cl:'c4',ch:'h6',ouv:'Gros béton',f:'C16/20 D20 S3 X0',m3:15,charged:'all',pl:['EF','EE']});
-  mk({d:'2026-11-02',h:'14:30',kind:'pour',pour:'Grasse',cl:'c3',ch:'h7',ouv:'Dalle',f:'C25/30 D20 S4 XC2',m3:7.5,charged:'all',pl:['GW']});
-  mk({d:'2026-11-02',h:'15:00',cl:'c7',ch:'h17',ouv:'Balayé',f:'Béton balayé C25 D16 S3 XF1',m3:10,charged:'all',pl:['7656','V955']});
-  // Mardi 3 novembre — pompe à tuyaux BQA l'après-midi en 3xSP4
-  mk({d:'2026-11-03',h:'06:30',tel:'06 12 45 78 90',cl:'c5',ch:'h10',ouv:'Dalle',f:'C30/37 D14 S4 XC4',m3:45,charged:'all',pl:['7656','V955','EF','EE','GW','V874'],pills:[{t:'Appeler avant départ',on:true,by:'Karim'},{t:'Chef de chantier : Yannick',on:false,by:'Julie (commercial)'}]});
-  mk({d:'2026-11-03',h:'07:00',resa:'ok',cl:'c2',ch:'h14',ouv:'Poteaux-poutres',f:'C35/45 D20 S3 XA1 HM',m3:12,cam:'3SP4',am:true,charged:'all',pl:['FK218','HD470','FK218'],pills:['Prendre 1 journée','Vidange longue 45 min+']});
-  mk({d:'2026-11-03',h:'08:00',cl:'c1',ch:'h11',ouv:'Voile',f:'BQA C25/30 D10 S4',m3:15,pompe:{t:'BQA',f:'Fica',ml:70,bon:true},charged:'all',pl:['7656','V955'],pills:[{t:'Citybag 1er camion',on:true,by:'Karim'}]});
-  mk({d:'2026-11-03',h:'09:30',kind:'pour',pour:'Nice',cl:'c3',ch:'h18',ouv:'Voirie',f:'C25/30 D20 S4 XC2',m3:7.5,charged:'all',pl:['EF']});
-  mk({d:'2026-11-03',h:'10:00',tel:'06 70 11 29 54',cl:'c9',ch:'h9',ouv:'Désactivé',f:'Désactivé 6/16, colorant PP120 4 kg/m³',m3:5,charged:'all',pl:['EE'],pills:['Attendre le client']});
-  mk({d:'2026-11-03',h:'13:00',tel:'07 81 22 63 40',cl:'c7',ch:'h8',ouv:'Piscine',f:'BQA C25/30 D10 S4',m3:12,cam:'3SP4',pompe:{t:'BQA',f:'GCA',ml:30,bon:true},charged:2,pl:['FK218','HD470','FK218'],pills:['Appeler chaque camion']});
-  const b7=mk({d:'2026-11-03',h:'14:00',cl:'c4',ch:'h12',ouv:'Fondations',f:'C25/30 D20 S3 XC1',m3:22.5,charged:'all',pl:['GW','V874','7656'],pills:[{t:'Rallonge de 7,5 m³ demandée à 15 h 20',on:true,by:'Thomas'}]});
-  b7.tours.push({v:7.5,s:1,p:'V955',x:1});
-  mk({d:'2026-11-03',h:'15:30',cl:'c6',ch:'h16',ouv:'Dalle',f:'C25/30 D14 S3',m3:8,st:'annulee',pills:[{t:'Pluie : reporté par le client',on:false,by:'Julie (commercial)'}]});
-  // Mercredi 4 novembre
-  mk({d:'2026-11-04',h:'07:00',cl:'c5',ch:'h1',ouv:'Voile',f:'C25/30 D20 S4 XC2',m3:30,pills:['Appeler avant départ']});
-  mk({d:'2026-11-04',h:'09:00',resa:'todo',cl:'c1',ch:'h2',ouv:'Escalier',f:'C25/30 D14 S4',m3:3,cam:'1SP4',pills:['1er camion ferme pour escalier']});
-  mk({d:'2026-11-04',h:'13:30',cl:'c2',ch:'h5',ouv:'Dalle',f:'C30/37 D14 S4 XC4',m3:18});
-  // Jeudi 5 novembre (à venir) — 200 m³ à la Fica 42, 6 camions en rotation
-  const rot=[];for(let i=0;i<27;i++)rot.push(P[i%6]);
-  mk({d:'2026-11-05',h:'06:00',tel:'06 21 33 47 85',cl:'c5',ch:'h1',ouv:'Radier',f:'C30/37 D20 S3 XC4',m3:200,pompe:{t:'42',f:'Fica',ml:0,bon:false,resa:'ok'},am:true,spec:true,pl:rot,by:'Julie (commercial)',
-     pills:['Appeler chaque camion',{t:'Chef de chantier : Yannick',on:false,by:'Julie (commercial)'},{t:'Éprouvettes : 3 séries',on:false,by:'Nadia (labo)'}]});
-  mk({d:'2026-11-05',h:'07:30',cl:'c4',ch:'h20',ouv:'Voile',f:'C25/30 D14 S4 XF1 FIBRÉE, attente formule labo',m3:15});
-  mk({d:'2026-11-05',h:'14:00',cl:'c1',ch:'h19',ouv:'Dalle',f:'C25/30 D20 S4 XC2',m3:22.5,pompe:{t:'26',f:'BST',ml:0,bon:false,resa:'todo'}});
-  // Vendredi 6 novembre
-  mk({d:'2026-11-06',h:'07:00',cl:'c5',ch:'h1',ouv:'Voile',f:'C25/30 D20 S4 XC2',m3:22.5});
-  mk({d:'2026-11-06',h:'08:00',cl:'c1',ch:'h11',ouv:'Désactivé',f:'Désactivé 6/16, colorant PP120',m3:12,pills:[{t:'Fiche désactivé du commercial attendue',on:false,by:'Karim'}]});
-  // Commandes du commercial à placer
-  mk({d:'2026-11-09',h:'07:30',kind:'aplacer',cre:'2026-11-02',souhait:'2 camions ensemble au démarrage',cl:'c3',ch:'h18',ouv:'Voirie',f:'C25/30 D20 S4 XC2',m3:37.5,by:'Julie (commercial)'});
-  mk({d:'2026-11-10',h:'08:00',kind:'aplacer',cre:'2026-11-03',souhait:'Le matin, heure à caler',cl:'c4',ch:'h12',ouv:'Dalle',f:'attente formule commercial',m3:18,by:'Julie (commercial)'});
-
-  // journées plus réalistes (La Bocca : environ 150 m³ par jour en moyenne, 60 m³/h au plus)
-  mk({d:'2026-11-02',h:'11:00',cl:'c3',ch:'h18',ouv:'Voirie',f:'C25/30 D20 S4 XC2',m3:30,charged:'all',pl:['GW','V874','7656','V955']});
-  mk({d:'2026-11-04',h:'07:30',cl:'c1',ch:'h11',ouv:'Dalle',f:'C25/30 D20 S3 XC1',m3:45,tel:'06 33 18 72 09',pills:['Appeler avant départ']});
-  mk({d:'2026-11-04',h:'10:30',cl:'c7',ch:'h17',ouv:'Fondations',f:'C25/30 D20 S3 XC1',m3:22.5});
-  mk({d:'2026-11-06',h:'13:30',cl:'c2',ch:'h14',ouv:'Dalle',f:'C30/37 D14 S4 XC4',m3:37.5,pompe:{t:'32',f:'Lafarge',ml:0,bon:false,resa:'todo'}});
-  mk({d:'2026-11-04',h:'14:00',kind:'aplacer',cre:'2026-11-03',souhait:'Report de la dalle annulée mardi (pluie)',cl:'c6',ch:'h16',ouv:'Dalle',f:'C25/30 D14 S3',m3:8,cam:'2SP4',resa:'todo',by:'Julie (commercial)'});
-  const day=(o)=>Object.assign({presents:[],passation:[],events:[],labo:[],ech:[],semis:[],ciments:[],etat:{k:'ouverte',t:''}},o);
-  const T=(prod,carr,s)=>({prod,carr,s:s?1:0});
-  const R=(h,s)=>({h,s:s?1:0});
-  const days={
-    '2026-10-30':day({presents:[{n:'Karim',pl:'Matin'},{n:'Sébastien',pl:'Après-midi'}],
-      semis:[{nom:'Semi 1',ch:'Marco',h:'07:30',tours:[T('6/16','CALLAS',1),T('0/4L','GOURDON',1),T('0/4L','GOURDON',1)]}],ciments:[{prod:'42,5R',rec:[R('07:00',1),R('13:00',1)]}]}),
-    '2026-11-02':day({presents:[{n:'Karim',pl:'Matin'},{n:'Sébastien',pl:'Après-midi'}],
-      passation:[{t:'Graissage malaxeur',on:true,by:'Karim'},{t:'Nettoyage déchargeur',on:true,by:'Karim'},{t:'Piquage pales malaxeur',on:true,by:'Sébastien'},{t:'Enlèvement bennes : 2x Bennes (demain)',on:true,by:'Sébastien'}],
-      labo:[{h:'09:00',t:'Prélèvement éprouvettes Les Terrasses du Golfe'}],ech:[{sens:'recu',c:'Nice',n:1,per:'Matin'}],
-      semis:[{nom:'Semi 1',ch:'Marco',h:'07:30',tours:[T('6/16','CALLAS',1),T('6/16','CALLAS',1),T('0/4L','GOURDON',1),T('0/4L','GOURDON',1)]},
-             {nom:'Semi 2',ch:'Didier',h:'08:00',tours:[T('0/4L','GOURDON',1),T('10/20','CALLAS',1),T('0/4L','GOURDON',1)]}],
-      ciments:[{prod:'42,5R',rec:[R('07:00',1),R('09:00',1),R('14:00',1)]},{prod:'FILLER',rec:[R('10:00',1)]}]}),
-    '2026-11-03':day({presents:[{n:'Karim',pl:'Matin'},{n:'Thomas',pl:'Après-midi',rempl:true}],
-      passation:[{t:'Graissage tapis peseur',on:true,by:'Karim, pour le poste de 10 h'},{t:'Enlèvement bennes : 2x Bennes',on:true,by:'Sébastien, la veille'},{t:'Piquage trappe malaxeur',on:false,by:'Thomas, fermeture'},{t:'État stocks colorants',on:false,by:'Thomas, fermeture'}],
-      events:[{t:'Jeudi : changement 6/16 → 4/10'}],labo:[{h:'14:00',t:'Nadia : réglage formule BQA'}],
-      ech:[{sens:'donne',c:'Vallauris',n:1,per:'Après-midi'}],
-      semis:[{nom:'Marco',ch:'',h:'07:30',tours:[T('6/16','CALLAS',1),T('6/16','CALLAS',1),T('0/4L','GOURDON',1),T('0/4L','GOURDON',0)]},
-             {nom:'Semi 2',ch:'Didier',h:'07:45',tours:[T('0/4L','GOURDON',1),T('0/4L','GOURDON',1),T('6/16','CALLAS',0)]},
-             {nom:'Semi 3',ch:'',h:'09:00',tours:[T('10/20','CALLAS',1),T('4/10','CALLAS',0)]}],
-      ciments:[{prod:'42,5R',rec:[R('07:00',1),R('09:00',1),R('14:00',0)]},{prod:'FILLER',rec:[R('10:00',1)]},{prod:'SRPM',rec:[R('16:00',0)]}]}),
-    '2026-11-04':day({presents:[{n:'Karim',pl:'Matin'},{n:'Sébastien',pl:'Après-midi'}]}),
-    '2026-11-05':day({presents:[{n:'Karim',pl:'Matin'},{n:'Sébastien',pl:'Après-midi'}],
-      passation:[{t:'Graissage malaxeur',on:false,by:'Karim'}],
-      events:[{t:'Changement 6/16 → 4/10'},{t:'Vider les fosses en fin de journée'}],labo:[{h:'06:00',t:'Nadia : éprouvettes radier Les Oliviers'}],
-      ech:[{sens:'recu',c:'Grasse',n:2,per:'Journée'},{sens:'recu',c:'Nice',n:1,per:'Matin'}]})
-  };
-  const byId=Object.fromEntries(orders.map(o=>[o.id,o]));
-  const find=(d,ch)=>orders.find(o=>o.date===d&&o.ch===ch).id;
-  const demandes=[
-    {id:'r1',deRole:'centraliste',rep:[],type:'formule',pour:'labo',t:'Formule C25/30 D14 S4 XF1 fibrée pour le mur de soutènement',oid:find('2026-11-05','h20'),de:'Karim',le:'2026-11-02',done:false},
-    {id:'r2',type:'eprouvettes',pour:'labo',t:'Confection éprouvettes radier Les Oliviers, 3 séries',oid:find('2026-11-05','h1'),de:'Karim',le:'2026-11-02',done:false},
-    {id:'r3',type:'info',pour:'commercial',t:'LEROY Sandrine : paiement du 3 nov. à confirmer',oid:find('2026-11-03','h9'),de:'Thomas',le:'2026-11-03',done:false},
-    {id:'r4',type:'contrat',pour:'commercial',t:'Ajouter BQA C25/30 D10 S4 au contrat LITTORAL BÂTIMENT',oid:find('2026-11-03','h8'),de:'Karim',le:'2026-10-30',done:true},
-    {id:'r5',type:'visite',pour:'commercial',t:'Visite : accès toupie à vérifier (pente forte)',oid:find('2026-11-03','h16'),de:'Karim',le:'2026-11-03',done:false},
-    {id:'r6',type:'chantier',pour:'commercial',t:'Créer le chantier Pôle sportif des Bréguières dans le logiciel',oid:find('2026-11-03','h12'),de:'Sébastien',le:'2026-11-02',done:false},
-    {id:'r7',deRole:'labo',rep:[],type:'resultats',pour:'commercial',t:'Résultats à 28 jours du voile EHPAD Les Mimosas : conformes (C25/30)',oid:find('2026-11-03','h11'),de:'Nadia (labo)',le:'2026-11-03',done:false},
-    {id:'r8',deRole:'commercial',rep:[{by:'Nadia (labo)',t:'Composition en cours, retour demain',at:'2026-11-03'}],type:'compo',pour:'labo',t:'Désactivé 6/16 colorant PP120 : composition à prévoir pour le parvis du vendredi',oid:find('2026-11-06','h11'),de:'Julie (commercial)',le:'2026-11-02',done:false}];
-  const conv={};
-  const cd=['2026-10-26','2026-10-27','2026-10-28','2026-10-29','2026-10-30','2026-11-02','2026-11-03','2026-11-04','2026-11-05','2026-11-06'];
-  const base=['06:00','06:15','06:30','06:45','07:00','07:30'];
-  cd.forEach((d,k)=>{conv[d]={};P.forEach((p,i)=>{conv[d][p]={h:base[(i+k)%6],dep:CENTRALE,aff:''}})});
-  conv['2026-11-02'].EF.dep='Tourrettes';conv['2026-11-04'].GW={st:'abs',h:'',dep:CENTRALE,aff:''};conv['2026-11-04'].V955={st:'conv',h:'07:45',dep:'Grasse',aff:''};conv['2026-11-04'].V874={st:'pret',h:'06:30',dep:CENTRALE,aff:'',pc:'Nice',per:'Après-midi'};conv['2026-11-03'].GW.dep='Grasse';conv['2026-11-03'].V874.aff='Prêté à Vallauris l\'après-midi';
-  Object.assign(conv['2026-11-05'],{'7656':{h:'05:45',dep:CENTRALE,aff:'Les Oliviers'},V955:{h:'06:00',dep:'Grasse',aff:'Les Oliviers'},EF:{h:'05:45',dep:CENTRALE,aff:'Les Oliviers'},
-    EE:{h:'06:00',dep:'Nice',aff:'Les Oliviers (badge)'},GW:{h:'06:00',dep:CENTRALE,aff:'Les Oliviers'},V874:{h:'06:15',dep:CENTRALE,aff:'Les Oliviers'}});
-  const adjuvants={
-    '2026-S44':[{t:'1000 L Adjuvant 1',on:true},{t:'1000 L Adjuvant 2',on:true},{t:'500 L Adjuvant 3',on:true}],
-    '2026-S45':[{t:'1000 L Adjuvant 1',on:true},{t:'500 L Adjuvant 3',on:false},{t:'200 L Retardateur',on:false}]};
-  void byId;
-  const liens=[
-    {cat:'Commandes',n:'Commande agrégats (sables, cailloux)',u:''},{cat:'Commandes',n:'Commande ciments',u:''},
-    {cat:'Formulaires',n:'Commande de pompe',u:''},{cat:'Formulaires',n:'Bon de pompe',u:''},{cat:'Formulaires',n:'Commande de SP4',u:''},
-    {cat:'Sécurité',n:'Accident transporteur',u:''}];
-  return {orders,days,clients,chantiers,formules,demandes,convocs:conv,plaquesX:[],adjuvants,liens,config:CONFIG0()};
-}
-
 /* ---------- calculs métier ---------- */
 const CONFIG0=()=>({agg:AGG.slice(),carr:CARRS.slice(),cim:CIMENTS.slice(),agence:AG0.slice(),camions:[{t:'8x4',cap:7.5},{t:'SP6',cap:6},{t:'SP4',cap:4}],pompes:['17','20','24','26','28','32','36','42','47','52','BQA'],fourn:['Lafarge','Fica','BST','GCA']});
 const CFG=()=>(typeof S!=='undefined'&&S&&S.config&&S.config.camions)?S.config:CONFIG0();
@@ -1644,7 +1505,7 @@ function rowHTML(o,editors){
   const ouv=o.ouv?`${o.ouv} · `:'';
   const nC=TR(o).filter(t=>t.s).length,nT=TR(o).length;
   return `<article class="row ${DET2?'det2':''} st-${st} kind-${o.kind} ${ed?'editing':''}" data-id="${o.id}" id="row-${o.id}">
-    ${ed?`<span class="editby">En cours de modification · ${esc(ed)}</span>`:''}
+    ${ed?`<span class="editby">Verrouillée · ${esc(ed)} modifie</span>`:''}
     <div class="r-time">${esc(o.h)}</div>
     <div class="c r-cl"><button class="r-client" data-act="edit" title="${esc(ouv+(c.note||(c.t==='comptant'?'Client comptant':'Client en compte')))} · modifier">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" title="Client comptant · clic : payé / en attente">${o.pay.paye?'PAYÉ':'€ ATTENTE'}</button>`:''}${o.spec?'<span class="tag spec" title="Mise en avant par le commercial">SPÉCIALE</span>':''}${o.modv?`<button class="tag modv" data-act="modv" title="Modifiée par ${esc(o.modv.by)} à ${esc(o.modv.at)}${role()==='centraliste'?' · clic : valider':''}">MODIF. À VALIDER</button>`:''}</div>
     <div class="r-vol ${liv>tot+0.01?'over':''}" title="${nC}/${nT} tours${o.plus?' · + 1 tour à confirmer':''}"><b>${fmt(liv)}</b>/${fmt(tot)}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}</div>
@@ -1690,7 +1551,7 @@ function rowCompact(o,editors){
   const n=TR(o).length,k=TR(o).filter(t=>t.s).length,ed=editors[o.id];
   const bar=`<span class="prog" aria-hidden="true">${o.tours.map(t=>`<i class="${t.s?'on':''} ${t.c?'ext':''} ${t.mv||t.rf?'mv':''}"></i>`).join('')}</span>`;
   return `<article class="row st-${st} kind-${o.kind} ${ed?'editing':''}" data-id="${o.id}" id="row-${o.id}">
-    ${ed?`<span class="editby">En cours de modification · ${esc(ed)}</span>`:''}
+    ${ed?`<span class="editby">Verrouillée · ${esc(ed)} modifie</span>`:''}
     <div class="r-time">${esc(o.h)}</div>
     <div class="c r-cl"><button class="r-client" data-act="edit">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" title="${o.pay.paye?'Payé · clic : remettre en attente':'Client comptant · clic : paiement reçu'}">${o.pay.paye?'PAYÉ':'€'}</button>`:''}${o.spec?'<span class="tag spec">SPÉC.</span>':''}</div>
     <div class="r-vol"><b>${fmt(livre(o))}</b>/${fmt(total(o))}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}</div>
@@ -1890,7 +1751,7 @@ const AIDE=[
   ['tous','Ligne « À surveiller »',`<p>Au-dessus des vues, en bas : bons de pompe, réservations, paiements, commandes à valider, demandes. Le nombre est à côté du titre.</p><ul><li>Clic sur une alerte → la ligne concernée.</li><li><b>Molette</b> de la souris pour faire défiler s'il y en a beaucoup.</li><li>Quand tout est réglé, la ligne disparaît.</li></ul>`],
   ['tous','Page À traiter (02 Demandes)',`<p>Tout ce qui attend une action, rangé par thème, du plus urgent en haut au moins urgent en bas. Une catégorie n'apparaît que si elle a quelque chose à traiter :</p><ol><li>Placement de chantier (commandes du commercial)</li><li>Modifications à valider</li><li>Pompes (réservation, bon de pompe, BQA)</li><li>Camions à réserver (SP4, SP6)</li><li>Paiements comptant</li><li>Formules et labo</li><li>Modifications de commande, chantiers et clients, autres demandes</li></ol><p>Chaque ligne a son bouton d'action (Réservée, Bon fait, Paiement reçu, Traité…). Les demandes traitées passent <b>en gris tout en bas</b>. Filtres : Tout, Pour moi, Envoyées.</p>`],
   ['tous','Chat de la centrale',`<p>Bouton <b>Chat</b> en bas à droite : une fenêtre s'ouvre. Toutes les personnes connectées au planning y écrivent (Entrée pour envoyer, Maj + Entrée pour aller à la ligne). Un chiffre orange signale les nouveaux messages.</p><ul><li>Une <b>réponse à une demande</b> est aussi envoyée dans le chat.</li><li>Les messages sont gardés <b>7 jours</b> puis s'effacent ; les réponses restent attachées à leur demande.</li></ul>`],
-  ['tous','Lire une bulle de tour',`<p>En vue <b>Détaillé</b> et à l'impression, chaque bulle montre le <b>cubage chargé en haut</b> et la <b>plaque en bas</b>.</p><ul><li><b>Vert plein</b> : chargé · <b>contour</b> : prévu · <b>pointillé</b> : complément (moins qu'un camion plein).</li><li><b>Gris-vert</b> : chargé par une autre centrale (son nom en bas) · <b>bleu</b> : camion replacé.</li><li><b>Orange « ? / +1T »</b> : le client prendra sans doute 1 tour de plus ([+] à la saisie).</li><li><b>+</b> au bout des bulles : ajouter un tour. Le cubage est prérempli à un camion plein (7,5 m³ ou le maximum du camion) ; corrigez-le pour un complément.</li></ul><p><button class="btn sm" data-act="demo-pdf">Voir un exemple de PDF (données fictives)</button></p>`],
+  ['tous','Lire une bulle de tour',`<p>En vue <b>Détaillé</b> et à l'impression, chaque bulle montre le <b>cubage chargé en haut</b> et la <b>plaque en bas</b>.</p><ul><li><b>Vert plein</b> : chargé · <b>contour</b> : prévu · <b>pointillé</b> : complément (moins qu'un camion plein).</li><li><b>Gris-vert</b> : chargé par une autre centrale (son nom en bas) · <b>bleu</b> : camion replacé.</li><li><b>Orange « ? / +1T »</b> : le client prendra sans doute 1 tour de plus ([+] à la saisie).</li><li><b>+</b> au bout des bulles : ajouter un tour. Le cubage est prérempli à un camion plein (7,5 m³ ou le maximum du camion) ; corrigez-le pour un complément.</li></ul>`],
   ['tous','Commentaires (pastilles)',`<ul><li><b>+ Info</b> sur la ligne : pastilles toutes prêtes ou texte libre.</li><li>Clic sur une pastille pour la modifier ; <b>×</b> pour la supprimer (avec confirmation).</li></ul>`]]],
  ['Disposition de l\'écran',[
   ['centraliste','Déplacer les trois encadrés du haut',`<ol><li><b>Rester appuyé</b> un instant sur le bord ou le titre d'un encadré (Planning camions, Journal de bord, Agrégats). Le contour devient orange.</li><li>Sans relâcher, glisser à gauche ou à droite des autres encadrés.</li><li>Glisser vers le bas de l'écran : <b>les trois encadrés passent ensemble en bas</b> de la page ; vers le haut, ils remontent.</li><li>Relâcher. La disposition est gardée pour vous. <b>Échap</b> pendant le geste annule.</li></ol><p>Les lignes du planning ne bougent jamais.</p>`],
@@ -1911,11 +1772,6 @@ const AIDE=[
    les messages plus anciens s'effacent d'eux-mêmes. Les réponses aux demandes restent aussi sur la demande. */
 const CHAT_DAYS=7;
 let chatWin=null;
-function demoChat(){const n=Date.now(),h=36e5;return [
-  {id:'m1',ts:n-26*h,by:'Julie (commercial)',role:'commercial',t:'Le chantier Villa Les Pins peut glisser à jeudi si la pompe n\'est pas dispo.'},
-  {id:'m2',ts:n-25.5*h,by:'Karim',role:'centraliste',t:'Pompe Fica réservée pour mercredi, je te garde le créneau de 14 h.'},
-  {id:'m3',ts:n-3*h,by:'Nadia (labo)',role:'labo',t:'Éprouvettes à prélever sur le 2e camion de BATISUD demain.'},
-  {id:'m4',ts:n-2.6*h,by:'Sébastien',role:'centraliste',t:'Noté sur la ligne.',ref:{t:'Éprouvettes BATISUD'}}]}
 const chatList=()=>{const lim=Date.now()-CHAT_DAYS*864e5;return (S.chat||[]).filter(m=>m.ts>=lim).sort((a,b)=>a.ts-b.ts)};
 function chatPurge(){const lim=Date.now()-CHAT_DAYS*864e5;const n=(S.chat||[]).length;S.chat=(S.chat||[]).filter(m=>m.ts>=lim);return S.chat.length!==n}
 function chatSend(t,ref){t=String(t||'').trim();if(!t)return false;S.chat=S.chat||[];S.chat.push({id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ts:Date.now(),by:author(),role:role(),t:t.slice(0,1000),ref:ref||null});chatPurge();prefs.chatSeen=Date.now();savePrefs();commit();return true}
@@ -1986,7 +1842,14 @@ function liensHTML(){
 /* ---------- présence (qui modifie quoi) ---------- */
 let room=null,peers=[];
 function editingMap(){const m={};peers.forEach(p=>{if(p.sameTab)return;const pr=p.presence||{};if(pr.edit&&pr.nom)m[pr.edit]=`${pr.nom}${pr.role?' ('+(ROLES[pr.role]||pr.role).toLowerCase()+')':''}`});return m}
-function setEditing(id){if(room)room.presence({edit:id||null}).catch(()=>{})}
+let myEdit=null,myEditAt=0,idleT=null;const LOCK_IDLE=5*60e3;
+function setEditing(id){myEdit=id||null;myEditAt=id?Date.now():0;clearTimeout(idleT);if(id)idleT=setTimeout(lockIdle,LOCK_IDLE);if(room)room.presence({edit:myEdit,editAt:myEditAt}).catch(()=>{})}
+function lockIdle(){if(!myEdit)return;closePop();closeDrawer();toast('5 minutes sans action : la commande est libérée, rien n\'a été enregistré')}
+['input','pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(myEdit){clearTimeout(idleT);idleT=setTimeout(lockIdle,LOCK_IDLE)}},true));
+const lockedBy=id=>editingMap()[id]||null;
+function lockStop(id){const who=id&&lockedBy(id);if(!who)return false;toast(`${who} modifie cette commande : elle se libère dès sa validation`);return true}
+// deux personnes au même instant : la première garde la main, l'autre est sortie
+function lockRace(){if(!myEdit)return;const riv=peers.find(p=>!p.sameTab&&p.presence&&p.presence.edit===myEdit&&(p.presence.editAt||0)<myEditAt);if(!riv)return;const n=riv.presence.nom||'Quelqu\'un';closePop();closeDrawer();toast(`${n} a pris la main sur cette commande juste avant vous`)}
 function whoHTML(){
   const list=peers.filter(p=>p.kind==='viewer'&&!p.isMe);
   const seen=new Set();
@@ -1999,6 +1862,7 @@ const migDone=new WeakSet();
 function render(force){
   plRefresh();
   if(!S)return;
+  if(histNeed())return;
   if(!migDone.has(S)){migDone.add(S);let ch=false;(S.orders||[]).forEach(o=>o.tours.forEach(t=>{if(t.p==='S1'){t.p='FK218';ch=true}else if(t.p==='S2'){t.p='HD470';ch=true}}));if(ch)setTimeout(commit)}
   if(!force&&(!popEl.hidden||!drawerEl.hidden)){renderPending=true;renderChrome();return}
   renderPending=false;
@@ -2097,7 +1961,7 @@ function sideHTML(){
   ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${role()!=='centraliste'?'named':''} ${i===0?'main':''} ${(k==='chat'?chatOn():view.tab===k&&!(isPhone()&&chatOn()))?'on':''}" ${k==='chat'?'data-act="chat"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
   </div><div class="side-rz" title="Glisser pour élargir ou réduire le menu · double-clic : carrés / normal" aria-hidden="true"></div>
   <div class="grow"></div>
-  <div class="mini"><span class="lbl">// ${MODE==='local'?'Démo':'Données'}</span><span>${MODE==='local'?'Données fictives sur cet appareil':'Partagées en direct'}</span>${MODE==='local'?'<button class="btn sm" data-act="reset">Recharger la démo</button>':''}</div>`;
+  <div class="mini"><span class="lbl">// Données</span><span>Partagées en direct</span></div>`;
 }
 let lastDec='',decId=0;
 function decodeDate(dl){
@@ -2177,6 +2041,20 @@ function calPop(anchor,title,onPick,startMonth){let month=startMonth||TODAY.slic
 /* =====================================================================
    Actions
    ===================================================================== */
+let histBusy=false,IMPORTING=false;
+// date plus ancienne que la période chargée : on va la chercher, puis on affiche
+function histNeed(){
+  if(MODE!=='shared'||!DB||!DB.from||view.tab!=='planning')return false;
+  const need=view.mode==='semaine'?mondayOf(view.date):view.date;
+  if(need>=DB.from())return false;
+  if(histBusy)return true;
+  histBusy=true;renderChrome();
+  document.getElementById('head').hidden=true;
+  document.getElementById('main').innerHTML='<p class="empty">Chargement de l\'historique…</p>';
+  const d0=need.slice(0,8)+'01';
+  DB.extend(addDays(d0,-7)).then(()=>{histBusy=false;render(true)}).catch(()=>{histBusy=false;toast('Historique indisponible sans connexion');view.date=TODAY;render(true)});
+  return true;
+}
 function go(d){view.date=d;render(true);window.scrollTo({top:0})}
 function jlog(d,t){const dd=day(d);const n=new Date();dd.journal=dd.journal||[];dd.journal.push({at:`${pad(n.getHours())}:${pad(n.getMinutes())}`,by:author(),t})}
 function unmove(id,i){const x=byId(id).tours[i];if(!x)return;
@@ -2240,6 +2118,7 @@ function demPop(anchor,oid,typeDef,pourDef){
 }
 
 function act(a,el,o,e){
+  if(o&&a!=='focus'&&a!=='pills-all'&&lockStop(o.id))return;
   const D_=view.date;const i=+el.dataset.i;
   switch(a){
     case 'prev':return go(view.mode==='semaine'&&view.tab==='planning'?addDays(mondayOf(view.date),-7):step(view.date,-1));
@@ -2253,7 +2132,7 @@ function act(a,el,o,e){
     case 'pickdate':return calPop(el,'Aller au planning du…',d=>{view.tab='planning';view.mode='jour';go(d);return 'close'},view.date.slice(0,7));
     case 'vue':prefs.vue=el.dataset.v;savePrefs();lastAnim='';return render(true);
     case 'settings':return settingsPop(el);
-    case 'reset':S=buildDemo();Object.keys(synced).forEach(p=>delete synced[p]);{const m=docsOf();Object.keys(m).forEach(p=>synced[p]=stable(m[p]))}lsSet(LS_DATA,S);return render(true);
+
     case 'banner-ok':{const n=new Date();prefs.banner=`${n.getFullYear()}-${n.getMonth()}`;savePrefs();return render(true)}
     // ligne commande
     case 'edit':return openOrderForm(o);
@@ -2308,7 +2187,7 @@ function act(a,el,o,e){
       if(el.dataset.v==='Renfort'||el.dataset.v==='Camion absent')return go(el.dataset.v);
       if(el.dataset.v==='Détachement')return listPop(el,'Détachement',['Détachement (nombre de camions)','Camion prêté (plaque)','Convoqué dans une autre centrale'],go);
       return listPop(el,'Planning camions',['Renfort (vient à la centrale)','Détachement (nombre de camions)','Camion prêté (plaque)','Convoqué dans une autre centrale','Camion absent'],go)}
-    case 'ech-add-old':{const d=dayOf(el);return formPop(el,'Camion échangé',[{k:'sens',label:'Sens',type:'select',opts:[['recu','Reçu d\'une autre centrale'],['donne','Donné à une autre centrale']],val:'recu'},{k:'c',label:'Centrale',type:'select',opts:AG(),val:AG()[0]},{k:'n',label:'Nombre de camions',type:'number',val:1},{k:'per',label:'Période',type:'select',opts:['Journée','Matin','Après-midi'],val:'Journée'}],v=>{day(d).ech.push({sens:v.sens,c:v.c,n:Math.max(1,parseInt(v.n)||1),per:v.per})})}
+
     case 'ech-x':day(dayOf(el)).ech.splice(i,1);break;
     case 'etat':{const d=dayOf(el);const et=dayRO(d).etat||{};return formPop(el,'État de la centrale',[{k:'k',label:'État',type:'select',opts:[['ouverte','Ouverte'],['fermee','Fermée'],['panne','Panne']],val:et.k||'ouverte'},{k:'per',label:'Quand',type:'select',opts:[['journee','Toute la journée'],['matin','Le matin'],['aprem','L\'après-midi'],['horaires','Horaires précis']],val:et.per||'journee'},{k:'de',label:'Si horaires : de',type:'time',step:900,val:et.de||'10:00'},{k:'a',label:'à',type:'time',step:900,val:et.a||'12:00'},{k:'t',label:'Cause',val:et.t||'',ph:'Ex. tapis peseur, coupure EDF'}],v=>{if(v.k==='ouverte'){day(d).etat={k:'ouverte',t:''};return}if(v.per==='horaires'&&!(v.de&&v.a&&mins(v.a)>mins(v.de))){toast('Indiquez une heure de fin après le début');return 'keep'}day(d).etat={k:v.k,t:v.t,per:v.per,de:v.per==='horaires'?v.de:'',a:v.per==='horaires'?v.a:''};jlog(d,winTxt(closedWin(d)))})}
     // en-tête : ouvrir / refermer un cadre (écrans tactiles)
@@ -2341,7 +2220,6 @@ function act(a,el,o,e){
     case 'aide-all':document.querySelectorAll('.aide-d:not([hidden])').forEach(d=>d.open=el.dataset.v==='1');return;
     case 'clo-rep':{const d=view.date;return listPop(el,'Replacer les tours non chargés vers…',AG(),c=>{const w=closedWin(d);let n=0,m=0;ordersOn(d).filter(o=>statut(o)!=='annulee'&&inWin(o.h,w)).forEach(o=>TR(o).forEach(t=>{if(!t.s&&!t.c){t.c=c;t.s=1;n++;m+=t.v}}));if(n)jlog(d,`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c} (${fmt(m)} m³) · centrale fermée`);toast(n?`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c}`:'Aucun tour à replacer')})}
     case 'map':{if(!(window.L&&window.STANDALONE))return;e.preventDefault();return openMap(o)}
-    case 'demo-pdf':return demoPDF();
     case 'liens-cfg':return openConfig('cfg-liens');
     case 'clot':{const d=dayOf(el);const dd=day(d);const pdf=()=>savePDF(`cloture-la-bocca-${d}.pdf`,()=>planningPDF([d],'A4'));if(dd.cloture){pdf();return}
       return confirmPop(el,'Clôturer la journée ?',dayShort(d)+' · le PDF de clôture sera téléchargé.','Oui, clôturer',()=>{const x=day(d);const n=new Date();x.cloture={by:author(),at:`${pad(n.getHours())}:${pad(n.getMinutes())}`};x.journal=x.journal||[];x.journal.push({at:x.cloture.at,by:author(),t:'Journée clôturée'});pdf()})}
@@ -2368,6 +2246,7 @@ function pillEdit(o,i,anchor){const id=o.id;setEditing(id);const p=o.pills[i];
   setTimeout(()=>{const inp=popEl.querySelector('#pe-t');if(inp){inp.focus();inp.select()}},20);
 }
 function longAct(el){const a=el.dataset.act,i=+el.dataset.i;const row=el.closest('[data-id]');
+  if(row&&lockStop(row.dataset.id))return;
   if(a==='conv'){const d=el.dataset.d,p=el.dataset.p;return openPop(el,`<div class="pop-h">${esc(p)} · ${esc(dayShort(d))}</div><button class="pop-b" data-pa="mod">Modifier…</button><button class="pop-b danger" data-pa="del">Annuler l'absence</button>`,{mod(){setTimeout(()=>convPop(el,d,p));return 'close'},del(){const x=(S.convocs[d]||{})[p];delete S.convocs[d][p];if(x&&x.st==='abs')jlog(d,`Absence annulée : ${p}`);toast('Absence annulée')}})}
   if(a==='tour'&&row)return tourPop(byId(row.dataset.id),i,el);
   if(a==='pill'&&row)return pillEdit(byId(row.dataset.id),i,el);
@@ -2460,13 +2339,13 @@ function settingsPop(anchor){
    <section class="ps"><div class="pop-l">Centrale</div><button class="pop-b" data-pa="cfg">Réglages : camions, agence, pompes…</button>${layoutPopHTML()}</section>`:''}
    <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button></section>
    <section class="ps"><div class="pop-l">Affichage</div><div class="pop-grid">${[['auto','Auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div></section>
-   ${MODE==='local'?'<section class="ps"><div class="pop-l">Démo</div><button class="pop-b" data-pa="reset">Recharger les données de démo</button></section>':''}
+
    <section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}${(dayRO(view.date).journal||[]).length?` (${dayRO(view.date).journal.length})`:''}</button></section>
    <section class="ps ps-sync"><div class="pop-l">Synchronisation et état</div><div class="sync-box">${syncDetail()}</div><button class="pop-b" data-pa="force">Forcer la synchronisation</button></section>`,
   {journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
    'lay-reset'(){const k=meKey();const had=prefs.layouts&&prefs.layouts[k];if(had){delete prefs.layouts[k];savePrefs()}applyLayout();toast(had?'Disposition réinitialisée : '+(S.config&&S.config.layout?'celle de la centrale':'celle par défaut'):'Déjà sur la disposition de la centrale');return 'close'},
    'lay-set'(){const L=layoutGet();S.config.layout={order:L.order.slice(),pos:L.pos};const k=meKey();if(prefs.layouts&&prefs.layouts[k]){delete prefs.layouts[k];savePrefs()}toast('Disposition de la centrale enregistrée pour tous les centralistes')},
-   clot(){const a=popAnchor;setTimeout(()=>act('clot',a,null,{}));return 'close'},mois(){const a=popAnchor;setTimeout(()=>act('conv-print',a,null,{}));return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'},demo(){setTimeout(chargerDemo);return 'close'},reset(){S=buildDemo();Object.keys(synced).forEach(p=>delete synced[p]);const m=docsOf();Object.keys(m).forEach(p=>synced[p]=stable(m[p]));lsSet(LS_DATA,S);render(true);return 'close'}});
+   clot(){const a=popAnchor;setTimeout(()=>act('clot',a,null,{}));return 'close'},mois(){const a=popAnchor;setTimeout(()=>act('conv-print',a,null,{}));return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'}});
 }
 function openConfig(focus){
   if(!S.config||!S.config.camions)S.config=CONFIG0();
@@ -2524,6 +2403,7 @@ function applyTheme(){const r=document.documentElement;if(prefs.theme==='auto')r
    ===================================================================== */
 let formCtx=null;
 function openOrderForm(o,opt){
+  if(o&&o.id&&!(opt&&opt.dup)&&lockStop(o.id))return;
   opt=opt||{};const isNew=!o||opt.dup;
   const base=o?clone(o):{date:view.mode==='jour'&&view.tab==='planning'?view.date:TODAY,h:'07:00',cl:'',ch:'',ouv:'',f:'',m3:'',cam:'',camNote:'',pompe:null,am:false,spec:false,pills:[]};
   if(opt.dup){base.date=opt.date;base.st=null;base.kind=base.kind==='aplacer'?'cmd':base.kind}
@@ -2748,14 +2628,17 @@ function commit(){
   extValides();
   const now=new Date();const stamp=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
   // journal : chaque changement de commande est tracé dans la journée concernée
-  {const cur={};S.orders.forEach(o=>cur['orders/'+o.id]=o);
-   Object.keys(cur).forEach(p=>{const k=known_(p);const strip=x=>{const y=clone(x);delete y.maj;return stable(y)};if(k&&strip(JSON.parse(k))===strip(cur[p]))return;const prev=k?JSON.parse(k):null;logLine(cur[p],summarize(prev,cur[p]),stamp)});
+  // on ne regarde en détail que les commandes qui ont réellement changé
+  const J={};
+  {const cur={};S.orders.forEach(o=>{const p='orders/'+o.id;cur[p]=o;J[p]=stable(o)});
+   const strip=x=>{const y=clone(x);delete y.maj;return stable(y)};
+   Object.keys(cur).forEach(p=>{const k=known_(p);if(k===J[p])return;if(k&&strip(JSON.parse(k))===strip(cur[p]))return;const prev=k?JSON.parse(k):null;logLine(cur[p],summarize(prev,cur[p]),stamp);delete J[p]});
    Object.keys(synced).concat(Object.keys(pending)).forEach(p=>{if(p.startsWith('orders/')&&!cur[p]){const k=known_(p);if(k){const prev=JSON.parse(k);logLine(prev,'commande supprimée',stamp)}}})}
-  if(MODE==='local'){lsSet(LS_DATA,S);const m=docsOf();Object.keys(synced).forEach(p=>{if(!m[p])delete synced[p]});Object.keys(m).forEach(p=>synced[p]=stable(m[p]));return}
   if(MODE!=='shared')return;
-  const m=docsOf();
+  const m=docsOf();const from=DB&&DB.from?DB.from():'';
   Object.keys(m).forEach(p=>{
-    let j=stable(m[p]);if(known_(p)===j)return;
+    if(!IMPORTING&&p.startsWith('days/')&&from&&p.slice(5)<from&&!known_(p))return;   // journée ancienne non chargée : on n'y touche pas
+    let j=J[p]||stable(m[p]);if(known_(p)===j)return;
     if(p.startsWith('orders/')){m[p].maj={by:author(),at:TODAY+' '+stamp};j=stable(m[p])}
     pending[p]={body:clone(m[p]),j};
   });
@@ -2775,7 +2658,7 @@ function flush(){
       sync.online=true;sync.err='';sync.last=new Date();
     }).catch(err=>{
       const c=err&&err.code;
-      if(c==='not_granted'||c==='permission_denied'){delete pending[path];sync.err='Lecture seule : ce compte ne peut pas modifier le planning.'}
+      if(c==='not_granted'||c==='permission_denied'){delete pending[path];if(ME&&ME.role==='lecture')sync.err='Lecture seule : ce compte ne peut pas modifier le planning.';else{toast('Action refusée : réservée au centraliste');clearTimeout(flush.t);flush.t=setTimeout(()=>forceSync(true),300)}}
       else sync.online=false;
     }).finally(()=>{delete inflight[path];lsSet(LS_PEND,pending);renderSync();if(pending[path]&&pending[path].j!==j&&sync.online)flush()});
   });
@@ -2806,7 +2689,7 @@ function startShared(db){
   window.addEventListener('offline',()=>{sync.online=false;renderSync()});
   setInterval(()=>{if(Object.keys(pending).length)flush()},15000);
 }
-function startLocal(){MODE='local';const d=lsGet(LS_DATA);S=d&&d.orders?d:buildDemo();if(!S.chat)S.chat=demoChat();const m=docsOf();Object.keys(m).forEach(p=>synced[p]=stable(m[p]));render(true)}
+
 function syncHTML(){
   const n=Object.keys(pending).length;const t=sync.last?`${pad(sync.last.getHours())}:${pad(sync.last.getMinutes())}`:'';
   if(MODE==='local')return `<span class="sync s-local" title="Les données restent sur cet appareil">Démo locale</span>`;
@@ -2826,15 +2709,15 @@ function syncDetail(){
     <div class="sd"><span class="lbl">Réseau</span><span>${navigator.onLine?'connecté':'pas de réseau'}</span></div>
     <div class="sd"><span class="lbl">Copie locale</span><span>${MODE==='shared'?'oui, sur cet appareil':'—'}</span></div>`;
 }
-async function forceSync(){
-  if(MODE!=='shared'||!DB){toast('Démo locale : rien à synchroniser');return}
-  toast('Synchronisation…');flush();
+async function forceSync(quiet){
+  if(MODE!=='shared'||!DB)return;
+  if(!quiet)toast('Synchronisation…');flush();
   try{
     const [o,d,r]=await Promise.all(['orders','days','ref'].map(c=>withTimeout(DB.collection(c).get(),12000)));
     S.orders=o.docs.map(x=>{const v=clone(x.data());v.id=x.id;synced['orders/'+x.id]=stable(v);return v});
     S.days={};d.docs.forEach(x=>{S.days[x.id]=clone(x.data());synced['days/'+x.id]=stable(S.days[x.id])});
     r.docs.forEach(x=>{const b=x.data();if(REF_KEYS.includes(x.id)){S[x.id]=clone(b.v);synced['ref/'+x.id]=stable({v:b.v})}});
-    overlayPending();saveMirror();sync.online=true;sync.cache=false;sync.err='';sync.last=new Date();render(true);toast('Planning synchronisé')
+    overlayPending();saveMirror();sync.online=true;sync.cache=false;sync.err='';sync.last=new Date();render(true);if(!quiet)toast('Planning synchronisé')
   }catch(e){sync.online=false;renderSync();toast('Pas de connexion au serveur : les modifications restent sur cet appareil')}
 }
 function syncState(){const n=Object.keys(pending).length;if(MODE==='local')return 'local';if(MODE!=='shared')return 'wait';if(sync.err||!sync.online||!navigator.onLine)return 'bad';if(n||sync.cache)return 'wait';return 'ok'}
@@ -2978,8 +2861,8 @@ async function convPDF(month,filled,fm){
     styles:{fontSize:big?10:7.8,cellPadding:big?2.2:1.4,lineColor:[180,180,175],lineWidth:.15,textColor:[21,21,21],minCellHeight:big?11:7.5},headStyles:{fillColor:[233,232,227],textColor:[21,21,21],fontStyle:'bold'},columnStyles:{0:{fontStyle:'bold',cellWidth:big?26:20}}});
   return doc.output('arraybuffer');
 }
-// exemple fictif pour le mode d'emploi : n'écrit rien dans les données partagées
-function demoPDF(){savePDF('exemple-planning-la-bocca.pdf',async()=>{await loadPdf();const keep=S;try{S=buildDemo();const ds=[...new Set(S.orders.map(o=>o.date))].sort();const c={};S.orders.forEach(o=>c[o.date]=(c[o.date]||0)+1);const d=ds.sort((a,b)=>c[b]-c[a])[0];return await planningPDF([d],'A4')}finally{S=keep}})}
+
+
 async function savePDF(name,make){toast('Préparation du PDF…');try{const buf=await make();saveFile(name,new Blob([buf],{type:'application/pdf'}))}catch(e){toast('PDF impossible pour l\'instant (bibliothèque non chargée, vérifiez la connexion)')}}
 function exportPop(anchor){
   const mon=mondayOf(view.date);
@@ -2992,12 +2875,11 @@ function exportPop(anchor){
       <p class="muted" style="margin:0;font-size:12.5px">Un fichier PDF, une page par jour, avec des lignes vides pour écrire à la main. Prêt à imprimer.</p>
     </form>
     <button class="pop-b" data-pa="html">Version page web (.html), sans PDF</button>
-    <button class="pop-b" data-pa="json">Sauvegarde complète des données (.json)</button>`,
+    <button class="pop-b" data-pa="json">Sauvegarde complète, tout l'historique (.json)</button>`,
   {go(f){const k=f.querySelector('#ex-k').value;const ds=exportDays(k,f.querySelector('#ex-a').value,f.querySelector('#ex-b').value);if(!ds.length){toast('Aucun jour dans cette période');return 'keep'}
       const fm=f.querySelector('input[name="ex-f"]:checked').value;savePDF(`planning-la-bocca-${ds[0]}${ds.length>1?'_'+ds[ds.length-1]:''}-${fm}.pdf`,()=>planningPDF(ds,fm))},
-   demo(){demoPDF()},
    html(){const f=popEl.querySelector('form');const k=f.querySelector('#ex-k').value;const ds=exportDays(k,f.querySelector('#ex-a').value,f.querySelector('#ex-b').value);if(!ds.length){toast('Aucun jour dans cette période');return 'keep'}const fm=f.querySelector('input[name="ex-f"]:checked').value;saveFile(`planning-la-bocca-${ds[0]}${ds.length>1?'_'+ds[ds.length-1]:''}-${fm}.html`,printHTML(ds,fm))},
-   json(){saveFile(`sauvegarde-planning-la-bocca-${TODAY}.json`,JSON.stringify({exporte:new Date().toISOString(),par:author(),donnees:S},null,1))}});
+   json(){sauvegardeComplete()}});
   const sel=popEl.querySelector('#ex-k'),dt=popEl.querySelector('#ex-dates');if(sel&&dt)sel.addEventListener('change',()=>{dt.hidden=sel.value!=='plage';placePop()});
 }
 function saveFile(name,data){
@@ -3027,11 +2909,19 @@ function supaDb(sb){
   const cache={},subs={};let chan=null;
   const snap=name=>{const m=cache[name]||new Map();const docs=[...m.entries()].map(([id,d])=>({id,data:()=>d}));return {docs,empty:!docs.length,metadata:{fromCache:false}}};
   const emit=name=>(subs[name]||[]).forEach(s=>{try{s.cb(snap(name))}catch(e){console.error(e)}});
-  async function load(name){
-    const all=[];const step=1000;
-    for(let from=0;;from+=step){const {data,error}=await sb.from('documents').select('id,data').eq('collection',name).range(from,from+step-1);if(error)throw error;all.push(...data);if(data.length<step)break}
-    cache[name]=new Map(all.map(r=>[r.id,r.data]));emit(name);
+  // Période chargée : les 2 derniers mois et tout l'avenir. Les dates plus anciennes sont chargées à la demande.
+  let FROM=addDays(realToday(),-62),lastLoad=0;
+  const inWin=(name,id,d)=>name==='orders'?(d&&(d.kind==='aplacer'||String(d.date||'')>=FROM)):name==='days'?id>=FROM:true;
+  async function page(build){const all=[];const step=1000;
+    for(let from=0;;from+=step){const {data,error}=await build().order('id').range(from,from+step-1);if(error)throw error;all.push(...data);if(data.length<step)break}
+    return all}
+  const base=name=>sb.from('documents').select('id,data').eq('collection',name);
+  async function fetchAll(name,from){
+    if(name==='orders'&&from){const [a,b]=await Promise.all([page(()=>base(name).gte('data->>date',from)),page(()=>base(name).eq('data->>kind','aplacer'))]);const m=new Map();a.concat(b).forEach(r=>m.set(r.id,r.data));return m}
+    if(name==='days'&&from)return new Map((await page(()=>base(name).gte('id',from))).map(r=>[r.id,r.data]));
+    return new Map((await page(()=>base(name))).map(r=>[r.id,r.data]));
   }
+  async function load(name){lastLoad=Date.now();cache[name]=await fetchAll(name,FROM);emit(name)}
   const fail=(name,e)=>(subs[name]||[]).forEach(s=>s.err&&s.err(supaErr(e)));
   function reloadAll(){Object.keys(subs).forEach(n=>load(n).catch(e=>fail(n,e)))}
   function ensureChan(){
@@ -3040,12 +2930,15 @@ function supaDb(sb){
       .on('postgres_changes',{event:'*',schema:'public',table:'documents'},p=>{
         const r=p.eventType==='DELETE'?p.old:p.new;const name=r&&r.collection;if(!name||!subs[name])return;
         const m=cache[name]||(cache[name]=new Map());
-        if(p.eventType==='DELETE')m.delete(r.id);else m.set(r.id,r.data);
+        if(p.eventType==='DELETE'||!inWin(name,r.id,r.data))m.delete(r.id);else m.set(r.id,r.data);
         emit(name);
       })
-      .subscribe(st=>{if(st==='SUBSCRIBED')reloadAll()});
+      .subscribe(st=>{if(st==='SUBSCRIBED'&&Date.now()-lastLoad>4000)reloadAll()});
   }
   return {
+    from:()=>FROM,
+    async extend(d){if(d>=FROM)return;FROM=d;await Promise.all(['orders','days'].filter(n=>subs[n]).map(n=>load(n)))},
+    async everything(){const out={};for(const n of ['orders','days','ref','chat'])out[n]=await fetchAll(n,null);return out},
     collection(name){return {
       onSnapshot(cb,err){(subs[name]=subs[name]||[]).push({cb,err});ensureChan();load(name).catch(e=>err&&err(supaErr(e)));return ()=>{subs[name]=(subs[name]||[]).filter(s=>s.cb!==cb)}},
       async get(){try{await load(name)}catch(e){throw supaErr(e)}return snap(name)}
@@ -3084,7 +2977,7 @@ async function supaLogout(){try{await SB.auth.signOut()}catch(e){}prefs.user=nul
 // Remplace toutes les données partagées (import d'une sauvegarde ou démo)
 function remplacerDonnees(d,label){
   if(!d||!Array.isArray(d.orders)){toast('Fichier non reconnu : ce n\'est pas une sauvegarde du planning');return}
-  const keep=logLine;logLine=()=>{};
+  const keep=logLine;logLine=()=>{};IMPORTING=true;
   try{
     S=clone(d);
     S.chat=S.chat||[];S.days=S.days||{};
@@ -3092,8 +2985,18 @@ function remplacerDonnees(d,label){
     ['convocs','adjuvants'].forEach(k=>{if(!S[k]||typeof S[k]!=='object')S[k]={}});
     if(!S.config)S.config=CONFIG0();
     commit();
-  }finally{logLine=keep}
+  }finally{logLine=keep;IMPORTING=false}
   render(true);toast(label);
+}
+async function sauvegardeComplete(){
+  if(!DB||!DB.everything){saveFile(`sauvegarde-planning-la-bocca-${TODAY}.json`,JSON.stringify({exporte:new Date().toISOString(),par:author(),donnees:S},null,1));return}
+  toast('Préparation de la sauvegarde…');
+  try{const all=await DB.everything();const d={orders:[],days:{},chat:[]};
+    all.orders.forEach((v,id)=>{const x=clone(v);x.id=id;d.orders.push(x)});all.days.forEach((v,id)=>{d.days[id]=v});all.chat.forEach(v=>d.chat.push(v));all.ref.forEach((v,id)=>{d[id]=v.v});
+    d.orders.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+    saveFile(`sauvegarde-planning-la-bocca-${TODAY}.json`,JSON.stringify({exporte:new Date().toISOString(),par:author(),commandes:d.orders.length,du:d.orders[0]?d.orders[0].date:'',au:d.orders.length?d.orders[d.orders.length-1].date:'',donnees:d},null,1));
+    toast(`Sauvegarde : ${d.orders.length} commandes`)}
+  catch(e){toast('Sauvegarde impossible sans connexion')}
 }
 function importerSauvegarde(){
   const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
@@ -3104,10 +3007,6 @@ function importerSauvegarde(){
       remplacerDonnees(d,'Sauvegarde importée')};
     r.readAsText(f)};
   inp.click();
-}
-function chargerDemo(){
-  if(!confirm('Remplacer TOUT le planning partagé par les données de démonstration (fictives) ?'))return;
-  const d=buildDemo();if(!d.chat)d.chat=demoChat();remplacerDonnees(d,'Données de démo chargées');
 }
 
 async function supaBoot(){
@@ -3127,7 +3026,7 @@ async function supaBoot(){
   startShared(supaDb(SB));
   room=supaRoom(SB);
   if(prefs.user)room.presence({nom:prefs.user.nom,role:prefs.user.role,edit:null}).catch(()=>{});
-  room.onPeers(ch=>{peers=ch.peers.slice();if(S){if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()}});
+  room.onPeers(ch=>{peers=ch.peers.slice();lockRace();if(S){if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()}});
   setTimeout(()=>loadPdf().catch(()=>{}),2500);
 }
 
@@ -3198,17 +3097,6 @@ function boot(){
   applyTheme();
   document.getElementById('main').innerHTML='<p class="empty">Chargement du planning…</p>';
   supaBoot();
-  if(false){
-  let settled=false;
-  const fallback=setTimeout(()=>{if(!settled){settled=true;startLocal()}},6000);
-  const cl_=window.STANDALONE?null:window.claude;
-  if(cl_&&cl_.use){
-    cl_.use('db').then(db=>{if(settled)return;settled=true;clearTimeout(fallback);db?startShared(db):startLocal()}).catch(()=>{if(!settled){settled=true;clearTimeout(fallback);startLocal()}});
-    cl_.use('downloads').then(d=>{DL=d}).catch(()=>{});
-    setTimeout(()=>loadPdf().catch(()=>{}),2500);
-    cl_.use('room').then(r=>{if(!r)return;room=r;if(prefs.user)r.presence({nom:prefs.user.nom,role:prefs.user.role,edit:null}).catch(()=>{});r.onPeers(ch=>{peers=ch.peers.slice();if(S){if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()}},()=>{})}).catch(()=>{});
-  }else{clearTimeout(fallback);settled=true;startLocal()}
-  }
 
   document.addEventListener('click',e=>{
     if(suppressClick){suppressClick=false;e.preventDefault();e.stopPropagation();return}
@@ -3237,7 +3125,7 @@ function boot(){
   let lt=null;
   document.addEventListener('pointerdown',e=>{const el=e.target.closest('[data-long]');if(!el||e.button>0)return;lt=setTimeout(()=>{lt=null;suppressClick=true;longAct(el)},480)});
   ['pointerup','pointercancel','pointerleave','scroll'].forEach(ev=>document.addEventListener(ev,()=>{if(lt){clearTimeout(lt);lt=null}},true));
-  document.addEventListener('dblclick',e=>{const el=e.target.closest('[data-act="pill"]');if(!el)return;e.preventDefault();const row=el.closest('[data-id]');if(row){const o=byId(row.dataset.id),k=+el.dataset.i;if(o){const fresh=document.querySelector(`#row-${o.id} [data-act="pill"][data-i="${k}"]`)||el;pillEdit(o,k,fresh)}}});
+  document.addEventListener('dblclick',e=>{const el=e.target.closest('[data-act="pill"]');if(!el)return;e.preventDefault();const row=el.closest('[data-id]');if(row){const o=byId(row.dataset.id),k=+el.dataset.i;if(o&&!lockStop(o.id)){const fresh=document.querySelector(`#row-${o.id} [data-act="pill"][data-i="${k}"]`)||el;pillEdit(o,k,fresh)}}});
   document.addEventListener('contextmenu',e=>{const el=e.target.closest('[data-long]');if(!el)return;e.preventDefault();if(lt){clearTimeout(lt);lt=null}longAct(el)});
   // recherche
   const q=document.getElementById('q'),qres=document.getElementById('qres');
