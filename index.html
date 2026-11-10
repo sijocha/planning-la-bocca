@@ -1142,6 +1142,18 @@ button.tag{cursor:pointer}
 .pe-pre .chip{font-size:12px}
 .pe-wrap{display:flex;flex-direction:column}
 .pop .pe-form{min-width:min(320px,calc(100vw - 48px))}
+.qplus{display:flex;gap:6px;align-items:stretch}
+.qplus input[type=number]{flex:1;min-width:0}
+.plus-t{position:relative;display:inline-flex;flex:none}
+.plus-t input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.plus-t span{display:inline-grid;place-items:center;height:32px;padding:0 10px;border:1.5px dashed #FF8A00;color:#c46500;font:700 13px var(--mono);cursor:pointer;background:var(--bg)}
+.plus-t input:checked+span{background:#FF8A00;color:#fff;border-style:solid}
+.plus-t input:focus-visible+span{outline:2px solid var(--edit-ink);outline-offset:2px}
+.plus-h{font-size:11.5px;color:var(--muted)}
+.vplus{font-style:normal;font-weight:800;color:#e07800;margin-left:2px}
+.t.t-plus{border:1.5px dashed #FF8A00;color:#c46500;background:rgba(255,138,0,.12);font-family:var(--mono);font-weight:700}
+.t.t-plus:hover{border-style:solid}
+.mo.t-plus{border:1px dashed #FF8A00;color:#c46500;background:rgba(255,138,0,.12)}
 </style>
 
 <div class="app" id="app">
@@ -1601,14 +1613,14 @@ function rowHTML(o,editors){
     ${ed?`<span class="editby">En cours de modification · ${esc(ed)}</span>`:''}
     <div class="r-time">${esc(o.h)}</div>
     <div class="c r-cl"><button class="r-client" data-act="edit" title="${esc(ouv+(c.note||(c.t==='comptant'?'Client comptant':'Client en compte')))} · modifier">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" title="Client comptant · clic : payé / en attente">${o.pay.paye?'PAYÉ':'€ ATTENTE'}</button>`:''}${o.spec?'<span class="tag spec" title="Mise en avant par le commercial">SPÉCIALE</span>':''}${o.modv?`<button class="tag modv" data-act="modv" title="Modifiée par ${esc(o.modv.by)} à ${esc(o.modv.at)}${role()==='centraliste'?' · clic : valider':''}">MODIF. À VALIDER</button>`:''}</div>
-    <div class="r-vol ${liv>tot+0.01?'over':''}" title="${nC}/${nT} tours"><b>${fmt(liv)}</b>/${fmt(tot)}</div>
+    <div class="r-vol ${liv>tot+0.01?'over':''}" title="${nC}/${nT} tours${o.plus?' · + 1 tour à confirmer':''}"><b>${fmt(liv)}</b>/${fmt(tot)}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}</div>
     <div class="c r-ch">${o.kind==='pour'?`<span class="tag pour" style="margin:0 5px 0 0">POUR ${esc(o.pour.toUpperCase())}</span>`:''}${ch?`<a class="r-site ${ch.nom?'':'adr'}" data-act="map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQ+' 06')}" target="_blank" rel="noopener" title="${esc(siteTitle)}">${esc(siteTxt)}</a>`:''}${ch&&ch.ot?'<span class="tag" title="Adresse unique à ce coulage">OT</span>':''}${o.am?'<span class="tag" title="Déborde sur l\'après-midi">→ AM</span>':''}</div>
     <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule" title="${esc(o.f)}${sap?' · SAP '+sap:' · pas de SAP'}${known(o.f)?'':' · formule non répertoriée'}">${esc(o.f||'Formule ?')}</button></div>
     <div class="r-cam">${cam?`<span class="mo">${esc(cam)}</span>`:'<span class="faint">8x4</span>'}${resaBadge(o)}</div>
     <div class="r-pom">${pom}</div>
     <div class="r-pills" ${o.pills.length>1?'data-more="1"':''}>${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${o.pompe&&o.pompe.city?'<span class="mo bag" title="Citybag à prévoir (chantier avec pompe)">Citybag</span>':''}${pillsRow(o)}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande" title="Statut, modifier, dupliquer…">⋯</button>
-    ${SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours</div>`:`<div class="r-tours">${tours}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button></div>`}
+    ${SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?'<button class="t t-plus" data-act="plus" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">+?</button>':''}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button></div>`}
     ${prefs.vue==='detail'?detLine(o,c,ch,sap):''}
   </article>`;
 }
@@ -1647,10 +1659,10 @@ function rowCompact(o,editors){
     ${ed?`<span class="editby">En cours de modification · ${esc(ed)}</span>`:''}
     <div class="r-time">${esc(o.h)}</div>
     <div class="c r-cl"><button class="r-client" data-act="edit">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" title="${o.pay.paye?'Payé · clic : remettre en attente':'Client comptant · clic : paiement reçu'}">${o.pay.paye?'PAYÉ':'€'}</button>`:''}${o.spec?'<span class="tag spec">SPÉC.</span>':''}</div>
-    <div class="r-vol"><b>${fmt(livre(o))}</b>/${fmt(total(o))}</div>
+    <div class="r-vol"><b>${fmt(livre(o))}</b>/${fmt(total(o))}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}</div>
     <div class="c r-ch">${o.kind==='pour'?`<span class="tag pour" style="margin:0 5px 0 0">${esc(o.pour.toUpperCase())}</span>`:''}${esc(siteName(o))}</div>
     <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule">${esc(o.f||'?')}</button></div>
-    <div class="r-prog" title="${k}/${n} tours chargés">${bar}<span class="mono">${k}/${n}</span>${o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe fait':'Clic : bon de pompe fait'}">${esc(o.pompe.t==='BQA'?'BQA':o.pompe.t+' m')}</button>`+pompeResa(o):''}${o.cam?`<span class="mo">${esc(o.cam)}</span>`+resaBadge(o):''}${o.pills.length?`<button class="tag" data-act="pills-all" title="${esc(o.pills.map(p=>p.t).join(' · '))}">${o.pills.length} info${o.pills.length>1?'s':''}</button>`:''}</div>
+    <div class="r-prog" title="${k}/${n} tours chargés">${bar}<span class="mono">${k}/${n}</span>${o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe fait':'Clic : bon de pompe fait'}">${esc(o.pompe.t==='BQA'?'BQA':o.pompe.t+' m')}</button>`+pompeResa(o):''}${o.cam?`<span class="mo">${esc(o.cam)}</span>`+resaBadge(o):''}${o.plus?'<button class="mo t-plus" data-act="plus" title="Complément à confirmer">+1T ?</button>':''}${o.pills.length?`<button class="tag" data-act="pills-all" title="${esc(o.pills.map(p=>p.t).join(' · '))}">${o.pills.length} info${o.pills.length>1?'s':''}</button>`:''}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande">⋯</button>
   </article>`;
 }
@@ -1684,7 +1696,7 @@ function nowLine(){const n=new Date();return `<div class="now" aria-label="Heure
 
 function cardHTML(o){const st=statut(o),c=cl(o.cl),fam=family(o.f);
   return `<button class="card st-${st} kind-${o.kind}" data-act="focus" data-oid="${o.id}">
-    <span class="c1"><span>${esc(o.h)}</span><span>${fmt(livre(o))}/${fmt(total(o))}</span></span>
+    <span class="c1"><span>${esc(o.h)}</span><span>${fmt(livre(o))}/${fmt(total(o))}${o.plus?' <b class="vplus">+</b>':''}</span></span>
     <span class="c2">${esc(c.n)}</span><span class="c3">${o.kind==='pour'?'Pour '+esc(o.pour)+' · ':''}${esc(siteName(o))}</span>
     <span class="c4 fam-${fam}">${esc(o.f)}</span>
     ${o.pompe||o.cam?`<span class="c3">${o.pompe?esc(pompeLabel(o.pompe)):''}${o.pompe&&o.cam?' · ':''}${esc(o.cam)}</span>`:''}
@@ -2194,6 +2206,8 @@ function act(a,el,o,e){
     case 'edit':return openOrderForm(o);
     case 'menu':return orderMenu(o,el);
     case 'tour':{const t=o.tours[i];if(t.mv)return tourPop(o,i,el);if(!t.s&&!t.p&&!t.c)return platePick(o,i,el);if(!t.s){if(o.date>TODAY){const id=o.id;setEditing(id);return early(o,el,()=>{byId(id).tours[i].s=1})}t.s=1;break}const id=o.id;setEditing(id);return confirmPop(el,'Retirer le stabilo ?',`Tour ${i+1}${t.p?' · '+t.p:''} · ${fmt(t.v)} m³ est noté chargé.`,'Oui, pas chargé',()=>{byId(id).tours[i].s=0},true)}
+    case 'plus':{const id=o.id;setEditing(id);return openPop(el,`<div class="pop-h">Complément à confirmer</div><p class="muted" style="margin:0;font-size:13px">${esc(cl(o.cl).n)} · ${fmt(total(o))} m³ <b>et plus</b> : le client prendra sans doute 1 tour de plus, quantité à confirmer.</p><button class="pop-b on" data-pa="add">Complément confirmé : ajouter le tour…</button><button class="pop-b" data-pa="no">Pas de complément : retirer le [+]</button>`,
+      {add(){const a=popAnchor;byId(id).plus=false;commit();jlog(byId(id).date,`Complément confirmé : ${siteName(byId(id))}`);setTimeout(()=>platePick(byId(id),null,document.querySelector(`#row-${id} .t-add`)||a));return 'close'},no(){byId(id).plus=false;toast('Complément retiré')}})}
     case 'addtour':return platePick(o,null,el);
     case 'pill':o.pills[i].on=!o.pills[i].on;break;
     case 'pill-x':{e.stopPropagation();const id=o.id;setEditing(id);return confirmPop(el,'Supprimer ce commentaire ?',o.pills[i].t,'Oui, supprimer',()=>{byId(id).pills.splice(i,1)},true)}
@@ -2475,7 +2489,7 @@ function openOrderForm(o,opt){
     <div class="q"><div class="ql">Pourquoi<small>Facultatif</small></div><div class="fields"><div class="full">${radios('f-ouv',OUVRAGES,base.ouv)}</div><label class="fl full">Ou en clair (il fait quoi ?)<input id="f-ouvx" value="${esc(OUVRAGES.includes(base.ouv)?'':base.ouv)}" placeholder="Ex. dalle du garage + escalier" autocomplete="off"></label></div></div>
     <div class="q"><div class="ql">Quoi<small>Formule, m³</small></div><div class="fields">
       <label class="fl full">Formule (telle qu'on l'écrit)<input id="f-f" list="dl-f" value="${esc(base.f)}" required autocomplete="off" placeholder="C25/30 D20 S3 XC1 · ou attente formule labo"></label>
-      <label class="fl">Quantité (m³)<input id="f-m3" type="number" step="0.5" min="0.5" value="${esc(m3)}" required inputmode="decimal"></label>
+      <div class="fl">Quantité (m³)<div class="qplus"><input id="f-m3" type="number" step="0.5" min="0.5" value="${esc(m3)}" required inputmode="decimal" aria-label="Quantité en m³"><label class="plus-t" title="Le client prendra sans doute un complément : 1 tour de plus, quantité à confirmer"><input type="checkbox" id="f-plus" ${base.plus?'checked':''}><span>[+]</span></label></div><small class="plus-h">[+] = et plus : 1 tour à confirmer</small></div>
       <label class="fl">N° SAP (facultatif)<input id="f-sap" value="${esc(o?o.sap||'':'')}" inputmode="numeric" placeholder="8 chiffres"></label>
       <div class="full" id="f-hint"></div>
     </div></div>
@@ -2577,7 +2591,7 @@ function saveOrderForm(f){
   if(!o){o={id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),seq:Date.now(),by:author(),tours:[],pills:src?src.pills.filter(p=>!P_COMMENT.includes(p.t)).map(p=>({t:p.t,on:false,by:p.by})):[],kind:src&&src.kind==='pour'?'pour':'cmd',pour:src?src.pour:'',souhait:'',st:null};S.orders.push(o)}
   if(o.camNote){if(!o.pills.some(p=>p.t===o.camNote))o.pills.push({t:o.camNote,on:false,by:o.by||author()})}
   const oldCap=o.tours.length?capOf(o.cam):cap;
-  Object.assign(o,{date:g('f-d').value,h:g('f-h').value,cl:c.id,ch:ch.id,ouv:g('f-ouvx').value.trim()||(ouvEl?ouvEl.value:''),f:fv,sap,cam,camNote:'',tel:g('f-tel').value.trim(),resa:cam?((f.querySelector('input[name="f-resa"]:checked')||{}).value||'todo'):null,pompe,am:g('f-am').checked,spec:g('f-spec').checked});
+  Object.assign(o,{date:g('f-d').value,h:g('f-h').value,cl:c.id,ch:ch.id,ouv:g('f-ouvx').value.trim()||(ouvEl?ouvEl.value:''),f:fv,sap,cam,camNote:'',tel:g('f-tel').value.trim(),resa:cam?((f.querySelector('input[name="f-resa"]:checked')||{}).value||'todo'):null,pompe,am:g('f-am').checked,spec:g('f-spec').checked,plus:g('f-plus').checked});
   if(ap){o.kind='aplacer';o.souhait=(g('f-sh')||{value:''}).value.trim();o.cre=TODAY}
   if(val){o.kind='cmd';delete o.modv}
   if(R!=='centraliste'&&!isNewO&&o.kind==='cmd'){o.modv={by:author(),at:new Date().toTimeString().slice(0,5)}}
