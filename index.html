@@ -972,6 +972,10 @@ body.hb-dragging .hb:hover{max-height:var(--headH)!important;overflow:hidden!imp
 .row.st-attente{border-left-color:#FF8A00!important}
 .row.st-encours{border-left-color:#1E9E4A!important}
 .row.st-terminee{border-left-color:#2F6FD6!important}
+.row.st-attente,.row.st-attente:hover{background-image:linear-gradient(90deg,rgba(255,138,0,.17),rgba(255,138,0,0) 42%)}
+.row.st-terminee,.row.st-terminee:hover{background-image:linear-gradient(90deg,rgba(47,111,214,.15),rgba(47,111,214,0) 42%)}
+.card.st-attente{background-image:linear-gradient(90deg,rgba(255,138,0,.17),rgba(255,138,0,0) 60%)}
+.card.st-terminee{background-image:linear-gradient(90deg,rgba(47,111,214,.15),rgba(47,111,214,0) 60%)}
 .card.st-attente{border-left-color:#FF8A00!important}.card.st-encours{border-left-color:#1E9E4A!important}.card.st-terminee{border-left-color:#2F6FD6!important}
 /* menu du badge : sections séparées, contrastées */
 .pop .ps{display:flex;flex-direction:column;gap:4px;padding:9px 0 8px;border-top:1px solid var(--line-strong)}
@@ -1115,6 +1119,29 @@ table.conv tfoot td{border-top:2px solid var(--ink);background:var(--panel);font
 table.conv tfoot td b{font:700 15px var(--mono)}
 table.conv tfoot .btn{margin-left:6px}
 .tours-t{width:100%;border-collapse:collapse;margin:6px 0;font-size:13.5px}.tours-t td,.tours-t th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}.tours-t td:last-child,.tours-t th:last-child{text-align:right}.tours-t tr.tot td{border-top:2px solid var(--ink);font-weight:600}
+/* infos : liste complète au survol, éditeur */
+.r-pills{overflow:hidden}
+.r-pills .chip:not(.add):not(.more){flex:0 1 auto;min-width:0}
+.r-pills .chip .pt,.plist .chip .pt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.r-pills .chip.add,.r-pills .chip.more{flex:none}
+.chip.more{font:600 11.5px var(--mono);background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button.tag{cursor:pointer}
+.plist{position:fixed;z-index:45;width:max-content;min-width:220px;max-width:min(380px,calc(100vw - 16px));max-height:60vh;overflow:auto;background:var(--panel);border:1px solid var(--ink);box-shadow:var(--shadow);padding:8px;display:flex;flex-direction:column;gap:6px;animation:plin .14s ease-out}
+@keyframes plin{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.plist .pl-h{font:600 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.plist .pl-l{display:flex;flex-direction:column;align-items:stretch;gap:4px}
+.plist .pl-l .chip{justify-content:space-between;white-space:normal;text-align:left;min-height:28px;font-size:13.5px}
+.plist .pl-l .chip .pt{white-space:normal}
+.plist .pl-f{display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:6px}
+.pe{display:flex;flex-direction:column;gap:4px;margin:4px 0}
+.pe-r{display:flex;gap:4px}
+.pe-r input{flex:1;min-width:0;height:32px;border:1px solid var(--line-strong);padding:0 9px;background:var(--bg);color:var(--ink);font-size:14.5px}
+.pe-x{width:32px;height:32px;border:1px solid var(--line-strong);font-size:16px;color:var(--muted);flex:none}
+.pe-x:hover{color:var(--bad-ink);border-color:var(--bad-ink)}
+.pe-pre{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.pe-pre .chip{font-size:12px}
+.pe-wrap{display:flex;flex-direction:column}
+.pop .pe-form{min-width:min(320px,calc(100vw - 48px))}
 </style>
 
 <div class="app" id="app">
@@ -1377,7 +1404,9 @@ let S=null;              // données
 let MODE='loading';      // 'shared' | 'local' | 'loading'
 const prefs=Object.assign({theme:'light',user:null,gate:'',banner:'',vue:'normal'},lsGet(LS_PREF)||{});
 if(prefs.v!==2){prefs.theme='light';prefs.v=2}
-const TODAY=realToday();
+let TODAY=realToday();
+// la page reste souvent ouverte la nuit : la date du jour se met à jour toute seule
+setInterval(()=>{const t=realToday();if(t===TODAY)return;const suivre=view.date===TODAY;TODAY=t;if(suivre)view.date=t;if(S)render(true)},60000);
 const view={tab:'planning',mode:'jour',date:pickStart(),dfilter:(prefs.user&&prefs.user.role!=='centraliste')?'moi':'tous',focus:null,hbOpen:[],adjYear:false};
 function pickStart(){let d=TODAY;if(d<'2026-10-26'||d>'2026-11-13')return '2026-11-03';while(isWE(d))d=addDays(d,1);return d}
 const savePrefs=()=>lsSet(LS_PREF,prefs);
@@ -1577,7 +1606,7 @@ function rowHTML(o,editors){
     <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule" title="${esc(o.f)}${sap?' · SAP '+sap:' · pas de SAP'}${known(o.f)?'':' · formule non répertoriée'}">${esc(o.f||'Formule ?')}</button></div>
     <div class="r-cam">${cam?`<span class="mo">${esc(cam)}</span>`:'<span class="faint">8x4</span>'}${resaBadge(o)}</div>
     <div class="r-pom">${pom}</div>
-    <div class="r-pills">${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${o.pompe&&o.pompe.city?'<span class="mo bag" title="Citybag à prévoir (chantier avec pompe)">Citybag</span>':''}${o.pills.map((p,i)=>`<button class="chip ${p.on?'on':''}" data-act="pill" data-i="${i}" data-long="1" title="Posé par ${esc(p.by||'?')} · clic : fait / à faire · double-clic ou clic long : modifier">${esc(p.t)}<span class="x" data-act="pill-x" data-i="${i}" role="button" aria-label="Retirer">×</span></button>`).join('')}<button class="chip add" data-act="addpill" aria-label="Ajouter une info">+ Info</button></div>
+    <div class="r-pills" ${o.pills.length>1?'data-more="1"':''}>${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${o.pompe&&o.pompe.city?'<span class="mo bag" title="Citybag à prévoir (chantier avec pompe)">Citybag</span>':''}${pillsRow(o)}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande" title="Statut, modifier, dupliquer…">⋯</button>
     ${SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours</div>`:`<div class="r-tours">${tours}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button></div>`}
     ${prefs.vue==='detail'?detLine(o,c,ch,sap):''}
@@ -1621,7 +1650,7 @@ function rowCompact(o,editors){
     <div class="r-vol"><b>${fmt(livre(o))}</b>/${fmt(total(o))}</div>
     <div class="c r-ch">${o.kind==='pour'?`<span class="tag pour" style="margin:0 5px 0 0">${esc(o.pour.toUpperCase())}</span>`:''}${esc(siteName(o))}</div>
     <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule">${esc(o.f||'?')}</button></div>
-    <div class="r-prog" title="${k}/${n} tours chargés">${bar}<span class="mono">${k}/${n}</span>${o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe fait':'Clic : bon de pompe fait'}">${esc(o.pompe.t==='BQA'?'BQA':o.pompe.t+' m')}</button>`+pompeResa(o):''}${o.cam?`<span class="mo">${esc(o.cam)}</span>`+resaBadge(o):''}${o.pills.length?`<span class="tag" title="${esc(o.pills.map(p=>p.t).join(' · '))}">${o.pills.length} info${o.pills.length>1?'s':''}</span>`:''}</div>
+    <div class="r-prog" title="${k}/${n} tours chargés">${bar}<span class="mono">${k}/${n}</span>${o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe fait':'Clic : bon de pompe fait'}">${esc(o.pompe.t==='BQA'?'BQA':o.pompe.t+' m')}</button>`+pompeResa(o):''}${o.cam?`<span class="mo">${esc(o.cam)}</span>`+resaBadge(o):''}${o.pills.length?`<button class="tag" data-act="pills-all" title="${esc(o.pills.map(p=>p.t).join(' · '))}">${o.pills.length} info${o.pills.length>1?'s':''}</button>`:''}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande">⋯</button>
   </article>`;
 }
@@ -1904,6 +1933,7 @@ function whoHTML(){
 let renderPending=false,lastAnim='';
 const migDone=new WeakSet();
 function render(force){
+  plRefresh();
   if(!S)return;
   if(!migDone.has(S)){migDone.add(S);let ch=false;(S.orders||[]).forEach(o=>o.tours.forEach(t=>{if(t.p==='S1'){t.p='FK218';ch=true}else if(t.p==='S2'){t.p='HD470';ch=true}}));if(ch)setTimeout(commit)}
   if(!force&&(!popEl.hidden||!drawerEl.hidden)){renderPending=true;renderChrome();return}
@@ -2125,11 +2155,12 @@ function orderMenu(o,anchor){const id=o.id;setEditing(id);
   openPop(anchor,`<div class="pop-h">${esc(cl(o.cl).n)} · ${esc(siteName(o))}</div>${o.maj?`<p class="muted" style="margin:0;font-size:12.5px">Dernière modification : ${esc(o.maj.by)}, ${esc(dayShort(o.maj.at.slice(0,10)))} à ${esc(hm(o.maj.at.slice(11)))}</p>`:''}<p class="muted" style="margin:0;font-size:12.5px">Saisie par ${esc(o.by||'?')}</p>
     ${role()==='centraliste'?`<div class="pop-l">Statut</div><div class="pop-grid">${[['','Auto'],['attente','En attente'],['encours','En cours'],['terminee','Terminée'],['annulee','Annulée']].map(([k,l])=>`<button class="pop-c txt ${(o.st||'')===k?'on':''}" data-pa="st" data-v="${k}">${l}</button>`).join('')}</div>`:`<button class="pop-b" data-pa="askc">Demander une modification au centraliste…</button>`}
     <button class="pop-b" data-pa="edit">Modifier la commande</button>
+    <button class="pop-b" data-pa="pedit">Modifier les infos${o.pills.length?` (${o.pills.length})`:''}</button>
     <button class="pop-b" data-pa="dup">Dupliquer…</button>
     <button class="pop-b" data-pa="spec">${o.spec?'Retirer la mise en avant':'Mettre en avant (commande spéciale)'}</button>
     <button class="pop-b" data-pa="ask">${role()==='centraliste'?'Demander au commercial ou au labo…':role()==='labo'?'Demander au commercial…':'Demander au labo…'}</button>
     ${role()==='centraliste'?'<button class="pop-b danger" data-pa="del">Supprimer…</button>':''}`,
-  {edit(){setTimeout(()=>openOrderForm(byId(id)));return 'close'},dup(){const a=popAnchor;setTimeout(()=>calPop(a,'Dupliquer vers quel jour ?',d=>{setTimeout(()=>openOrderForm(byId(id),{dup:true,date:d}));return 'close'}));return 'close'},
+  {edit(){setTimeout(()=>openOrderForm(byId(id)));return 'close'},pedit(){const a=popAnchor;setTimeout(()=>pillsPop(a,id));return 'close'},dup(){const a=popAnchor;setTimeout(()=>calPop(a,'Dupliquer vers quel jour ?',d=>{setTimeout(()=>openOrderForm(byId(id),{dup:true,date:d}));return 'close'}));return 'close'},
    spec(){const x=byId(id);x.spec=!x.spec},st(el){const v=el.dataset.v||null,x=byId(id);if(v==='annulee'&&x.st!=='annulee')return confirmPop(null,'Annuler cette commande ?',ordLbl(x),'Oui, annuler la commande',()=>{byId(id).st='annulee';toast('Commande annulée')},true);x.st=v},
    ask(){const a=popAnchor;setTimeout(()=>demPop(a,id));return 'close'},askc(){const a=popAnchor;setTimeout(()=>demPop(a,id,'modif','centraliste'));return 'close'},
    del(){popEl.innerHTML=`<div class="pop-h">Supprimer cette commande ?</div><p class="muted" style="margin:0">${esc(cl(o.cl).n)} · ${esc(siteName(o))} · ${esc(dayShort(o.date))}</p><button class="btn" data-pa="delok" style="color:var(--bad-ink)">Supprimer définitivement</button><button class="pop-b" data-pa="cancel">Annuler</button>`;return 'keep'},
@@ -2148,9 +2179,9 @@ function act(a,el,o,e){
   switch(a){
     case 'prev':return go(view.mode==='semaine'&&view.tab==='planning'?addDays(mondayOf(view.date),-7):step(view.date,-1));
     case 'next':return go(view.mode==='semaine'&&view.tab==='planning'?addDays(mondayOf(view.date),7):step(view.date,1));
-    case 'today':{let d=TODAY;while(isWE(d)&&!hasOrders(d))d=addDays(d,1);return go(d)}
+    case 'today':{TODAY=realToday();view.tab='planning';view.mode='jour';if(isPhone()&&chatOn())chatWin.hidden=true;let d=TODAY;while(isWE(d)&&!hasOrders(d))d=addDays(d,1);return go(d)}
     case 'mode':view.mode=el.dataset.v;view.tab='planning';return render(true);
-    case 'tab':if(isPhone()&&chatOn())chatWin.hidden=true;view.tab=el.dataset.v;return render(true);
+    case 'tab':if(isPhone()&&chatOn())chatWin.hidden=true;if(el.dataset.v==='planning'&&role()==='centraliste'){TODAY=realToday();view.mode='jour';if(view.tab==='planning'||view.date!==TODAY){view.tab='planning';return go(TODAY)}}view.tab=el.dataset.v;return render(true);
     case 'goto':view.date=el.dataset.d;view.mode='jour';view.tab='planning';document.getElementById('qres').hidden=true;return render(true);
     case 'focus':{e.preventDefault();document.getElementById('qres').hidden=true;const x=byId(el.dataset.oid);if(!x)return;view.tab='planning';view.mode='jour';view.date=x.date;view.focus=x.id;return render(true)}
     case 'new':return openOrderForm(null);
@@ -2166,6 +2197,8 @@ function act(a,el,o,e){
     case 'addtour':return platePick(o,null,el);
     case 'pill':o.pills[i].on=!o.pills[i].on;break;
     case 'pill-x':{e.stopPropagation();const id=o.id;setEditing(id);return confirmPop(el,'Supprimer ce commentaire ?',o.pills[i].t,'Oui, supprimer',()=>{byId(id).pills.splice(i,1)},true)}
+    case 'pills-all':return plShow(el);
+    case 'pills-edit':{const id=o.id;return setTimeout(()=>pillsPop(plAnchor&&document.body.contains(plAnchor)?plAnchor:document.querySelector(`#row-${id} .r-menu`)||el,id))}
     case 'addpill':{const id=o.id;setEditing(id);return listPop(el,'Ajouter une info sur la ligne',P_COMMENT,v=>{byId(id).pills.push({t:v,on:false,by:author()})},'Ou texte libre (retard, consigne…)')}
     case 'formule':{const id=o.id;setEditing(id);return formPop(el,'Formule',[{k:'f',label:'Formule (comme sur le papier)',val:o.f,list:S.formules.map(x=>x.f)},{k:'sap',label:'N° SAP (8 chiffres, facultatif)',val:sapOf(o),ph:'60012481'}],v=>{if(v.sap&&!/^\d{8}$/.test(v.sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}const x=byId(id);x.f=v.f;x.sap=v.sap;learnFormule(v.f,v.sap)})}
     case 'pompe':{const id=o.id,b=o.pompe.bon;setEditing(id);return confirmPop(el,b?'Remettre le bon de pompe à faire ?':'Confirmer : bon de pompe fait ?',ordLbl(o),b?'Oui, pas encore fait':'Oui, le bon est fait',()=>{byId(id).pompe.bon=!b;toast(b?'Bon de pompe à faire':'Bon de pompe fait')},b)}
@@ -2474,7 +2507,7 @@ function openOrderForm(o,opt){
           <label><input type="radio" name="f-presa" value="ok" ${p.resa==='ok'||(base.pompe&&!p.resa)?'checked':''}><span class="r-ok">Réservé</span></label>
           <label><input type="radio" name="f-presa" value="todo" ${p.resa==='todo'||!base.pompe?'checked':''}><span class="r-todo">À réserver</span></label></div></div>
       </div>
-      <div class="full"><span class="fl">Infos sur la ligne</span><div class="radios" id="f-pills">${P_COMMENT.slice(0,8).map(t=>`<label><input type="checkbox" value="${esc(t)}" ${base.pills.some(x=>x.t===t)?'checked':''}><span>${esc(t)}</span></label>`).join('')}</div></div>
+      <div class="full pe-wrap" id="f-pills"><span class="fl">Infos sur la ligne</span>${pillsEditor(base.pills)}</div>
       <label class="ck full"><input type="checkbox" id="f-spec" ${base.spec?'checked':''}> Commande spéciale (mise en avant)</label>
       ${role!=='centraliste'&&isNew?`<p class="hint full" style="background:var(--info);color:var(--info-ink)">La commande part au centraliste, qui la valide sur le planning.</p><label class="fl full">Souhait<input id="f-sh" placeholder="Ex. 2 camions ensemble au démarrage"></label>`:''}
       ${role==='centraliste'&&o&&o.kind==='aplacer'&&!opt.dup?`<label class="ck full"><input type="checkbox" id="f-val" checked> Valider et placer au planning en enregistrant</label>`:''}
@@ -2534,7 +2567,7 @@ function saveOrderForm(f){
   if(ch){if(cha&&ch.adr!==cha){ch.adr=cha;delete ch.geo}}
   else{ch={id:'h'+Date.now().toString(36),nom:chn,adr:cha,cl:c.id,ot};const tw=S.chantiers.find(x=>x.geo&&cha&&x.adr===cha);if(tw)ch.geo=tw.geo.slice();S.chantiers.push(ch)}
   const cam=g('f-cam').value.trim();const cap=capOf(cam);
-  const pills=[...f.querySelectorAll('#f-pills input:checked')].map(x=>x.value);
+  const pills=peValues(f);
   const rv=n=>(f.querySelector(`input[name="${n}"]:checked`)||{}).value||'';
   const pompe=g('f-pp').checked?{t:rv('f-pt')||CFG().pompes[0],f:rv('f-pf')||CFG().fourn[0],ml:parseInt(g('f-pml').value)||0,bon:g('f-pb').checked,resa:rv('f-presa')||'todo',beto:g('f-beto').checked,city:g('f-city').checked}:null;
   const ouvEl=f.querySelector('input[name="f-ouv"]:checked');
@@ -2550,8 +2583,7 @@ function saveOrderForm(f){
   if(R!=='centraliste'&&!isNewO&&o.kind==='cmd'){o.modv={by:author(),at:new Date().toTimeString().slice(0,5)}}
   if(c.t==='comptant'&&!o.pay)o.pay={paye:false,note:''};if(c.t!=='comptant')o.pay=null;
   // infos cochées
-  const keep=o.pills.filter(p=>!P_COMMENT.slice(0,8).includes(p.t)||pills.includes(p.t));
-  pills.forEach(t=>{if(!keep.some(p=>p.t===t))keep.push({t,on:false,by:author()})});o.pills=keep;
+  o.pills=mergePills(o.pills,pills);
   // tours : on régénère si la quantité ou la capacité change, en gardant les tours déjà chargés
   if(Math.abs(total(o)-m3)>0.01||oldCap!==cap||!o.tours.length){const nt=genTours(m3,cap);nt.forEach((t,i)=>{const old=o.tours[i];if(old&&!formCtx.src||old&&formCtx.id){t.s=old.s;if(old.p)t.p=old.p;if(old.c)t.c=old.c}});if(!formCtx.id)nt.forEach(t=>{t.s=0;delete t.c});o.tours=nt}
   learnFormule(fv,sap);
@@ -3005,6 +3037,66 @@ async function supaBoot(){
   if(prefs.user)room.presence({nom:prefs.user.nom,role:prefs.user.role,edit:null}).catch(()=>{});
   room.onPeers(ch=>{peers=ch.peers.slice();if(S){if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()}});
   setTimeout(()=>loadPdf().catch(()=>{}),2500);
+}
+
+
+/* =====================================================================
+   Infos sur la ligne : affichage limité, liste complète au survol, éditeur
+   ===================================================================== */
+const pillsLim=o=>{const n=(o.pills||[]).length;return isPhone()||n<=2?n:1};
+function pillChip(p,i){return `<button class="chip ${p.on?'on':''}" data-act="pill" data-i="${i}" data-long="1" title="${esc(p.t)} · posé par ${esc(p.by||'?')} · clic : fait / à faire · double-clic : modifier"><span class="pt">${esc(p.t)}</span><span class="x" data-act="pill-x" data-i="${i}" role="button" aria-label="Retirer">×</span></button>`}
+function pillsRow(o){
+  const all=o.pills||[],lim=pillsLim(o);
+  const more=all.length-lim;
+  return all.slice(0,lim).map(pillChip).join('')
+    +(more>0?`<button class="chip more" data-act="pills-all" title="Voir les ${all.length} infos">+${more}</button>`:'')
+    +`<button class="chip add" data-act="addpill" aria-label="Ajouter une info">+ Info</button>`;
+}
+let plEl=null,plTimer=null,plHideT=null,plAnchor=null;
+function plBuild(o){
+  return `<div class="pl-h">${esc(cl(o.cl).n)} · ${o.pills.length} info${o.pills.length>1?'s':''}</div>
+    <div class="pl-l">${o.pills.map(pillChip).join('')||'<p class="muted" style="margin:0">Aucune info</p>'}</div>
+    <div class="pl-f"><button class="btn sm" data-act="addpill">+ Info</button><button class="btn sm" data-act="pills-edit">Modifier les infos</button></div>`;
+}
+function plShow(anchor){
+  const row=anchor&&anchor.closest('[data-id]');const o=row&&byId(row.dataset.id);if(!o)return;
+  plClose();plAnchor=anchor;
+  plEl=document.createElement('div');plEl.id='plist';plEl.className='plist';plEl.dataset.id=o.id;plEl.innerHTML=plBuild(o);
+  document.body.appendChild(plEl);
+  const r=anchor.getBoundingClientRect(),w=plEl.offsetWidth,h=plEl.offsetHeight;
+  let x=Math.min(r.left,innerWidth-w-8),y=r.bottom+2;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-2);
+  plEl.style.left=Math.max(8,x)+'px';plEl.style.top=y+'px';
+  plEl.addEventListener('click',()=>setTimeout(plClose,0));
+}
+function plClose(){clearTimeout(plTimer);clearTimeout(plHideT);if(plEl){plEl.remove();plEl=null;plAnchor=null}}
+function plRefresh(){if(!plEl)return;const o=byId(plEl.dataset.id);if(!o||!o.pills.length){plClose();return}plEl.innerHTML=plBuild(o)}
+document.addEventListener('mouseover',e=>{
+  const c=e.target.closest&&e.target.closest('.r-pills[data-more]');
+  if(c){clearTimeout(plHideT);const id=c.closest('[data-id]').dataset.id;if(plEl&&plEl.dataset.id===id)return;clearTimeout(plTimer);plTimer=setTimeout(()=>plShow(c),450);return}
+  if(e.target.closest&&e.target.closest('#plist')){clearTimeout(plHideT);return}
+  clearTimeout(plTimer);if(plEl){clearTimeout(plHideT);plHideT=setTimeout(plClose,300)}
+});
+addEventListener('scroll',()=>plClose(),true);
+// éditeur (menu ⋯ et formulaire de commande)
+function peRow(t){return `<div class="pe-r"><input name="pt" value="${esc(t)}" placeholder="Info (retard, consigne…)" maxlength="80" autocomplete="off"><button type="button" class="pe-x" data-pe="x" aria-label="Retirer cette info" title="Retirer">×</button></div>`}
+function pillsEditor(pills){
+  return `<div class="pe">${(pills||[]).map(p=>peRow(p.t)).join('')}${peRow('')}</div>
+    <div class="pe-pre">${P_COMMENT.slice(0,10).map(t=>`<button type="button" class="chip" data-pe="pre" data-v="${esc(t)}">+ ${esc(t)}</button>`).join('')}</div>
+    <button type="button" class="btn sm" data-pe="add" style="align-self:flex-start">+ Ajouter une ligne</button>`;
+}
+function peValues(form){const out=[];form.querySelectorAll('.pe input[name="pt"]').forEach(x=>{const v=x.value.trim();if(v&&!out.includes(v))out.push(v)});return out}
+function mergePills(old,vals){return vals.map((t,i)=>{const same=(old||[]).find(p=>p.t===t);if(same)return same;const prev=(old||[])[i];return {t,on:false,by:prev&&!vals.includes(prev.t)?prev.by:author()}})}
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('[data-pe]');if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  const box=b.closest('form').querySelector('.pe');const k=b.dataset.pe;
+  if(k==='x'){const r=b.closest('.pe-r');if(box.children.length>1)r.remove();else r.querySelector('input').value='';return}
+  if(k==='add'){box.insertAdjacentHTML('beforeend',peRow(''));box.lastElementChild.querySelector('input').focus();return}
+  if(k==='pre'){const v=b.dataset.v;if([...box.querySelectorAll('input')].some(x=>x.value.trim()===v))return;const empty=[...box.querySelectorAll('input')].find(x=>!x.value.trim());if(empty)empty.value=v;else box.insertAdjacentHTML('beforeend',peRow(v));if(![...box.querySelectorAll('input')].some(x=>!x.value.trim()))box.insertAdjacentHTML('beforeend',peRow(''));}
+},true);
+function pillsPop(anchor,id){setEditing(id);
+  openPop(anchor,`<div class="pop-h">Infos sur la ligne</div><form data-pa="psave" class="pe-form">${pillsEditor(byId(id).pills)}<button class="btn primary" type="submit">Enregistrer</button></form>`,
+    {psave(f){const x=byId(id);x.pills=mergePills(x.pills,peValues(f));toast('Infos enregistrées')}});
 }
 
 /* =====================================================================
