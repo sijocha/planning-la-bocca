@@ -93,6 +93,8 @@ a{color:inherit}
 .qres{position:absolute;top:38px;right:0;width:min(380px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line-strong);border-radius:10px;box-shadow:var(--shadow);max-height:60vh;overflow:auto;z-index:30;padding:6px}
 .qres button{display:grid;grid-template-columns:86px 1fr;gap:8px;width:100%;text-align:left;padding:7px 8px;border-radius:6px}
 .qres button:hover{background:var(--sunk)}
+/* Lecture seule : les boutons de saisie disparaissent */
+body.ro [data-act="new"],body.ro .t-add,body.ro .chip.add,body.ro .s-add,body.ro .hb-add,body.ro [data-act="ap-ok"],body.ro [data-act="modv"],body.ro [data-act="presa"],body.ro [data-act="we-open"]{display:none!important}
 .sync{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:13px;font-size:12.5px;font-weight:600;white-space:nowrap}
 .sync::before{content:"";width:7px;height:7px;border-radius:4px;background:currentColor}
 .s-ok{background:var(--ok);color:var(--ok-ink)} .s-bad{background:var(--bad);color:var(--bad-ink)} .s-wait{background:var(--warn);color:var(--warn-ink)} .s-local{background:var(--info);color:var(--info-ink)}
@@ -1843,7 +1845,8 @@ function liensHTML(){
 let room=null,peers=[];
 function editingMap(){const m={};peers.forEach(p=>{if(p.sameTab)return;const pr=p.presence||{};if(pr.edit&&pr.nom)m[pr.edit]=`${pr.nom}${pr.role?' ('+(ROLES[pr.role]||pr.role).toLowerCase()+')':''}`});return m}
 let myEdit=null,myEditAt=0,idleT=null;const LOCK_IDLE=5*60e3;
-function setEditing(id){myEdit=id||null;myEditAt=id?Date.now():0;clearTimeout(idleT);if(id)idleT=setTimeout(lockIdle,LOCK_IDLE);if(room)room.presence({edit:myEdit,editAt:myEditAt}).catch(()=>{})}
+function setEditing(id){if(id&&ME&&ME.role==='lecture')id=null;   // lecture seule : n'ouvre jamais de verrou
+  myEdit=id||null;myEditAt=id?Date.now():0;clearTimeout(idleT);if(id)idleT=setTimeout(lockIdle,LOCK_IDLE);if(room)room.presence({edit:myEdit,editAt:myEditAt}).catch(()=>{})}
 function lockIdle(){if(!myEdit)return;closePop();closeDrawer();toast('5 minutes sans action : la commande est libérée, rien n\'a été enregistré')}
 ['input','pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(myEdit){clearTimeout(idleT);idleT=setTimeout(lockIdle,LOCK_IDLE)}},true));
 const lockedBy=id=>editingMap()[id]||null;
@@ -2056,7 +2059,17 @@ function histNeed(){
   return true;
 }
 function go(d){view.date=d;render(true);window.scrollTo({top:0})}
-function jlog(d,t){const dd=day(d);const n=new Date();dd.journal=dd.journal||[];dd.journal.push({at:`${pad(n.getHours())}:${pad(n.getMinutes())}`,by:author(),t})}
+// Journal : une ligne = un document à part (collection « journal »), jamais réécrit.
+// Il ne grossit plus le document de la journée, que tout le monde modifie.
+function jAdd(d,at,t){const ts=Date.now();const id=`${d}_${ts}_${Math.random().toString(36).slice(2,6)}`;pending['journal/'+id]={body:{d,at,by:author(),t,ts},j:'j'}}
+function jlog(d,t){const n=new Date();jAdd(d,`${pad(n.getHours())}:${pad(n.getMinutes())}`,t);lsSet(LS_PEND,pending);clearTimeout(jlog.t);jlog.t=setTimeout(flush,50)}
+// Lignes d'une journée : anciennes lignes gardées dans la journée + lignes de la base + lignes pas encore envoyées
+async function jget(d){
+  const m=new Map();(dayRO(d).journal||[]).forEach((e,i)=>m.set('old'+i,Object.assign({ts:i},e)));
+  if(DB&&DB.journal)(await DB.journal(d)).forEach(r=>m.set(r.id,r.data));
+  Object.keys(pending).forEach(p=>{const b=pending[p].body;if(p.startsWith('journal/')&&b&&b.d===d)m.set(p.slice(8),b)});
+  return [...m.values()].sort((a,b)=>String(a.at).localeCompare(String(b.at))||(a.ts||0)-(b.ts||0));
+}
 function unmove(id,i){const x=byId(id).tours[i];if(!x)return;
   if(x.mv){const d=byId(x.mv);if(d){const k=d.tours.findIndex(u=>u.rf===id&&(u.p||'')===(x.p||''));if(k>=0){const u=d.tours[k];if(u.free){u.s=0;delete u.p;delete u.rf;delete u.free;delete u.plein;if(u.fv!=null){u.v=u.fv;delete u.fv}}else d.tours.splice(k,1)}}}
   if(x.rf){const s0=byId(x.rf);if(s0){const u=s0.tours.find(u=>u.mv===id&&(u.p||'')===(x.p||''));if(u)delete u.mv}}}
@@ -2202,7 +2215,9 @@ function act(a,el,o,e){
       v=>{if(!v.prod){toast('Indiquez le ciment');return 'keep'}learnList('cim',v.prod,CIMENTS);const hs=[v.hs];const L=day(d).ciments;const ex=L.find(c=>c.prod.toLowerCase()===v.prod.toLowerCase());if(ex)hs.forEach(h=>ex.rec.push({h,s:0}));else L.push({prod:v.prod,rec:hs.map(h=>({h,s:0}))});sortCim(ex||L[L.length-1])})}
     case 'cim-t':{const x=day(dayOf(el)).ciments[i].rec[+el.dataset.k];x.s=x.s?0:1;break}
     case 'cim-tadd':{const d=dayOf(el);const c=day(d).ciments[i];return formPop(el,'Livraison '+c.prod,[{k:'h',label:'Heure',type:'time',val:'12:00',step:900}],v=>{if(!v.h)return 'keep';c.rec.push({h:v.h,s:0});sortCim(c)})}
-    case 'journal':{const j=(dayRO(view.date).journal||[]).slice().reverse();return openPop(el,`<div class="pop-h">Journal · ${esc(dayShort(view.date))}</div>${j.length?`<ol class="journal-l">${j.map(e=>`<li><span class="mono">${esc(e.at)}</span><b>${esc(e.by)}</b> ${esc(e.t)}</li>`).join('')}</ol>`:'<p class="muted" style="margin:0">Chaque modification d\'une commande s\'inscrit ici : qui, quoi, à quelle heure.</p>'}`,{})}
+    case 'journal':{const d=view.date;const h=`<div class="pop-h">Journal · ${esc(dayShort(d))}</div>`;openPop(el,h+'<p class="muted" style="margin:0">Chargement…</p>',{});
+      jget(d).then(l=>{const j=l.reverse();if(popEl.hidden||popAnchor!==el)return;popEl.innerHTML=h+(j.length?`<ol class="journal-l">${j.map(e=>`<li><span class="mono">${esc(e.at)}</span><b>${esc(e.by)}</b> ${esc(e.t)}</li>`).join('')}</ol>`:'<p class="muted" style="margin:0">Chaque modification d\'une commande s\'inscrit ici : qui, quoi, à quelle heure.</p>');placePop()})
+       .catch(()=>{if(!popEl.hidden&&popAnchor===el)popEl.innerHTML=h+'<p class="muted" style="margin:0">Journal indisponible sans connexion.</p>'});return}
     case 'adj-year':view.adjYear=!view.adjYear;return render(true);
     case 'conv-print':return convPrintPop(el);
     // camions
@@ -2222,7 +2237,7 @@ function act(a,el,o,e){
     case 'map':{if(!(window.L&&window.STANDALONE))return;e.preventDefault();return openMap(o)}
     case 'liens-cfg':return openConfig('cfg-liens');
     case 'clot':{const d=dayOf(el);const dd=day(d);const pdf=()=>savePDF(`cloture-la-bocca-${d}.pdf`,()=>planningPDF([d],'A4'));if(dd.cloture){pdf();return}
-      return confirmPop(el,'Clôturer la journée ?',dayShort(d)+' · le PDF de clôture sera téléchargé.','Oui, clôturer',()=>{const x=day(d);const n=new Date();x.cloture={by:author(),at:`${pad(n.getHours())}:${pad(n.getMinutes())}`};x.journal=x.journal||[];x.journal.push({at:x.cloture.at,by:author(),t:'Journée clôturée'});pdf()})}
+      return confirmPop(el,'Clôturer la journée ?',dayShort(d)+' · le PDF de clôture sera téléchargé.','Oui, clôturer',()=>{const x=day(d);const n=new Date();x.cloture={by:author(),at:`${pad(n.getHours())}:${pad(n.getMinutes())}`};jlog(d,'Journée clôturée');pdf()})}
     case 'lien-add':case 'lien-edit':{const L=S.liens=S.liens||[];const x=a==='lien-edit'?L[i]:{cat:'Commandes',n:'',u:''};
       return formPop(el,a==='lien-add'?'Nouveau raccourci':'Modifier le raccourci',[{k:'n',label:'Nom',val:x.n},{k:'u',label:'Adresse (https://…)',val:x.u,ph:'https://forms.gle/…'},{k:'cat',label:'Rubrique',val:x.cat,list:['Commandes','Formulaires','Sécurité','Contacts']},...(a==='lien-edit'?[{k:'del',label:'Supprimer ce raccourci',type:'check',val:false}]:[])],
         v=>{if(v.del){L.splice(i,1);return}if(!v.n)return 'keep';if(v.u&&!/^https?:\/\//i.test(v.u))v.u='https://'+v.u;const y={cat:v.cat||'Commandes',n:v.n,u:v.u};if(a==='lien-add')L.push(y);else L[i]=y})}
@@ -2340,7 +2355,7 @@ function settingsPop(anchor){
    <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button></section>
    <section class="ps"><div class="pop-l">Affichage</div><div class="pop-grid">${[['auto','Auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div></section>
 
-   <section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}${(dayRO(view.date).journal||[]).length?` (${dayRO(view.date).journal.length})`:''}</button></section>
+   <section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}</button></section>
    <section class="ps ps-sync"><div class="pop-l">Synchronisation et état</div><div class="sync-box">${syncDetail()}</div><button class="pop-b" data-pa="force">Forcer la synchronisation</button></section>`,
   {journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
    'lay-reset'(){const k=meKey();const had=prefs.layouts&&prefs.layouts[k];if(had){delete prefs.layouts[k];savePrefs()}applyLayout();toast(had?'Disposition réinitialisée : '+(S.config&&S.config.layout?'celle de la centrale':'celle par défaut'):'Déjà sur la disposition de la centrale');return 'close'},
@@ -2622,9 +2637,10 @@ function summarize(a,b){
   if(stable(a.pills)!==stable(b.pills))r.push('infos de la ligne');
   return r.join(', ')||'modifiée';
 }
-function logLine(o,txt,stamp){const d=day(o.date);d.journal=d.journal||[];d.journal.push({at:stamp,by:author(),t:`${cl(o.cl).n} · ${siteName(o)} : ${txt}`});if(d.journal.length>400)d.journal.splice(0,d.journal.length-400)}
+function logLine(o,txt,stamp){jAdd(o.date,stamp,`${cl(o.cl).n} · ${siteName(o)} : ${txt}`)}
 function extValides(){(S&&S.orders||[]).forEach(o=>(o.tours||[]).forEach(t=>{if(t.c&&!t.s)t.s=1}))}
 function commit(){
+  if(ME&&ME.role==='lecture'&&MODE==='shared'){const m=docsOf();if(Object.keys(m).some(p=>known_(p)&&known_(p)!==stable(m[p]))){toast('Lecture seule : modification impossible');forceSync(true)}return}
   extValides();
   const now=new Date();const stamp=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
   // journal : chaque changement de commande est tracé dans la journée concernée
@@ -2640,27 +2656,85 @@ function commit(){
     if(!IMPORTING&&p.startsWith('days/')&&from&&p.slice(5)<from&&!known_(p))return;   // journée ancienne non chargée : on n'y touche pas
     let j=J[p]||stable(m[p]);if(known_(p)===j)return;
     if(p.startsWith('orders/')){m[p].maj={by:author(),at:TODAY+' '+stamp};j=stable(m[p])}
-    pending[p]={body:clone(m[p]),j};
+    const old=pending[p];   // version de départ : celle sur laquelle la modification a été faite
+    pending[p]={body:clone(m[p]),j,base:old?old.base:(synced[p]||null),ver:old?old.ver:(DB&&DB.ver?DB.ver(p):null)};
   });
   Object.keys(synced).concat(Object.keys(pending)).forEach(p=>{if((p.startsWith('orders/')||p.startsWith('chat/'))&&!m[p]&&!(pending[p]&&pending[p].body===null))pending[p]={body:null,j:null}});
   lsSet(LS_PEND,pending);saveMirror();flush();
 }
 function withTimeout(pr,ms){return Promise.race([pr,new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout'}),ms))])}
+/* Enregistrements simultanés : la base refuse un document modifié par quelqu'un d'autre depuis
+   la version connue (fonction doc_set). La page relit alors la version de la base, fusionne les deux
+   modifications et renvoie. Aucune modification n'est perdue sans prévenir. */
+const isObj=x=>x&&typeof x==='object'&&!Array.isArray(x);
+function merge3(b,m,t){
+  const sm=stable(m),st=stable(t);if(sm===st)return t;
+  const sb=b===undefined?undefined:stable(b);
+  if(sm===sb)return t;if(st===sb)return m;
+  if(isObj(m)&&isObj(t)){const o={},B=isObj(b)?b:{};
+    new Set([...Object.keys(t),...Object.keys(m)]).forEach(k=>{
+      const inM=k in m,inT=k in t,inB=k in B;
+      if(inM&&inT)o[k]=merge3(inB?B[k]:undefined,m[k],t[k]);
+      else if(inM){if(!inB||stable(m[k])!==stable(B[k]))o[k]=m[k]}       // supprimé par l'autre : gardé seulement si je l'ai modifié
+      else if(!inB||stable(t[k])!==stable(B[k]))o[k]=t[k]});            // supprimé par moi : idem
+    return o}
+  if(Array.isArray(m)&&Array.isArray(t))return mergeArr(Array.isArray(b)?b:[],m,t);
+  return m;   // même valeur modifiée des deux côtés : la mienne
+}
+function mergeArr(b,m,t){
+  const ids=a=>a.every(x=>isObj(x)&&x.id!=null);
+  if(ids(m)&&ids(t)&&ids(b)){const B=new Map(b.map(x=>[x.id,x])),T=new Map(t.map(x=>[x.id,x])),M=new Set(m.map(x=>x.id));const out=[];
+    m.forEach(x=>{if(T.has(x.id))out.push(merge3(B.get(x.id),x,T.get(x.id)));else if(!B.has(x.id)||stable(x)!==stable(B.get(x.id)))out.push(x)});
+    t.forEach(x=>{if(!M.has(x.id)&&(!B.has(x.id)||stable(x)!==stable(B.get(x.id))))out.push(x)});
+    return out}
+  if(m.length===t.length&&b.length===m.length)return m.map((x,i)=>merge3(b[i],x,t[i]));   // ex. tours : même place
+  // listes simples : ma liste, moins ce que l'autre a supprimé, plus ce qu'il a ajouté
+  const cnt=a=>{const c=new Map();a.forEach(x=>{const y=stable(x);c.set(y,(c.get(y)||0)+1)});return c};
+  const cb=cnt(b),ct=cnt(t),out=[];const dec=(c,y)=>{if((c.get(y)||0)>0){c.set(y,c.get(y)-1);return true}return false};
+  m.forEach(x=>{const y=stable(x);if(dec(cb,y)){if(dec(ct,y))out.push(x)}else{dec(ct,y);out.push(x)}});
+  t.forEach(x=>{const y=stable(x);if(dec(ct,y)&&!dec(cb,y))out.push(x)});
+  return out;
+}
+async function sendDoc(path,P){
+  let body=P.body,expected=P.ver||null,merged=false;
+  for(let i=0;;i++){
+    try{const ver=await DB.doc(path).set(body,expected);return {ver,body,merged}}
+    catch(e){
+      if(!e||e.code!=='conflict'||i>=3)throw e;
+      const srv=await DB.doc(path).fetch();
+      expected=srv?srv.ver:null;
+      if(srv&&srv.data){const nb=merge3(P.base?JSON.parse(P.base):undefined,body,srv.data);merged=merged||stable(nb)!==stable(body);body=nb}
+    }
+  }
+}
+function applyDoc(path,b){const i=path.indexOf('/'),col=path.slice(0,i),id=path.slice(i+1);
+  if(col==='orders'){S.orders=S.orders.filter(o=>o.id!==id);if(b)S.orders.push(clone(b))}
+  else if(col==='chat'){S.chat=(S.chat||[]).filter(c=>c.id!==id);if(b)S.chat.push(clone(b))}
+  else if(col==='days'){if(b)S.days[id]=clone(b)}
+  else if(col==='ref'&&b)S[id]=clone(b.v)}
 function flush(){
   if(!DB)return;
   Object.keys(pending).forEach(path=>{
     if(inflight[path])return;
-    const {body,j}=pending[path];inflight[path]=true;renderSync();
-    const ref=DB.doc(path);
-    withTimeout(body===null?ref.delete():ref.set(clone(body)),12000).then(()=>{
-      if(pending[path]&&pending[path].j===j)delete pending[path];
-      if(body===null)delete synced[path];else synced[path]=j;
+    const P=pending[path];const {body,j}=P;inflight[path]=true;renderSync();
+    const ref=DB.doc(path),jr=path.startsWith('journal/');
+    const run=body===null?ref.delete():jr?ref.add(body):sendDoc(path,P);
+    withTimeout(run,15000).then(res=>{
       sync.online=true;sync.err='';sync.last=new Date();
+      if(jr){delete pending[path];return}
+      if(body===null){if(pending[path]===P)delete pending[path];delete synced[path];return}
+      const sent=res.body,sj=stable(sent);synced[path]=sj;
+      const cur=pending[path];
+      if(cur===P||(cur&&cur.j===j))delete pending[path];
+      else if(cur&&cur.body){   // modifiée encore pendant l'envoi : on repart de ce qui vient d'être enregistré
+        if(res.merged){cur.body=merge3(body,cur.body,sent);cur.j=stable(cur.body)}
+        cur.base=sj;cur.ver=res.ver}
+      if(res.merged){applyDoc(path,pending[path]?pending[path].body:sent);saveMirror();render();toast('Modification fusionnée avec celle d\'un collègue')}
     }).catch(err=>{
       const c=err&&err.code;
       if(c==='not_granted'||c==='permission_denied'){delete pending[path];if(ME&&ME.role==='lecture')sync.err='Lecture seule : ce compte ne peut pas modifier le planning.';else{toast('Action refusée : réservée au centraliste');clearTimeout(flush.t);flush.t=setTimeout(()=>forceSync(true),300)}}
       else sync.online=false;
-    }).finally(()=>{delete inflight[path];lsSet(LS_PEND,pending);renderSync();if(pending[path]&&pending[path].j!==j&&sync.online)flush()});
+    }).finally(()=>{delete inflight[path];lsSet(LS_PEND,pending);renderSync();if(pending[path]&&pending[path]!==P&&sync.online)flush()});
   });
 }
 function overlayPending(){
@@ -2694,7 +2768,7 @@ function syncHTML(){
   const n=Object.keys(pending).length;const t=sync.last?`${pad(sync.last.getHours())}:${pad(sync.last.getMinutes())}`:'';
   if(MODE==='local')return `<span class="sync s-local" title="Les données restent sur cet appareil">Démo locale</span>`;
   if(MODE!=='shared')return `<span class="sync s-wait">Connexion…</span>`;
-  if(sync.err)return `<span class="sync s-bad" title="${esc(sync.err)}">Lecture seule</span>`;
+  if(sync.err||(ME&&ME.role==='lecture'))return `<span class="sync s-local" title="Ce compte consulte le planning sans pouvoir le modifier">Lecture seule</span>`;
   if(!sync.online||(!navigator.onLine))return `<span class="sync s-bad" title="Vous pouvez continuer à remplir le planning : tout est gardé sur cet appareil et sera envoyé au retour de la connexion.">Hors ligne${n?` · ${n} modif. en attente`:''}</span>`;
   if(n)return `<span class="sync s-wait" title="Envoi des modifications">Envoi… ${n}</span>`;
   if(sync.cache)return `<span class="sync s-wait" title="Copie de cet appareil, en attente du serveur">Copie locale</span>`;
@@ -2906,7 +2980,7 @@ function supaErr(e){const msg=(e&&e.message)||'';const denied=(e&&e.code==='4250
 
 // Même interface que la base précédente : collection(n).onSnapshot(cb) et doc(chemin).set()/delete()
 function supaDb(sb){
-  const cache={},subs={};let chan=null;
+  const cache={},subs={},ver={};let chan=null;   // ver : date de modification connue de chaque document (contrôle des enregistrements simultanés)
   const snap=name=>{const m=cache[name]||new Map();const docs=[...m.entries()].map(([id,d])=>({id,data:()=>d}));return {docs,empty:!docs.length,metadata:{fromCache:false}}};
   const emit=name=>(subs[name]||[]).forEach(s=>{try{s.cb(snap(name))}catch(e){console.error(e)}});
   // Période chargée : les 2 derniers mois et tout l'avenir. Les dates plus anciennes sont chargées à la demande.
@@ -2915,11 +2989,12 @@ function supaDb(sb){
   async function page(build){const all=[];const step=1000;
     for(let from=0;;from+=step){const {data,error}=await build().order('id').range(from,from+step-1);if(error)throw error;all.push(...data);if(data.length<step)break}
     return all}
-  const base=name=>sb.from('documents').select('id,data').eq('collection',name);
+  const base=name=>sb.from('documents').select('id,data,modifie_le').eq('collection',name);
+  const keep=(name,rows)=>{const m=new Map();rows.forEach(r=>{m.set(r.id,r.data);if(r.modifie_le)ver[name+'/'+r.id]=r.modifie_le});return m};
   async function fetchAll(name,from){
-    if(name==='orders'&&from){const [a,b]=await Promise.all([page(()=>base(name).gte('data->>date',from)),page(()=>base(name).eq('data->>kind','aplacer'))]);const m=new Map();a.concat(b).forEach(r=>m.set(r.id,r.data));return m}
-    if(name==='days'&&from)return new Map((await page(()=>base(name).gte('id',from))).map(r=>[r.id,r.data]));
-    return new Map((await page(()=>base(name))).map(r=>[r.id,r.data]));
+    if(name==='orders'&&from){const [a,b]=await Promise.all([page(()=>base(name).gte('data->>date',from)),page(()=>base(name).eq('data->>kind','aplacer'))]);return keep(name,a.concat(b))}
+    if(name==='days'&&from)return keep(name,await page(()=>base(name).gte('id',from)));
+    return keep(name,await page(()=>base(name)));
   }
   async function load(name){lastLoad=Date.now();cache[name]=await fetchAll(name,FROM);emit(name)}
   const fail=(name,e)=>(subs[name]||[]).forEach(s=>s.err&&s.err(supaErr(e)));
@@ -2930,7 +3005,9 @@ function supaDb(sb){
       .on('postgres_changes',{event:'*',schema:'public',table:'documents'},p=>{
         const r=p.eventType==='DELETE'?p.old:p.new;const name=r&&r.collection;if(!name||!subs[name])return;
         const m=cache[name]||(cache[name]=new Map());
-        if(p.eventType==='DELETE'||!inWin(name,r.id,r.data))m.delete(r.id);else m.set(r.id,r.data);
+        if(p.eventType==='DELETE'){m.delete(r.id);delete ver[name+'/'+r.id]}
+        else{const k=name+'/'+r.id;if(r.modifie_le&&ver[k]&&Date.parse(r.modifie_le)<Date.parse(ver[k]))return;   // écho en retard d'une version déjà dépassée
+          if(r.modifie_le)ver[k]=r.modifie_le;if(inWin(name,r.id,r.data))m.set(r.id,r.data);else m.delete(r.id)}
         emit(name);
       })
       .subscribe(st=>{if(st==='SUBSCRIBED'&&Date.now()-lastLoad>4000)reloadAll()});
@@ -2938,7 +3015,9 @@ function supaDb(sb){
   return {
     from:()=>FROM,
     async extend(d){if(d>=FROM)return;FROM=d;await Promise.all(['orders','days'].filter(n=>subs[n]).map(n=>load(n)))},
-    async everything(){const out={};for(const n of ['orders','days','ref','chat'])out[n]=await fetchAll(n,null);return out},
+    ver:path=>ver[path]||null,
+    async everything(){const out={};for(const n of ['orders','days','ref','chat','journal'])out[n]=await fetchAll(n,null);return out},
+    async journal(d){const rows=await page(()=>sb.from('documents').select('id,data').eq('collection','journal').gte('id',d+'_').lt('id',d+'`'));return rows},
     collection(name){return {
       onSnapshot(cb,err){(subs[name]=subs[name]||[]).push({cb,err});ensureChan();load(name).catch(e=>err&&err(supaErr(e)));return ()=>{subs[name]=(subs[name]||[]).filter(s=>s.cb!==cb)}},
       async get(){try{await load(name)}catch(e){throw supaErr(e)}return snap(name)}
@@ -2946,8 +3025,13 @@ function supaDb(sb){
     doc(path){
       const i=path.indexOf('/');const collection=path.slice(0,i),id=path.slice(i+1);
       return {
-        async set(body){const {error}=await sb.from('documents').upsert({collection,id,data:body});if(error)throw supaErr(error);(cache[collection]||(cache[collection]=new Map())).set(id,body)},
-        async delete(){const {error}=await sb.from('documents').delete().eq('collection',collection).eq('id',id);if(error)throw supaErr(error);if(cache[collection])cache[collection].delete(id)},
+        // enregistrement conditionnel : refusé (conflict) si le document a changé depuis la version attendue
+        async set(body,expected){const {data,error}=await sb.rpc('doc_set',{p_collection:collection,p_id:id,p_data:body,p_expected:expected||null});
+          if(error){if(error.code==='40001')throw {code:'conflict'};throw supaErr(error)}
+          ver[path]=data;(cache[collection]||(cache[collection]=new Map())).set(id,body);return data},
+        async add(body){const {error}=await sb.rpc('doc_set',{p_collection:collection,p_id:id,p_data:body,p_expected:null});if(error&&error.code!=='40001')throw supaErr(error)},
+        async fetch(){const {data,error}=await sb.from('documents').select('data,modifie_le').eq('collection',collection).eq('id',id).maybeSingle();if(error)throw supaErr(error);if(data)ver[path]=data.modifie_le;return data?{data:data.data,ver:data.modifie_le}:null},
+        async delete(){const {error}=await sb.from('documents').delete().eq('collection',collection).eq('id',id);if(error)throw supaErr(error);if(cache[collection])cache[collection].delete(id);delete ver[path]},
         async get(){const {data,error}=await sb.from('documents').select('data').eq('collection',collection).eq('id',id).maybeSingle();if(error)throw supaErr(error);return {exists:!!data,data:()=>data&&data.data}}
       };
     }
@@ -2972,7 +3056,7 @@ async function supaLogin(){
   try{await SB.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname,queryParams:{prompt:'select_account'}}})}
   catch(e){toast('Connexion Google impossible pour le moment')}
 }
-async function supaLogout(){try{await SB.auth.signOut()}catch(e){}prefs.user=null;prefs.gate='';savePrefs();try{localStorage.removeItem(LS_MIRROR);localStorage.removeItem(LS_PEND)}catch(e){}location.reload()}
+async function supaLogout(){const n=Object.keys(pending).length;if(n&&!confirm(`${n} modification${n>1?'s':''} pas encore envoyée${n>1?'s':''} au serveur (connexion lente ou coupée).\nEn vous déconnectant maintenant, elle${n>1?'s seront perdues':' sera perdue'}.\n\nSe déconnecter quand même ?`))return;try{await SB.auth.signOut()}catch(e){}prefs.user=null;prefs.gate='';savePrefs();try{localStorage.removeItem(LS_MIRROR);localStorage.removeItem(LS_PEND)}catch(e){}location.reload()}
 
 // Remplace toutes les données partagées (import d'une sauvegarde ou démo)
 function remplacerDonnees(d,label){
@@ -2992,7 +3076,7 @@ async function sauvegardeComplete(){
   if(!DB||!DB.everything){saveFile(`sauvegarde-planning-la-bocca-${TODAY}.json`,JSON.stringify({exporte:new Date().toISOString(),par:author(),donnees:S},null,1));return}
   toast('Préparation de la sauvegarde…');
   try{const all=await DB.everything();const d={orders:[],days:{},chat:[]};
-    all.orders.forEach((v,id)=>{const x=clone(v);x.id=id;d.orders.push(x)});all.days.forEach((v,id)=>{d.days[id]=v});all.chat.forEach(v=>d.chat.push(v));all.ref.forEach((v,id)=>{d[id]=v.v});
+    all.orders.forEach((v,id)=>{const x=clone(v);x.id=id;d.orders.push(x)});all.days.forEach((v,id)=>{d.days[id]=v});all.chat.forEach(v=>d.chat.push(v));all.ref.forEach((v,id)=>{d[id]=v.v});d.journal=[...all.journal.values()];
     d.orders.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
     saveFile(`sauvegarde-planning-la-bocca-${TODAY}.json`,JSON.stringify({exporte:new Date().toISOString(),par:author(),commandes:d.orders.length,du:d.orders[0]?d.orders[0].date:'',au:d.orders.length?d.orders[d.orders.length-1].date:'',donnees:d},null,1));
     toast(`Sauvegarde : ${d.orders.length} commandes`)}
@@ -3022,6 +3106,7 @@ async function supaBoot(){
   SB.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT')location.reload()});
   if(!ME.actif){prefs.user=null;savePrefs();main.innerHTML='<p class="empty">Accès non autorisé.</p>';showGate();return}
   if(prefs.user&&!isAdmin())prefs.user.role=ROLE_UI[ME.role]||'commercial';
+  document.body.classList.toggle('ro',ME.role==='lecture');
   if(!prefs.user||prefs.gate!==TODAY||prefs.email!==ME.email)showGate();
   startShared(supaDb(SB));
   room=supaRoom(SB);
