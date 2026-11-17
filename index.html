@@ -973,17 +973,17 @@ body.hb-dragging .hb:hover{max-height:var(--headH)!important;overflow:hidden!imp
 .aide-b b{font-weight:700}
 @media (max-width:760px){.aide{columns:1}.aide-q{max-width:none}}
 
-/* statut de la commande : barre et dégradé à DROITE de la ligne */
-.row,.card{border-left:1px solid var(--line)!important;border-right:4px solid var(--line-strong)}
-.row.st-attente{border-right-color:#FF8A00!important}
-.row.st-encours{border-right-color:#1E9E4A!important}
-.row.st-terminee{border-right-color:#2F6FD6!important}
-.row.st-annulee{border-right-color:var(--bad-ink)!important}
+/* statut de la commande : barre de couleur à gauche, dégradé à droite */
+.row,.card{border-right:0!important;border-left:4px solid var(--line-strong)!important}
+.row.st-attente{border-left-color:#FF8A00!important}
+.row.st-encours{border-left-color:#1E9E4A!important}
+.row.st-terminee{border-left-color:#2F6FD6!important}
+.row.st-annulee{border-left-color:var(--bad-ink)!important}
 .row.st-attente,.row.st-attente:hover{background-image:linear-gradient(270deg,rgba(255,138,0,.17),rgba(255,138,0,0) 42%)}
 .row.st-terminee,.row.st-terminee:hover{background-image:linear-gradient(270deg,rgba(47,111,214,.15),rgba(47,111,214,0) 42%)}
 .card.st-attente{background-image:linear-gradient(270deg,rgba(255,138,0,.17),rgba(255,138,0,0) 60%)}
 .card.st-terminee{background-image:linear-gradient(270deg,rgba(47,111,214,.15),rgba(47,111,214,0) 60%)}
-.card.st-attente{border-right-color:#FF8A00!important}.card.st-encours{border-right-color:#1E9E4A!important}.card.st-terminee{border-right-color:#2F6FD6!important}.card.st-annulee{border-right-color:var(--bad-ink)!important}
+.card.st-attente{border-left-color:#FF8A00!important}.card.st-encours{border-left-color:#1E9E4A!important}.card.st-terminee{border-left-color:#2F6FD6!important}.card.st-annulee{border-left-color:var(--bad-ink)!important}
 /* menu du badge : sections séparées, contrastées */
 .pop .ps{display:flex;flex-direction:column;gap:4px;padding:9px 0 8px;border-top:1px solid var(--line-strong)}
 .pop .pop-h+.ps{border-top:2px solid var(--ink);margin-top:4px}
@@ -1182,7 +1182,7 @@ button.tag{cursor:pointer}
 .an-v{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
 .an-s small{font:500 11px var(--mono);color:var(--muted);text-align:center;letter-spacing:.02em}
 .an .t,.an .chip,.an .mo,.an .tag{pointer-events:none}
-.an-row{display:flex;gap:12px;align-items:center;min-width:min(320px,90%);padding:7px 12px;border-right:4px solid var(--c);border-left:1px solid var(--line);background:linear-gradient(270deg,color-mix(in srgb,var(--g,var(--c)) 18%,transparent),transparent 50%),var(--panel);font-size:14px}
+.an-row{display:flex;gap:12px;align-items:center;min-width:min(320px,90%);padding:7px 12px;border-left:4px solid var(--c);background:linear-gradient(270deg,color-mix(in srgb,var(--g,var(--c)) 18%,transparent),transparent 50%),var(--panel);font-size:14px}
 .an-list{display:flex;flex-direction:column;gap:4px;min-width:200px;padding:6px;border:1px solid var(--ink);background:var(--panel)}
 .an-q{font:700 15px var(--mono);border:1px solid var(--line-strong);padding:4px 10px;background:var(--panel)}
 .plus-t.on span{background:#FF8A00;color:#fff;border-style:solid}
@@ -1269,6 +1269,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 /* Planning camions : étiquette et camions sur la même ligne */
 .hb-body>.chips{flex-wrap:nowrap;overflow:hidden}
 .hb-body>.chips>*{flex:none}
+.hb-body>*{flex-shrink:0}
 .hb-body>.chips>.lbl{flex:none;min-width:96px}
 .hb:hover .hb-body>.chips,.hb.open .hb-body>.chips,.hb:focus-within .hb-body>.chips{flex-wrap:wrap}
 /* barres de défilement au style du site : fines, carrées, encre sur papier */
@@ -1831,7 +1832,7 @@ function adjHTML(){
 const AIDE=[
  ['Pour commencer',[
   ['tous','Se connecter et changer d\'utilisateur',`<p>À l'ouverture : <b>Se connecter avec Google</b>, avec une adresse inscrite par la centrale. Le <b>rôle</b> (centraliste, commercial, labo, lecture seule) est donné par cette liste. Puis votre <b>prénom</b>, affiché auprès des autres et dans le journal.</p><ul><li>Au poste de la centrale (compte commun) : <b>badge du compte</b> (rond en haut à droite) → <b>Accueil centrale</b> à chaque prise de poste.</li><li>Se déconnecter : badge du compte → <b>Se déconnecter</b>.</li><li>Quand quelqu'un modifie une commande, les autres voient « En cours de modification » avec son nom.</li></ul>`],
-  ['tous','Lire l\'écran du jour',`<p>Une ligne par chantier, de haut en bas dans l'ordre des heures, regroupées en <b>Matin</b> et <b>Après-midi</b>. Le trait rouge marque l'heure actuelle.</p><ul><li><b>Ligne 1</b> : heure, client, m³ livrés / total, chantier, formule, type de camion, pompe, commentaires à droite.</li><li><b>Ligne 2</b> : les bulles des tours (une bulle = un camion).</li><li>Au-dessus du premier chantier : nombre de camions et de chantiers, et la légende prévu · chargé · complément.</li><li>Une ligne sur deux est sur fond gris pour mieux suivre.</li><li><b>Barre à droite</b> de la ligne = statut : orange en attente, vert en cours, bleu terminée.</li></ul>`],
+  ['tous','Lire l\'écran du jour',`<p>Une ligne par chantier, de haut en bas dans l'ordre des heures, regroupées en <b>Matin</b> et <b>Après-midi</b>. Le trait rouge marque l'heure actuelle.</p><ul><li><b>Ligne 1</b> : heure, client, m³ livrés / total, chantier, formule, type de camion, pompe, commentaires à droite.</li><li><b>Ligne 2</b> : les bulles des tours (une bulle = un camion).</li><li>Au-dessus du premier chantier : nombre de camions et de chantiers, et la légende prévu · chargé · complément.</li><li>Une ligne sur deux est sur fond gris pour mieux suivre.</li><li><b>Barre à gauche</b> de la ligne = statut : orange en attente, vert en cours, bleu terminée.</li></ul>`],
   ['tous','Changer de jour, de semaine ou de vue',`<ul><li><b>‹ ›</b> autour de la date, ou les flèches <b>← →</b> du clavier. Sur tablette : glisser vers la gauche ou la droite.</li><li>Clic sur la <b>grande date</b> : calendrier ou date tapée pour aller à un jour précis. <b>Aujourd'hui</b> pour revenir.</li><li><b>Jour / Semaine</b> en haut à gauche.</li><li><b>Sur téléphone</b> : les commandes sont en vue simple avec la formule ; un <b>appui sur une commande</b> affiche ses chargements (tours) et tous ses détails, un nouvel appui à gauche (sur l'heure) la referme.</li><li>Sur ordinateur, en bas : <b>Simple</b> (lignes serrées), <b>Normal</b>, <b>Détaillé</b> (téléphone, notes, commandes annulées).</li><li><b>Recherche</b> « Client ou chantier » en haut : clic sur un résultat pour y aller.</li></ul>`]]],
  ['Commandes',[
   ['tous','Saisir une commande',`<ol><li><b>+ Commande</b> en haut à droite (ou la touche <b>N</b>).</li><li>Remplir : client, date et heure, m³, chantier ou adresse, formule, type de camion (8x4, SP6, SP4) et nombre, pompe, paiement (comptant ou en compte), commentaires.</li><li><b>Enregistrer</b>. Les tours sont créés selon le volume.</li></ol><p>Une note libre (« Prendre 1 journée ») va en commentaire. Si la centrale est fermée sur l'heure choisie, une alerte rouge s'affiche : un second clic sur Enregistrer place quand même la commande.</p>`],
