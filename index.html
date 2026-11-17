@@ -1239,6 +1239,26 @@ table.conv th,table.conv td{overflow:hidden;text-overflow:ellipsis}
 .mo:not(.on):not(.warn):not(.bad):not(.bag){background-color:color-mix(in srgb,var(--ink) 5%,transparent)}
 .lk-r,.aide-d{background-color:color-mix(in srgb,var(--ink) 3%,var(--panel))}
 .phviews button:not(.on){background-color:color-mix(in srgb,var(--ink) 5%,transparent)}
+
+/* téléphone : ligne simple, appui = détails de cette commande seulement */
+@media (max-width:760px){
+  .phviews{display:none!important}
+  .row.ph{cursor:pointer}
+  .row.ph:not(.open)>.r-fo,.row.ph:not(.open)>.r-cam,.row.ph:not(.open)>.r-pom,.row.ph:not(.open)>.r-mo,.row.ph:not(.open)>.r-tel,.row.ph:not(.open)>.r-pills{display:none!important}
+  .row.ph:not(.open){grid-template-areas:"time client vol menu" "time site site site" "time tours tours tours"!important}
+  .row.ph.open{grid-template-areas:"time client vol menu" "time site site site" "time form form form" "time cam pom pom" "time tel tel tel" "time pills pills pills" "time tours tours tours" "time det det det"!important;background:color-mix(in srgb,var(--ink) 4%,var(--panel))!important;box-shadow:inset 0 0 0 1px var(--ink)}
+  .row.ph>.r-tours.ph-t{display:flex!important;grid-area:tours;flex-wrap:wrap;gap:3px;height:auto!important;padding:3px 6px 2px!important;border:0!important;align-items:center}
+  .row.ph:not(.open)>.r-tours.ph-t .t:not(.on){display:none}
+  .row.ph:not(.open)>.r-tours.ph-t:not(:has(.t.on)) .t{display:none}
+  .ph-t .t{height:22px;min-width:auto;padding:0 6px;gap:3px;font-size:11px;pointer-events:none}
+  .ph-t .t small{font:500 10px var(--mono)}
+  .ph-t .ph-n{font:500 11px var(--mono);color:var(--muted);margin-left:4px}
+  .row.ph.open>.r-det{display:flex!important;grid-area:det;padding:4px 6px 6px!important;font-size:12.5px}
+  .row.ph>.r-time{position:relative}
+  .row.ph.open>.r-time::after{content:"▲";position:absolute;left:6px;bottom:4px;font-size:9px;color:var(--muted)}
+  .row.ph:not(.open)>.r-time::after{content:"▼";position:absolute;left:6px;bottom:4px;font-size:9px;color:var(--faint)}
+  .row.ph>.r-time{min-height:44px}
+}
 </style>
 
 <div class="app" id="app">
@@ -1540,6 +1560,7 @@ function footHTML(iso){
 }
 
 /* ---------- une ligne = un chantier ---------- */
+const phOpen=new Set();
 function rowHTML(o,editors){
   if(prefs.vue==='simple'&&!isPhone())return rowCompact(o,editors);
   const SIM=simple();
@@ -1558,7 +1579,9 @@ function rowHTML(o,editors){
   const ed=editors[o.id];
   const ouv=o.ouv?`${o.ouv} · `:'';
   const nC=TR(o).filter(t=>t.s).length,nT=TR(o).length;
-  return `<article class="row ${DET2?'det2':''} st-${st} kind-${o.kind} ${ed?'editing':''}" data-id="${o.id}" id="row-${o.id}">
+  const PH=isPhone(),OPEN=PH&&phOpen.has(o.id);
+  const phT=PH?`<div class="r-tours ph-t" aria-label="Tours">${o.tours.length?o.tours.map((t,i)=>`<span class="t ${t.s?'on':''} ${t.c?'ext':''} ${t.mv?'mv':''} ${t.rf?'rf':''}" title="Tour ${i+1} · ${fmt(t.v)} m³ · ${t.s?'chargé':'prévu'}${t.p?' · '+esc(t.p):''}${t.c?' · '+esc(t.c):''}"><b>${fmt(t.v)}</b>${t.c?`<small>${esc(t.c)}</small>`:t.p?`<small>${esc(t.p)}</small>`:''}</span>`).join(''):'<span class="faint">Aucun tour</span>'}<span class="ph-n">${nC}/${nT} chargé${nC>1?'s':''}</span></div>`:'';
+  return `<article class="row ${DET2&&!PH?'det2':''} st-${st} kind-${o.kind} ${ed?'editing':''} ${PH?'ph':''} ${OPEN?'open':''}" data-id="${o.id}" id="row-${o.id}">
     ${ed?`<span class="editby">Verrouillée · ${esc(ed)} modifie</span>`:''}
     <div class="r-time">${esc(o.h)}</div>
     <div class="c r-cl"><button class="r-client" data-act="edit" title="${esc(ouv+(c.note||(c.t==='comptant'?'Client comptant':'Client en compte')))} · modifier">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" title="Client comptant · clic : payé / en attente">${o.pay.paye?'PAYÉ':'€ ATTENTE'}</button>`:''}${o.spec?'<span class="tag spec" title="Mise en avant par le commercial">SPÉCIALE</span>':''}${o.modv?`<button class="tag modv" data-act="modv" title="Modifiée par ${esc(o.modv.by)} à ${esc(o.modv.at)}${role()==='centraliste'?' · clic : valider':''}">MODIF. À VALIDER</button>`:''}</div>
@@ -1569,8 +1592,8 @@ function rowHTML(o,editors){
     <div class="r-pom">${pom}</div>
     <div class="r-pills" ${o.pills.length>1?'data-more="1"':''}>${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${o.pompe&&o.pompe.city?'<span class="mo bag" title="Citybag à prévoir (chantier avec pompe)">Citybag</span>':''}${pillsRow(o)}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande" title="Statut, modifier, dupliquer…">⋯</button>
-    ${SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button></div>`}
-    ${prefs.vue==='detail'?detLine(o,c,ch,sap):''}
+    ${PH?phT:SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button></div>`}
+    ${prefs.vue==='detail'||OPEN?detLine(o,c,ch,sap):''}
   </article>`;
 }
 function pompeResa(o){const p=o.pompe;if(!p||!p.resa)return '';return p.resa==='ok'?'<span class="resa ok" title="Pompe réservée">RÉSERVÉ</span>':`<button class="resa todo" data-act="presa" title="${peutValider()?'Clic : valider la réservation de la pompe':'En attente de réservation'}">À RÉSERVER</button>`}
@@ -1790,7 +1813,7 @@ const AIDE=[
  ['Pour commencer',[
   ['tous','Se connecter et changer d\'utilisateur',`<p>À l'ouverture : <b>Se connecter avec Google</b>, avec une adresse inscrite par la centrale. Le <b>rôle</b> (centraliste, commercial, labo, lecture seule) est donné par cette liste. Puis votre <b>prénom</b>, affiché auprès des autres et dans le journal.</p><ul><li>Au poste de la centrale (compte commun) : <b>badge du compte</b> (rond en haut à droite) → <b>Accueil centrale</b> à chaque prise de poste.</li><li>Se déconnecter : badge du compte → <b>Se déconnecter</b>.</li><li>Quand quelqu'un modifie une commande, les autres voient « En cours de modification » avec son nom.</li></ul>`],
   ['tous','Lire l\'écran du jour',`<p>Une ligne par chantier, de haut en bas dans l'ordre des heures, regroupées en <b>Matin</b> et <b>Après-midi</b>. Le trait rouge marque l'heure actuelle.</p><ul><li><b>Ligne 1</b> : heure, client, m³ livrés / total, chantier, formule, type de camion, pompe, commentaires à droite.</li><li><b>Ligne 2</b> : les bulles des tours (une bulle = un camion).</li><li>Au-dessus du premier chantier : nombre de camions et de chantiers, et la légende prévu · chargé · complément.</li><li>Une ligne sur deux est sur fond gris pour mieux suivre.</li><li><b>Barre à droite</b> de la ligne = statut : orange en attente, vert en cours, bleu terminée.</li></ul>`],
-  ['tous','Changer de jour, de semaine ou de vue',`<ul><li><b>‹ ›</b> autour de la date, ou les flèches <b>← →</b> du clavier. Sur tablette : glisser vers la gauche ou la droite.</li><li>Clic sur la <b>grande date</b> : calendrier ou date tapée pour aller à un jour précis. <b>Aujourd'hui</b> pour revenir.</li><li><b>Jour / Semaine</b> en haut à gauche.</li><li>En bas (sur téléphone : juste au-dessus des boutons) : <b>Simple</b> (lignes serrées), <b>Normal</b>, <b>Détaillé</b> (téléphone, notes, commandes annulées).</li><li><b>Recherche</b> « Client ou chantier » en haut : clic sur un résultat pour y aller.</li></ul>`]]],
+  ['tous','Changer de jour, de semaine ou de vue',`<ul><li><b>‹ ›</b> autour de la date, ou les flèches <b>← →</b> du clavier. Sur tablette : glisser vers la gauche ou la droite.</li><li>Clic sur la <b>grande date</b> : calendrier ou date tapée pour aller à un jour précis. <b>Aujourd'hui</b> pour revenir.</li><li><b>Jour / Semaine</b> en haut à gauche.</li><li><b>Sur téléphone</b> : les commandes sont en vue simple avec les tours chargés ; un <b>appui sur une commande</b> affiche tous ses détails, un nouvel appui à gauche (sur l'heure) la referme.</li><li>Sur ordinateur, en bas : <b>Simple</b> (lignes serrées), <b>Normal</b>, <b>Détaillé</b> (téléphone, notes, commandes annulées).</li><li><b>Recherche</b> « Client ou chantier » en haut : clic sur un résultat pour y aller.</li></ul>`]]],
  ['Commandes',[
   ['tous','Saisir une commande',`<ol><li><b>+ Commande</b> en haut à droite (ou la touche <b>N</b>).</li><li>Remplir : client, date et heure, m³, chantier ou adresse, formule, type de camion (8x4, SP6, SP4) et nombre, pompe, paiement (comptant ou en compte), commentaires.</li><li><b>Enregistrer</b>. Les tours sont créés selon le volume.</li></ol><p>Une note libre (« Prendre 1 journée ») va en commentaire. Si la centrale est fermée sur l'heure choisie, une alerte rouge s'affiche : un second clic sur Enregistrer place quand même la commande.</p>`],
   ['tous','Modifier, dupliquer, annuler une commande',`<ul><li>Menu <b>…</b> au bout de la ligne : <b>Modifier la commande</b>, <b>Dupliquer…</b> sur d'autres dates, statut (automatique, en attente, en cours, terminée, annulée), supprimer.</li><li>Clic sur la <b>formule</b> pour la changer ; le code SAP s'affiche au survol.</li><li>Annuler ou supprimer demande une <b>confirmation</b>. Les commandes annulées ne se voient qu'en vue Détaillé.</li></ul>`],
@@ -1942,7 +1965,7 @@ function render(force){
   const ak=t+view.mode+view.date;const anim=ak!==lastAnim;lastAnim=ak;m.classList.remove('anim');
   m.innerHTML=t==='planning'?(view.mode==='jour'?dayHTML(view.date):weekHTML()):t==='demandes'?demandesHTML():t==='agregats'?aggTabHTML():t==='camions'?camionsHTML():t==='liens'?liensHTML():t==='aide'?aideHTML():adjHTML();
   document.getElementById('foot').innerHTML=footHTML(view.date);
-  {let pv=document.getElementById('phviews');const on=isPhone()&&view.tab==='planning'&&view.mode==='jour'&&['centraliste','commercial'].includes(role());
+  {let pv=document.getElementById('phviews');const on=false;
    if(on&&!pv){pv=document.createElement('div');pv.id='phviews';pv.className='phviews';pv.setAttribute('role','group');pv.setAttribute('aria-label','Affichage des chantiers');document.body.appendChild(pv)}
    if(pv){pv.hidden=!on;document.body.classList.toggle('has-phv',on);if(on)pv.innerHTML=[['simple','Simple'],['normal','Normal'],['detail','Détaillé']].map(([k,l])=>`<button class="${(prefs.vue||'normal')===k?'on':''}" data-act="vue" data-v="${k}">${l}</button>`).join('')}}
   {const wb=document.getElementById('watchbar');const it=watchItems(view.date);const sl=wb.querySelector('.wb-in');const x=sl?sl.scrollLeft:0;
@@ -3264,6 +3287,8 @@ function boot(){
 
   document.addEventListener('click',e=>{
     if(suppressClick){suppressClick=false;e.preventDefault();e.stopPropagation();return}
+    {const rw=isPhone()&&e.target.closest&&e.target.closest('.row.ph[data-id]');
+     if(rw&&popEl.hidden&&!e.target.closest('button,a,input,select,textarea,label,[data-act]:not(.r-time)')){const id=rw.dataset.id;if(phOpen.has(id))phOpen.delete(id);else phOpen.add(id);render(true);return}}
     const pa=e.target.closest('[data-pa]');
     if(pa&&popEl.contains(pa)&&pa.tagName!=='FORM'){e.preventDefault();runPop(pa);return}
     if(!popEl.hidden&&!popEl.contains(e.target))closePop();
