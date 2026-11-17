@@ -1406,7 +1406,8 @@ let TODAY=realToday();
 // la page reste souvent ouverte la nuit : la date du jour se met à jour toute seule
 setInterval(()=>{const t=realToday();if(t===TODAY)return;const suivre=view.date===TODAY;TODAY=t;if(suivre)view.date=t;if(S)render(true)},60000);
 const view={tab:'planning',mode:'jour',date:pickStart(),dfilter:(prefs.user&&prefs.user.role!=='centraliste')?'moi':'tous',focus:null,hbOpen:[],adjYear:false};
-function pickStart(){let d=TODAY;if(d<'2026-10-26'||d>'2026-11-13')return '2026-11-03';while(isWE(d))d=addDays(d,1);return d}
+/* le planning s'ouvre toujours sur la date du jour (téléphone comme ordinateur) */
+function pickStart(){return TODAY}
 const savePrefs=()=>lsSet(LS_PREF,prefs);
 const cl=id=>(S.clients.find(c=>c.id===id)||{n:'?',t:'compte'});
 const chan=id=>S.chantiers.find(c=>c.id===id)||null;
