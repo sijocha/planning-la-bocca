@@ -1189,6 +1189,45 @@ button.tag{cursor:pointer}
 @keyframes an4{0%,21%{opacity:1;transform:none}25%,97%{opacity:0;transform:translateY(3px)}100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.an-s{animation:none;opacity:0}.an-s:last-child{opacity:1}}
 .row.editing{cursor:not-allowed}.row.editing>*:not(.editby){opacity:.55}.row.editing .editby{opacity:1}
+
+/* téléphone : barre de navigation pleine largeur, sans blancs */
+@media (max-width:760px){
+  .side{padding:0!important;height:calc(54px + env(safe-area-inset-bottom,0px))!important;min-height:0!important;overflow:hidden!important;gap:0!important;display:flex!important}
+  .side .nav-b,.side .nav-b.main{flex:1 1 0!important;min-width:0!important;width:auto!important;height:54px!important;margin:0!important;padding:0 2px!important;border:0!important;border-left:1px solid var(--line)!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important}
+  .side .nav-b:first-of-type{border-left:0!important}
+  .side .nav-b .nt{display:block!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px!important;letter-spacing:.02em!important}
+  .side .nav-b .n{position:absolute!important;top:3px;right:4px;margin:0!important}
+  /* vues Simple / Normal / Détaillé au-dessus des boutons */
+  .phviews{position:fixed;left:0;right:0;bottom:calc(54px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;background:var(--bg);border-top:1px solid var(--ink)}
+  .phviews[hidden]{display:none!important}
+  .phviews button{flex:1 1 0;height:38px;font:600 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-left:1px solid var(--line)}
+  .phviews button:first-child{border-left:0}
+  .phviews button.on{background:var(--ink);color:var(--bg)}
+  body.has-phv .watchbar{bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+  body.has-phv .work{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+  body.has-phv:has(.watchbar:not([hidden])) .work{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))!important}
+  body.has-phv .toast{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+}
+@media (min-width:761px){.phviews{display:none!important}}
+@media (max-width:760px){.day-stats{flex-wrap:wrap;gap:6px 14px}.day-stats .legend{display:none!important}html,body{overflow-x:hidden;max-width:100%}}
+/* mode d'emploi : fermer à côté du titre, boutons dessous, recherche dessous */
+.aide-top{display:flex;flex-direction:column;gap:10px;margin:8px 0 14px;max-width:880px}
+.aide-t{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.aide-t h2{margin:0;font-size:22px}
+.aide-t .aide-x{margin-left:auto}
+.aide-top>p{margin:0}
+.aide-bt{display:flex;gap:8px;flex-wrap:wrap}
+.aide-top .aide-q{max-width:none;width:100%;flex:none}
+@media (max-width:760px){.aide-t .aide-x{height:34px;padding:0 12px}}
+/* pannes : cases sous l'état de la centrale */
+.chip.panne{background:var(--bad);border-color:var(--bad-ink);color:var(--bad-ink);white-space:normal}
+.chip.panne .pn-b{margin-left:6px;padding:0 6px;height:19px;border:1px solid currentColor;font:600 10.5px var(--mono);text-transform:uppercase;letter-spacing:.04em}
+.chip.panne .pn-b:hover{background:var(--bad-ink);color:#fff}
+.chip.panne.fin{background:transparent;color:var(--muted);border-color:var(--line-strong);border-style:dashed}
+/* Convocation : jour étroit, camions en colonnes égales */
+table.conv{table-layout:fixed}
+table.conv th:first-child,table.conv td.d{width:96px}
+table.conv th,table.conv td{overflow:hidden;text-overflow:ellipsis}
 </style>
 
 <div class="app" id="app">
@@ -1245,6 +1284,7 @@ const AG0=['Grasse','Nice','Vallauris','Tourrettes'];
 const FOURN=['Lafarge','Fica','BST','GCA'];
 const TAILLES=['17','20','24','26','28','32','36','42','47','52','BQA'];
 const OUVRAGES=['Dalle','Dallage','Radier','Fondations','Voile','Poteaux-poutres','Escalier','Chape','Désactivé','Balayé','Piscine','Voirie','Gros béton','Propreté','Autre'];
+const pPre=o=>P_COMMENT.filter(t=>(o&&o.pompe)||!/citybag|b[ée]tobag/i.test(t));
 const P_COMMENT=['Prendre 1 journée','Appeler avant départ','Appeler chaque camion','Attendre le client','Citybag 1er camion','Bétobag 1er camion','1er camion ferme pour escalier','Formule … en premier','Chef de chantier : ','Retard 1 h','Vidange longue 45 min+','Prévoir 1 h 30 par rotation','Accès difficile'];
 const P_ENTRETIEN=['Graissage malaxeur','Graissage ensilage','Graissage tapis peseur','Nettoyage déchargeur','Nettoyage chargeur','Chargeur fosse','Chaussette ciment','Trappe à ciment','Trappe malaxeur','Piquage trappe malaxeur','Piquage pales malaxeur','Kärcher malaxeur','Rangement local stock','État stocks colorants','Enlèvement bennes : 1x Benne','Enlèvement bennes : 2x Bennes'];
 const ZONES=['La piste','Le labo','Le stock','Local adjuvants','Zone ensilage intérieur','Organes de pesée'];
@@ -1435,7 +1475,8 @@ function headHTML(iso){
   const dd=dayRO(iso);
   const ech=sens=>dd.ech.map((e,i)=>e.sens!==sens?'':`<span class="chip ${sens==='recu'?'info':''}">${esc(e.c)} ×${e.n} <small>${esc(e.per)}</small>${chipX('ech-x',i,e.c)}</span>`).join('');
   const et=dd.etat||{k:'ouverte'};
-  const etW=closedWin(iso);const etChip=et.k==='ouverte'?`<button class="chip ok" data-act="etat">Ouverte</button>`:`<button class="chip bad" data-act="etat">${et.k==='fermee'?'Fermée':'Panne'} ${esc(etW?etW.lbl:'')}${et.t?' · '+esc(et.t):''}</button>`;
+  const etW=etatWin(iso);const etChip=(!et.k||et.k==='ouverte'||et.k==='panne')?`<button class="chip ok" data-act="etat" title="État de la centrale · ajouter une panne">Ouverte</button>`:`<button class="chip bad" data-act="etat">Fermée ${esc(etW?etW.lbl:'')}${et.t?' · '+esc(et.t):''}</button>`;
+  const pn=pannesOn(iso);const pannesLine=pn.length?`<div class="chips pannes">${pn.map((x,i)=>`<span class="chip panne ${x.fin?'fin':''}" title="${x.fin?'Panne terminée à '+esc(hm(x.fin))+(x.finBy?' · '+esc(x.finBy):''):'Panne en cours'}${x.by?' · notée par '+esc(x.by):''}"><b>Panne</b> ${esc(panneLbl(x))}${x.t?' · '+esc(x.t):''}${x.fin?' · terminée':''}${x.fin?'':`<button class="pn-b" data-act="panne-end" data-i="${i}" title="La panne est réparée : fermer la case">Terminée</button>`}<button class="x" data-act="panne-x" data-i="${i}" aria-label="Annuler cette panne" title="Annuler (panne notée par erreur)">×</button></span>`).join('')}</div>`:'';
   const det=ech('donne')+convChips(iso,'pret')+convChips(iso,'ailleurs');
   return `<div class="hb-w" data-box="ech"><div class="hb" data-act="hb">
       <div class="hb-h"><span class="lbl" title="Rester appuyé sur le bord ou le titre pour déplacer">// Planning camions</span></div>
@@ -1448,7 +1489,7 @@ function headHTML(iso){
     </div></div>
     <div class="hb-w" data-box="vie"><div class="hb" data-act="hb">
       <div class="hb-h"><span class="lbl" title="Rester appuyé sur le bord ou le titre pour déplacer">// Journal de bord</span>${etChip}</div>
-      <div class="hb-body">
+      <div class="hb-body">${pannesLine}
       ${dd.presents.length?`<div class="chips">${dd.presents.map((p,i)=>`<span class="chip ${p.rempl?'warn':''}" title="${p.rempl?'Remplaçant':'Centraliste'}"><b>${esc(p.n)}</b><small>${esc(p.pl)}${p.rempl?' · remplaçant':''}</small>${role()==='centraliste'?chipX('pres-x',i,p.n):''}</span>`).join('')}</div>`:''}
       ${dd.passation.length?`<div class="chips">${dd.passation.map((p,i)=>`<button class="chip ${p.on?'on':''}" data-act="pass" data-i="${i}" title="Posé par ${esc(p.by||'?')} · clic : fait / à faire">${esc(p.t)}<small>${esc(p.by||'')}</small><span class="x" data-act="pass-x" data-i="${i}" role="button" aria-label="Retirer">×</span></button>`).join('')}</div>`:''}
       ${dd.events.length||dd.labo.length?`<div class="chips">${dd.events.map((e,i)=>`<span class="chip ${e.k==='prod'?'prod':'dash'}">${e.h?`<b>${esc(hm(e.h))}</b> `:''}${esc(e.t)}${chipX('ev-x',i,e.t)}</span>`).join('')}${dd.labo.map((l,i)=>`<span class="chip ok">Labo ${esc(hm(l.h))} · ${esc(l.t)}${chipX('labo-x',i,l.t)}</span>`).join('')}</div>`:''}
@@ -1565,11 +1606,19 @@ function rowCompact(o,editors){
 }
 
 /* créneau de fermeture ou de panne de la centrale : [début, fin, libellé] en minutes */
-function closedWin(iso){const et=(dayRO(iso)||{}).etat;if(!et||et.k==='ouverte')return null;const p=et.per||'journee';
+function etatWin(iso){const et=(dayRO(iso)||{}).etat;if(!et||et.k==='ouverte'||et.k==='panne')return null;const p=et.per||'journee';
   const w=p==='matin'?[0,720,'le matin']:p==='aprem'?[720,1440,'l\'après-midi']:p==='horaires'&&et.de&&et.a?[mins(et.de),mins(et.a),hm(et.de)+' – '+hm(et.a)]:[0,1440,'toute la journée'];
   return {de:w[0],a:w[1],lbl:w[2],k:et.k,t:et.t||''}}
-const inWin=(h,w)=>!!w&&mins(h)>=w.de&&mins(h)<w.a;
-const winTxt=w=>`Centrale ${w.k==='panne'?'en panne':'fermée'} ${w.lbl}${w.t?' · '+w.t:''}`;
+/* pannes du jour : chacune est une case (de, à, cause), en cours ou terminée */
+const pannesOn=iso=>((dayRO(iso)||{}).pannes||[]);
+const panneLbl=x=>`${hm(x.de)} – ${hm(x.a)}`;
+/* fenêtre(s) sans chargement : fermeture de la centrale + pannes */
+function closedWin(iso){const L=[];const e=etatWin(iso);if(e)L.push(e);
+  pannesOn(iso).forEach(x=>{if(x.de&&x.a&&mins(x.a)>mins(x.de))L.push({de:mins(x.de),a:mins(x.a),lbl:panneLbl(x)+(x.fin?' (terminée)':''),k:'panne',t:x.t||''})});
+  if(!L.length)return null;if(L.length===1)return L[0];
+  return {de:Math.min(...L.map(x=>x.de)),a:Math.max(...L.map(x=>x.a)),lbl:L.map(x=>x.lbl).join(' · '),k:L.some(x=>x.k==='fermee')?'fermee':'panne',t:L.map(x=>x.t).filter(Boolean).join(' · '),list:L}}
+const inWin=(h,w)=>!!w&&(w.list?w.list.some(x=>mins(h)>=x.de&&mins(h)<x.a):mins(h)>=w.de&&mins(h)<w.a);
+const winTxt=w=>w.list?`Centrale ${w.list.map(x=>(x.k==='panne'?'en panne ':'fermée ')+x.lbl+(x.t?' · '+x.t:'')).join(' ; ')}`:`Centrale ${w.k==='panne'?'en panne':'fermée'} ${w.lbl}${w.t?' · '+w.t:''}`;
 function dayHTML(iso){
   if(isWE(iso)&&!weOpen(iso)&&!hasOrders(iso))return `<div class="we-panel"><p class="lbl">// Week-end</p><h2>${esc(dayLong(iso))}</h2><p>La centrale n'a pas de journée planning ce jour.</p>${role()==='centraliste'?`<button class="btn primary" data-act="we-open" data-d="${iso}">Créer une journée planning ce jour</button><p class="muted">Ouverture exceptionnelle : le jour s'ajoute au planning et à la navigation.</p>`:'<p class="muted">Une commande passée ce jour proposera de créer l\'ouverture.</p>'}</div>`;
   const os=ordersOn(iso).filter(o=>prefs.vue==='detail'||statut(o)!=='annulee');const editors=editingMap();
@@ -1678,7 +1727,7 @@ function camionsHTML(){
   const mo=view.date.slice(0,7),y=+mo.slice(0,4),m=+mo.slice(5,7),nd=new Date(Date.UTC(y,m,0)).getUTCDate();
   const ds=[];for(let i=1;i<=nd;i++){const d=`${mo}-${pad(i)}`;if(!isWE(d)||weOpen(d)||hasOrders(d))ds.push(d)}
   const mn=MOISL[m-1];
-  return `<div class="sec-h"><h2>Convocations camions 8x4</h2><div class="mnav"><button class="ib" data-act="cmonth" data-v="-1" aria-label="Mois précédent">‹</button><b>${esc(mn.charAt(0).toUpperCase()+mn.slice(1))} ${y}</b><button class="ib" data-act="cmonth" data-v="1" aria-label="Mois suivant">›</button></div><p>Le mois complet. Une centrale indiquée = premier chargement de 7,5 m³ là-bas. Clic droit sur un camion pour le modifier.</p><button class="btn sm" data-act="plaque-add">+ Camion</button><button class="btn sm" data-act="conv-print">Imprimer ${esc(mn)} (rempli ou vide)</button></div>
+  return `<div class="sec-h"><h2>Convocation</h2><div class="mnav"><button class="ib" data-act="cmonth" data-v="-1" aria-label="Mois précédent">‹</button><b>${esc(mn.charAt(0).toUpperCase()+mn.slice(1))} ${y}</b><button class="ib" data-act="cmonth" data-v="1" aria-label="Mois suivant">›</button></div><p>Le mois complet. Une centrale indiquée = premier chargement de 7,5 m³ là-bas. Clic droit sur un camion pour le modifier.</p><button class="btn sm" data-act="plaque-add">+ Camion</button><button class="btn sm" data-act="conv-print">Imprimer ${esc(mn)} (rempli ou vide)</button></div>
   <div class="tbl-wrap"><table class="conv zebra"><thead><tr><th>Jour</th>${pl.map(p=>`<th class="plq" data-plq="${esc(p.c)}" title="Clic droit pour modifier · repère sur les bulles : ${esc(p.c)}">${esc(plDisp(p))}</th>`).join('')}<th>1er chargement ailleurs</th></tr></thead><tbody>
   ${ds.map(d=>{const cv=S.convocs[d]||{};const g={};pl.forEach(p=>{const x=cv[p.c];if(x&&x.st!=='abs'&&x.dep&&x.dep!==CENTRALE)g[x.dep]=(g[x.dep]||0)+7.5});
     return `<tr class="${d===TODAY?'today':''} ${dow(d)===1?'wk1':''} ${isWE(d)?'we':''}"><td class="d">${esc(dayShort(d))}</td>${pl.map(p=>{const x=cv[p.c];return `<td><button class="cell ${x&&x.st==='abs'?'abs':''}" data-act="conv" data-d="${d}" data-p="${esc(p.c)}">${!x?'<span class="muted">—</span>':x.st==='abs'?'<b class="abs-t">ABSENT</b>':`<b>${esc(hm(x.h))}${x.dep&&x.dep!==CENTRALE?' '+esc(x.dep):''}</b>${x.st==='pret'?`<span class="dep pret">Prêté → ${esc(x.pc)} · ${esc(x.per)}</span>`:''}${x.aff?`<span class="aff">${esc(x.aff)}</span>`:''}`}</button></td>`}).join('')}
@@ -1730,7 +1779,7 @@ const AIDE=[
  ['Pour commencer',[
   ['tous','Se connecter et changer d\'utilisateur',`<p>À l'ouverture : <b>Se connecter avec Google</b>, avec une adresse inscrite par la centrale. Le <b>rôle</b> (centraliste, commercial, labo, lecture seule) est donné par cette liste. Puis votre <b>prénom</b>, affiché auprès des autres et dans le journal.</p><ul><li>Au poste de la centrale (compte commun) : <b>badge du compte</b> (rond en haut à droite) → <b>Changer de prénom au poste</b> à chaque prise de poste.</li><li>Se déconnecter : badge du compte → <b>Se déconnecter</b>.</li><li>Quand quelqu'un modifie une commande, les autres voient « En cours de modification » avec son nom.</li></ul>`],
   ['tous','Lire l\'écran du jour',`<p>Une ligne par chantier, de haut en bas dans l'ordre des heures, regroupées en <b>Matin</b> et <b>Après-midi</b>. Le trait rouge marque l'heure actuelle.</p><ul><li><b>Ligne 1</b> : heure, client, m³ livrés / total, chantier, formule, type de camion, pompe, commentaires à droite.</li><li><b>Ligne 2</b> : les bulles des tours (une bulle = un camion).</li><li>Au-dessus du premier chantier : nombre de camions et de chantiers, et la légende prévu · chargé · complément.</li><li>Une ligne sur deux est sur fond gris pour mieux suivre.</li><li><b>Barre à gauche</b> de la ligne = statut : orange en attente, vert en cours, bleu terminée.</li></ul>`],
-  ['tous','Changer de jour, de semaine ou de vue',`<ul><li><b>‹ ›</b> autour de la date, ou les flèches <b>← →</b> du clavier. Sur tablette : glisser vers la gauche ou la droite.</li><li>Clic sur la <b>grande date</b> : calendrier ou date tapée pour aller à un jour précis. <b>Aujourd'hui</b> pour revenir.</li><li><b>Jour / Semaine</b> en haut à gauche.</li><li>En bas : <b>Simple</b> (lignes serrées), <b>Normal</b>, <b>Détaillé</b> (téléphone, notes, commandes annulées).</li><li><b>Recherche</b> « Client ou chantier » en haut : clic sur un résultat pour y aller.</li></ul>`]]],
+  ['tous','Changer de jour, de semaine ou de vue',`<ul><li><b>‹ ›</b> autour de la date, ou les flèches <b>← →</b> du clavier. Sur tablette : glisser vers la gauche ou la droite.</li><li>Clic sur la <b>grande date</b> : calendrier ou date tapée pour aller à un jour précis. <b>Aujourd'hui</b> pour revenir.</li><li><b>Jour / Semaine</b> en haut à gauche.</li><li>En bas (sur téléphone : juste au-dessus des boutons) : <b>Simple</b> (lignes serrées), <b>Normal</b>, <b>Détaillé</b> (téléphone, notes, commandes annulées).</li><li><b>Recherche</b> « Client ou chantier » en haut : clic sur un résultat pour y aller.</li></ul>`]]],
  ['Commandes',[
   ['tous','Saisir une commande',`<ol><li><b>+ Commande</b> en haut à droite (ou la touche <b>N</b>).</li><li>Remplir : client, date et heure, m³, chantier ou adresse, formule, type de camion (8x4, SP6, SP4) et nombre, pompe, paiement (comptant ou en compte), commentaires.</li><li><b>Enregistrer</b>. Les tours sont créés selon le volume.</li></ol><p>Une note libre (« Prendre 1 journée ») va en commentaire. Si la centrale est fermée sur l'heure choisie, une alerte rouge s'affiche : un second clic sur Enregistrer place quand même la commande.</p>`],
   ['tous','Modifier, dupliquer, annuler une commande',`<ul><li>Menu <b>…</b> au bout de la ligne : <b>Modifier la commande</b>, <b>Dupliquer…</b> sur d'autres dates, statut (automatique, en attente, en cours, terminée, annulée), supprimer.</li><li>Clic sur la <b>formule</b> pour la changer ; le code SAP s'affiche au survol.</li><li>Annuler ou supprimer demande une <b>confirmation</b>. Les commandes annulées ne se voient qu'en vue Détaillé.</li></ul>`],
@@ -1745,7 +1794,7 @@ const AIDE=[
  ['Centrale',[
   ['tous','Ouvrir la centrale un week-end',`<p>Le week-end n'a pas de journée planning. En allant sur un samedi ou un dimanche, le bouton <b>Créer une journée planning ce jour</b> ouvre la centrale exceptionnellement (avec confirmation). Une commande saisie un week-end propose aussi la création : second clic sur Enregistrer.</p>`],
   ['centraliste','Journal de bord',`<ul><li>Centralistes présents et horaires, remplaçant : <b>+ Présent</b>.</li><li>Passation entre postes : <b>+ Passation</b> ; clic pour la marquer faite.</li><li>Entretien et RDV labo : <b>+ Événement</b>, <b>+ RDV labo</b>.</li><li><b>+ Changement produit</b> : ciment, adjuvant, agrégat, silo ou formule, avec l'heure ; noté aussi au journal.</li><li>Tous les boutons <b>+</b> sont sur la ligne du bas de chaque encadré.</li></ul>`],
-  ['tous','Centrale fermée ou en panne',`<ol><li>Clic sur l'état (<b>Ouverte</b>) dans le Journal de bord.</li><li>Choisir Fermée ou Panne, puis <b>Quand</b> : journée, matin, après-midi ou horaires précis, et la cause.</li></ol><p>Le créneau passe en <b>rouge</b> ; les commandes restent. Le centraliste voit les tours à replacer et le bouton <b>Replacer les tours dans une autre centrale…</b>. Le commercial voit le même rouge avant de placer un chantier.</p>`],
+  ['tous','Centrale fermée ou en panne',`<p><b>Fermée</b> : clic sur l'état (<b>Ouverte</b>) dans le Journal de bord → Fermée, puis <b>Quand</b> (journée, matin, après-midi ou horaires) et la cause.</p><p><b>Panne</b> : même fenêtre → Panne, avec les heures et la cause. La panne s'ajoute comme une <b>case rouge</b> sous l'état de la centrale (plusieurs pannes possibles dans la journée) :</p><ul><li><b>Terminée</b> : la centrale repart ; la case se ferme et l'heure de fin est notée.</li><li><b>×</b> : annule une panne notée par erreur.</li></ul><p>Pendant une fermeture ou une panne, les commandes du créneau passent en rouge et le centraliste peut <b>replacer les tours dans une autre centrale</b>. Le commercial voit le même rouge.</p>`],
   ['centraliste','Agrégats et ciments',`<ul><li>Une ligne par <b>semi</b> : clic sur son nom pour mettre le prénom du chauffeur, l'heure, une remarque.</li><li>Au début, seule la première semi est notée ; <b>[+]</b> après le dernier produit pour ajouter le suivant demandé au chauffeur.</li><li>Clic sur un tour = <b>reçu</b> (stabilo). Clic long = modifier le produit ou la carrière, supprimer.</li><li>Au repos, l'encadré montre la dernière semi reçue ; au survol, tout s'affiche.</li><li>Ligne <b>Ciments</b> en haut : <b>+ Ciment</b> (en bas du cadre) → nom du ciment, puis l'heure dans la liste (6 h à 22 h, toutes les 30 min).</li><li><b>+ Semi</b> au bout de la ligne de la première semi.</li><li>Page <b>03 Agrégats</b> : la semaine entière, à remplir la veille.</li></ul>`],
   ['centraliste','Adjuvants',`<p>Page <b>05 Adjuvants</b> : les commandes et livraisons des 3 dernières semaines, et le tableau de l'année.</p>`],
   ['centraliste','Raccourcis',`<p>Page <b>06 Raccourcis</b> : sites et formulaires utiles (agrégats, pompe, SP4, bon de pompe, accidents…), rangés par thème. Ils se modifient dans les Réglages.</p>`]]],
@@ -1754,7 +1803,7 @@ const AIDE=[
   ['tous','Page À traiter (02 Demandes)',`<p>Tout ce qui attend une action, rangé par thème, du plus urgent en haut au moins urgent en bas. Une catégorie n'apparaît que si elle a quelque chose à traiter :</p><ol><li>Placement de chantier (commandes du commercial)</li><li>Modifications à valider</li><li>Pompes (réservation, bon de pompe, BQA)</li><li>Camions à réserver (SP4, SP6)</li><li>Paiements comptant</li><li>Formules et labo</li><li>Modifications de commande, chantiers et clients, autres demandes</li></ol><p>Chaque ligne a son bouton d'action (Réservée, Bon fait, Paiement reçu, Traité…). Les demandes traitées passent <b>en gris tout en bas</b>. Filtres : Tout, Pour moi, Envoyées.</p>`],
   ['tous','Chat de la centrale',`<p>Bouton <b>Chat</b> en bas à droite : une fenêtre s'ouvre. Toutes les personnes connectées au planning y écrivent (Entrée pour envoyer, Maj + Entrée pour aller à la ligne). Un chiffre orange signale les nouveaux messages.</p><ul><li>Une <b>réponse à une demande</b> est aussi envoyée dans le chat.</li><li>Les messages sont gardés <b>7 jours</b> puis s'effacent ; les réponses restent attachées à leur demande.</li></ul>`],
   ['tous','Lire une bulle de tour',`<p>En vue <b>Détaillé</b> et à l'impression, chaque bulle montre le <b>cubage chargé en haut</b> et la <b>plaque en bas</b>.</p><ul><li><b>Vert plein</b> : chargé · <b>contour</b> : prévu · <b>pointillé</b> : complément (moins qu'un camion plein).</li><li><b>Gris-vert</b> : chargé par une autre centrale (son nom en bas) · <b>bleu</b> : camion replacé.</li><li><b>Orange « ? / +1T »</b> : le client prendra sans doute 1 tour de plus ([+] à la saisie).</li><li><b>+</b> au bout des bulles : ajouter un tour. Le cubage est prérempli à un camion plein (7,5 m³ ou le maximum du camion) ; corrigez-le pour un complément.</li></ul>`],
-  ['tous','Commentaires (pastilles)',`<ul><li><b>+ Info</b> sur la ligne : pastilles toutes prêtes ou texte libre.</li><li>Clic sur une pastille pour la modifier ; <b>×</b> pour la supprimer (avec confirmation).</li></ul>`]]],
+  ['tous','Commentaires (pastilles)',`<ul><li><b>+ Info</b> sur la ligne : pastilles toutes prêtes ou texte libre. « Citybag 1er camion » et « Bétobag 1er camion » ne sont proposés que sur les chantiers avec pompe.</li><li>Clic sur une pastille pour la modifier ; <b>×</b> pour la supprimer (avec confirmation).</li></ul>`]]],
  ['Disposition de l\'écran',[
   ['centraliste','Déplacer les trois encadrés du haut',`<ol><li><b>Rester appuyé</b> un instant sur le bord ou le titre d'un encadré (Planning camions, Journal de bord, Agrégats). Le contour devient orange.</li><li>Sans relâcher, glisser à gauche ou à droite des autres encadrés.</li><li>Glisser vers le bas de l'écran : <b>les trois encadrés passent ensemble en bas</b> de la page ; vers le haut, ils remontent.</li><li>Relâcher. La disposition est gardée pour vous. <b>Échap</b> pendant le geste annule.</li></ol><p>Les lignes du planning ne bougent jamais.</p>`],
   ['tous','Ouvrir ou fermer ce mode d\'emploi',`<p>Il s'ouvre depuis le <b>badge du compte</b> → <b>Aide</b> → <b>Mode d'emploi</b> : un onglet s'ajoute au menu de gauche. Pour le fermer : <b>clic droit</b> sur l'onglet, ou <b>× Fermer l'onglet</b> en haut de cette page.</p>`],
@@ -1825,9 +1874,10 @@ const AIDE_ANIM={
   'Ligne « À surveiller »':()=>anS([[`<span class="chip bad">Paiement · MARTIN</span><span class="chip info">2 à placer</span>`,'Ce qui demande une action aujourd\'hui'],[`<span class="chip info">2 à placer</span><span class="chip warn">Pompe à réserver</span>`,'Clic sur une alerte : la ligne concernée s\'ouvre']])
 };
 function aideHTML(){const ce=role()==='centraliste';
-  return `<div class="sec-h"><h2>Mode d'emploi</h2><p>Un dépliant par élément : cliquez sur un titre pour l'ouvrir.</p>
-   <input class="aide-q" type="search" placeholder="Que voulez-vous faire ? (ex. plaque, paiement, réinitialiser)" aria-label="Chercher dans le mode d'emploi" data-act="aide-q">
-   <button class="btn sm" data-act="aide-all" data-v="1">Tout ouvrir</button><button class="btn sm" data-act="aide-all" data-v="0">Tout fermer</button><button class="btn sm" data-act="aide-close" title="Le rouvrir : badge du compte → Mode d'emploi">× Fermer l'onglet</button></div>
+  return `<div class="aide-top"><div class="aide-t"><h2>Mode d'emploi</h2><button class="btn sm aide-x" data-act="aide-close" title="Le rouvrir : badge du compte → Mode d'emploi">× Fermer l'onglet</button></div>
+   <p class="muted">Un dépliant par élément : cliquez sur un titre pour l'ouvrir.</p>
+   <div class="aide-bt"><button class="btn sm" data-act="aide-all" data-v="1">Tout ouvrir</button><button class="btn sm" data-act="aide-all" data-v="0">Tout fermer</button></div>
+   <input class="aide-q" type="search" placeholder="Que voulez-vous faire ? (ex. plaque, paiement, réinitialiser)" aria-label="Chercher dans le mode d'emploi" data-act="aide-q"></div>
    <div class="aide">${AIDE.map(([g,L])=>{const it=L.filter(x=>ce||x[0]==='tous');return it.length?`<section class="aide-g"><h3>${esc(g)}</h3>${it.map(([w,t,b])=>`<details class="aide-d"><summary><span>${esc(t)}</span>${w==='centraliste'&&ce?'':''}</summary><div class="aide-b">${AIDE_ANIM[t]?AIDE_ANIM[t]():''}${b}</div></details>`).join('')}</section>`:''}).join('')}
    <p class="aide-none muted" hidden>Rien trouvé : essayez un autre mot.</p></div>`}
 document.addEventListener('input',e=>{if(!e.target.matches||!e.target.matches('.aide-q'))return;const q=e.target.value.trim().toLowerCase();let n=0;
@@ -1881,6 +1931,9 @@ function render(force){
   const ak=t+view.mode+view.date;const anim=ak!==lastAnim;lastAnim=ak;m.classList.remove('anim');
   m.innerHTML=t==='planning'?(view.mode==='jour'?dayHTML(view.date):weekHTML()):t==='demandes'?demandesHTML():t==='agregats'?aggTabHTML():t==='camions'?camionsHTML():t==='liens'?liensHTML():t==='aide'?aideHTML():adjHTML();
   document.getElementById('foot').innerHTML=footHTML(view.date);
+  {let pv=document.getElementById('phviews');const on=isPhone()&&view.tab==='planning'&&view.mode==='jour'&&['centraliste','commercial'].includes(role());
+   if(on&&!pv){pv=document.createElement('div');pv.id='phviews';pv.className='phviews';pv.setAttribute('role','group');pv.setAttribute('aria-label','Affichage des chantiers');document.body.appendChild(pv)}
+   if(pv){pv.hidden=!on;document.body.classList.toggle('has-phv',on);if(on)pv.innerHTML=[['simple','Simple'],['normal','Normal'],['detail','Détaillé']].map(([k,l])=>`<button class="${(prefs.vue||'normal')===k?'on':''}" data-act="vue" data-v="${k}">${l}</button>`).join('')}}
   {const wb=document.getElementById('watchbar');const it=watchItems(view.date);const sl=wb.querySelector('.wb-in');const x=sl?sl.scrollLeft:0;
    wb.hidden=!it.length;wb.innerHTML=it.length?`<span class="lbl">// À surveiller <b>${it.length}</b></span><div class="wb-in">${it.join('')}</div>`:'';
    const ni=wb.querySelector('.wb-in');if(ni){ni.scrollLeft=x;ni.addEventListener('wheel',e=>{if(ni.scrollWidth<=ni.clientWidth)return;e.preventDefault();ni.scrollLeft+=(Math.abs(e.deltaY)>Math.abs(e.deltaX)?e.deltaY:e.deltaX)},{passive:false})}}
@@ -2158,7 +2211,7 @@ function act(a,el,o,e){
     case 'pill-x':{e.stopPropagation();const id=o.id;setEditing(id);return confirmPop(el,'Supprimer ce commentaire ?',o.pills[i].t,'Oui, supprimer',()=>{byId(id).pills.splice(i,1)},true)}
     case 'pills-all':return plShow(el);
     case 'pills-edit':{const id=o.id;return setTimeout(()=>pillsPop(plAnchor&&document.body.contains(plAnchor)?plAnchor:document.querySelector(`#row-${id} .r-menu`)||el,id))}
-    case 'addpill':{const id=o.id;setEditing(id);return listPop(el,'Ajouter une info sur la ligne',P_COMMENT,v=>{byId(id).pills.push({t:v,on:false,by:author()})},'Ou texte libre (retard, consigne…)')}
+    case 'addpill':{const id=o.id;setEditing(id);return listPop(el,'Ajouter une info sur la ligne',pPre(o),v=>{byId(id).pills.push({t:v,on:false,by:author()})},'Ou texte libre (retard, consigne…)')}
     case 'formule':{const id=o.id;setEditing(id);return formPop(el,'Formule',[{k:'f',label:'Formule (comme sur le papier)',val:o.f,list:S.formules.map(x=>x.f)},{k:'sap',label:'N° SAP (8 chiffres, facultatif)',val:sapOf(o),ph:'60012481'}],v=>{if(v.sap&&!/^\d{8}$/.test(v.sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}const x=byId(id);x.f=v.f;x.sap=v.sap;learnFormule(v.f,v.sap)})}
     case 'pompe':{const id=o.id,b=o.pompe.bon;setEditing(id);return confirmPop(el,b?'Remettre le bon de pompe à faire ?':'Confirmer : bon de pompe fait ?',ordLbl(o),b?'Oui, pas encore fait':'Oui, le bon est fait',()=>{byId(id).pompe.bon=!b;toast(b?'Bon de pompe à faire':'Bon de pompe fait')},b)}
     case 'pay':{const id=o.id,p=o.pay.paye;setEditing(id);return confirmPop(el,p?'Remettre le paiement en attente ?':'Confirmer : paiement reçu ?',ordLbl(o),p?'Oui, pas encore payé':'Oui, le client a payé',()=>{byId(id).pay.paye=!p;toast(p?'Paiement en attente':'Paiement validé')},p)}
@@ -2202,7 +2255,12 @@ function act(a,el,o,e){
       return listPop(el,'Planning camions',['Renfort (vient à la centrale)','Détachement (nombre de camions)','Camion prêté (plaque)','Convoqué dans une autre centrale','Camion absent'],go)}
 
     case 'ech-x':day(dayOf(el)).ech.splice(i,1);break;
-    case 'etat':{const d=dayOf(el);const et=dayRO(d).etat||{};return formPop(el,'État de la centrale',[{k:'k',label:'État',type:'select',opts:[['ouverte','Ouverte'],['fermee','Fermée'],['panne','Panne']],val:et.k||'ouverte'},{k:'per',label:'Quand',type:'select',opts:[['journee','Toute la journée'],['matin','Le matin'],['aprem','L\'après-midi'],['horaires','Horaires précis']],val:et.per||'journee'},{k:'de',label:'Si horaires : de',type:'time',step:900,val:et.de||'10:00'},{k:'a',label:'à',type:'time',step:900,val:et.a||'12:00'},{k:'t',label:'Cause',val:et.t||'',ph:'Ex. tapis peseur, coupure EDF'}],v=>{if(v.k==='ouverte'){day(d).etat={k:'ouverte',t:''};return}if(v.per==='horaires'&&!(v.de&&v.a&&mins(v.a)>mins(v.de))){toast('Indiquez une heure de fin après le début');return 'keep'}day(d).etat={k:v.k,t:v.t,per:v.per,de:v.per==='horaires'?v.de:'',a:v.per==='horaires'?v.a:''};jlog(d,winTxt(closedWin(d)))})}
+    case 'etat':{const d=dayOf(el);const et=dayRO(d).etat||{};return formPop(el,'État de la centrale',[{k:'k',label:'État',type:'select',opts:[['ouverte','Ouverte'],['fermee','Fermée'],['panne','Panne']],val:et.k||'ouverte'},{k:'per',label:'Quand',type:'select',opts:[['journee','Toute la journée'],['matin','Le matin'],['aprem','L\'après-midi'],['horaires','Horaires précis']],val:et.per||'journee'},{k:'de',label:'Si horaires : de',type:'time',step:900,val:et.de||'10:00'},{k:'a',label:'à',type:'time',step:900,val:et.a||'12:00'},{k:'t',label:'Cause',val:et.t||'',ph:'Ex. tapis peseur, coupure EDF'}],v=>{if(v.k==='ouverte'){day(d).etat={k:'ouverte',t:''};return}if(v.per==='horaires'&&!(v.de&&v.a&&mins(v.a)>mins(v.de))){toast('Indiquez une heure de fin après le début');return 'keep'}
+      if(v.k==='panne'){const h=v.per==='matin'?['06:00','12:00']:v.per==='aprem'?['12:00','18:00']:v.per==='journee'?['06:00','18:00']:[v.de,v.a];const dd=day(d);dd.pannes=dd.pannes||[];dd.pannes.push({de:h[0],a:h[1],t:v.t||'',by:author()});dd.pannes.sort((a,b)=>a.de.localeCompare(b.de));if(dd.etat&&dd.etat.k==='panne')dd.etat={k:'ouverte',t:''};jlog(d,`Panne ${hm(h[0])} – ${hm(h[1])}${v.t?' · '+v.t:''}`);toast('Panne ajoutée sous l\'état de la centrale');return}
+      day(d).etat={k:v.k,t:v.t,per:v.per,de:v.per==='horaires'?v.de:'',a:v.per==='horaires'?v.a:''};jlog(d,winTxt(closedWin(d)))})}
+    case 'panne-end':{e.stopPropagation();const d=dayOf(el),i=+el.dataset.i;const x=pannesOn(d)[i];if(!x)return;const n=new Date(),now=`${pad(n.getHours())}:${pad(n.getMinutes())}`;
+      return confirmPop(el,'Panne terminée ?',`Panne ${panneLbl(x)}${x.t?' · '+x.t:''}. La case se ferme${d===TODAY&&mins(now)>mins(x.de)&&mins(now)<mins(x.a)?' et la fin passe à '+hm(now):''}.`,'Oui, la centrale repart',()=>{const y=day(d).pannes[i];if(!y)return;if(d===TODAY&&mins(now)>mins(y.de)&&mins(now)<mins(y.a))y.a=now;y.fin=now;y.finBy=author();jlog(d,`Fin de panne ${panneLbl(y)}${y.t?' · '+y.t:''}`)})}
+    case 'panne-x':{e.stopPropagation();const d=dayOf(el),i=+el.dataset.i;const x=pannesOn(d)[i];if(!x)return;return confirmPop(el,'Annuler cette panne ?',`Panne ${panneLbl(x)}${x.t?' · '+x.t:''} : elle sera retirée (notée par erreur).`,'Oui, annuler la panne',()=>{const L=day(d).pannes;const y=L[i];L.splice(i,1);jlog(d,`Panne annulée ${y?panneLbl(y):''}`)},true)}
     // en-tête : ouvrir / refermer un cadre (écrans tactiles)
     case 'hb':{const all=[...document.querySelectorAll('#head .hb')];const k=all.indexOf(el);if(k<0)return;const on=el.classList.toggle('open');view.hbOpen=on?view.hbOpen.concat([k]):view.hbOpen.filter(x=>x!==k);return}
     // agrégats : une ligne par semi
@@ -2473,7 +2531,7 @@ function openOrderForm(o,opt){
           <label><input type="radio" name="f-presa" value="ok" ${p.resa==='ok'||(base.pompe&&!p.resa)?'checked':''}><span class="r-ok">Réservé</span></label>
           <label><input type="radio" name="f-presa" value="todo" ${p.resa==='todo'||!base.pompe?'checked':''}><span class="r-todo">À réserver</span></label></div></div>
       </div>
-      <div class="full pe-wrap" id="f-pills"><span class="fl">Infos sur la ligne</span>${pillsEditor(base.pills)}</div>
+      <div class="full pe-wrap" id="f-pills"><span class="fl">Infos sur la ligne</span>${pillsEditor(base.pills,base)}</div>
       <label class="ck full"><input type="checkbox" id="f-spec" ${base.spec?'checked':''}> Commande spéciale (mise en avant)</label>
       ${role!=='centraliste'&&isNew?`<p class="hint full" style="background:var(--info);color:var(--info-ink)">La commande part au centraliste, qui la valide sur le planning.</p><label class="fl full">Souhait<input id="f-sh" placeholder="Ex. 2 camions ensemble au démarrage"></label>`:''}
       ${role==='centraliste'&&o&&o.kind==='aplacer'&&!opt.dup?`<label class="ck full"><input type="checkbox" id="f-val" checked> Valider et placer au planning en enregistrant</label>`:''}
@@ -2926,13 +2984,23 @@ function dayPage(doc,d,k,part,big,nParts){
       if(o.plus){const [bx,by]=at(o.tours.length);bulle(bx,by,'?','+1T',[255,240,224],[255,138,0],[196,101,0],true)}}});
 }
 async function convPDF(month,filled,fm){
-  const J=await loadPdf();const doc=new J({orientation:'landscape',unit:'mm',format:fm.toLowerCase()});const W=doc.internal.pageSize.getWidth(),M=9,big=fm==='A3';
-  const pl=FLEET();const y=+month.slice(0,4),m=+month.slice(5,7);const nd=new Date(Date.UTC(y,m,0)).getUTCDate();const ds=[];for(let i=1;i<=nd;i++){const d=`${month}-${pad(i)}`;if(!isWE(d))ds.push(d)}
-  doc.setFont('helvetica','bold');doc.setFontSize(big?20:15);doc.text(pdfT(`Convocations 8x4 · ${MOISL[m-1]} ${y} · ${CENTRALE}`),M,M+6);
-  doc.setDrawColor(255,77,0);doc.setLineWidth(.8);doc.line(M,M+9,W-M,M+9);
-  doc.autoTable({startY:M+12,margin:{left:M,right:M},theme:'grid',head:[['Jour'].concat(pl.map(p=>plDisp(p))).concat(['Observations'])].map(r=>r.map(pdfT)),
-    body:ds.map(d=>{const cv=S.convocs[d]||{};return [dayShort(d)].concat(pl.map(p=>{const x=cv[p.c];if(!filled||!x)return '';if(x.st==='abs')return 'ABSENT';return hm(x.h)+(x.dep&&x.dep!==CENTRALE?' '+x.dep:'')+(x.st==='pret'?'\nprêté -> '+x.pc+' ('+x.per+')':'')+(x.aff?'\n'+x.aff:'')})).concat([''])}).map(r=>r.map(pdfT)),
-    styles:{fontSize:big?10:7.8,cellPadding:big?2.2:1.4,lineColor:[180,180,175],lineWidth:.15,textColor:[21,21,21],minCellHeight:big?11:7.5},headStyles:{fillColor:[233,232,227],textColor:[21,21,21],fontStyle:'bold'},columnStyles:{0:{fontStyle:'bold',cellWidth:big?26:20}}});
+  const J=await loadPdf();const big=fm==='A3';
+  const pl=FLEET();const y=+month.slice(0,4),m=+month.slice(5,7);const nd=new Date(Date.UTC(y,m,0)).getUTCDate();const ds=[];for(let i=1;i<=nd;i++){const d=`${month}-${pad(i)}`;if(!isWE(d)||weOpen(d))ds.push(d)}
+  const body=ds.map(d=>{const cv=S.convocs[d]||{};return [dayShort(d)].concat(pl.map(p=>{const x=cv[p.c];if(!filled||!x)return '';if(x.st==='abs')return 'ABSENT';return hm(x.h)+(x.dep&&x.dep!==CENTRALE?' '+x.dep:'')+(x.st==='pret'?'\nprêté -> '+x.pc+' ('+x.per+')':'')+(x.aff?'\n'+x.aff:'')})).concat([''])}).map(r=>r.map(pdfT));
+  const head=[['Jour'].concat(pl.map(p=>plDisp(p))).concat(['Observations'])].map(r=>r.map(pdfT));
+  // Le mois tient toujours sur une seule page : on réduit le texte jusqu'à ce que tout tienne.
+  let doc=null;
+  for(let fs=big?11:8.5;fs>=4;fs-=.5){
+    doc=new J({orientation:'landscape',unit:'mm',format:fm.toLowerCase()});const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=8;
+    doc.setFont('helvetica','bold');doc.setFontSize(big?18:13);doc.text(pdfT(`Convocation · ${MOISL[m-1]} ${y} · ${CENTRALE}`),M,M+5);
+    doc.setDrawColor(255,77,0);doc.setLineWidth(.7);doc.line(M,M+7.5,W-M,M+7.5);
+    const top=M+10,avail=H-top-M,rowH=Math.max(4,(avail-1)/(ds.length+1)-.05);const dayW=big?24:17;const colW=(W-2*M-dayW)/(pl.length+1);
+    const cs={0:{fontStyle:'bold',cellWidth:dayW}};for(let k=1;k<=pl.length+1;k++)cs[k]={cellWidth:colW};
+    doc.autoTable({startY:top,margin:{left:M,right:M,top:M,bottom:M},theme:'grid',head,body,tableWidth:W-2*M,rowPageBreak:'avoid',
+      styles:{fontSize:fs,cellPadding:Math.min(1.6,fs/6),lineColor:[180,180,175],lineWidth:.15,textColor:[21,21,21],minCellHeight:rowH,valign:'middle',overflow:'linebreak'},
+      headStyles:{fillColor:[233,232,227],textColor:[21,21,21],fontStyle:'bold',minCellHeight:Math.min(rowH,9)},columnStyles:cs});
+    if(doc.getNumberOfPages()===1)break;
+  }
   return doc.output('arraybuffer');
 }
 
@@ -3155,9 +3223,9 @@ document.addEventListener('mouseover',e=>{
 addEventListener('scroll',()=>plClose(),true);
 // éditeur (menu ⋯ et formulaire de commande)
 function peRow(t){return `<div class="pe-r"><input name="pt" value="${esc(t)}" placeholder="Info (retard, consigne…)" maxlength="80" autocomplete="off"><button type="button" class="pe-x" data-pe="x" aria-label="Retirer cette info" title="Retirer">×</button></div>`}
-function pillsEditor(pills){
+function pillsEditor(pills,o){
   return `<div class="pe">${(pills||[]).map(p=>peRow(p.t)).join('')}${peRow('')}</div>
-    <div class="pe-pre">${P_COMMENT.slice(0,10).map(t=>`<button type="button" class="chip" data-pe="pre" data-v="${esc(t)}">+ ${esc(t)}</button>`).join('')}</div>
+    <div class="pe-pre">${pPre(o).slice(0,10).map(t=>`<button type="button" class="chip" data-pe="pre" data-v="${esc(t)}">+ ${esc(t)}</button>`).join('')}</div>
     <button type="button" class="btn sm" data-pe="add" style="align-self:flex-start">+ Ajouter une ligne</button>`;
 }
 function peValues(form){const out=[];form.querySelectorAll('.pe input[name="pt"]').forEach(x=>{const v=x.value.trim();if(v&&!out.includes(v))out.push(v)});return out}
@@ -3171,7 +3239,7 @@ document.addEventListener('click',e=>{
   if(k==='pre'){const v=b.dataset.v;if([...box.querySelectorAll('input')].some(x=>x.value.trim()===v))return;const empty=[...box.querySelectorAll('input')].find(x=>!x.value.trim());if(empty)empty.value=v;else box.insertAdjacentHTML('beforeend',peRow(v));if(![...box.querySelectorAll('input')].some(x=>!x.value.trim()))box.insertAdjacentHTML('beforeend',peRow(''));}
 },true);
 function pillsPop(anchor,id){setEditing(id);
-  openPop(anchor,`<div class="pop-h">Infos sur la ligne</div><form data-pa="psave" class="pe-form">${pillsEditor(byId(id).pills)}<button class="btn primary" type="submit">Enregistrer</button></form>`,
+  openPop(anchor,`<div class="pop-h">Infos sur la ligne</div><form data-pa="psave" class="pe-form">${pillsEditor(byId(id).pills,byId(id))}<button class="btn primary" type="submit">Enregistrer</button></form>`,
     {psave(f){const x=byId(id);x.pills=mergePills(x.pills,peValues(f));toast('Infos enregistrées')}});
 }
 
