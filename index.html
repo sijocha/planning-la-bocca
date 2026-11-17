@@ -1261,6 +1261,23 @@ table.conv th,table.conv td{overflow:hidden;text-overflow:ellipsis}
 }
 .conv .cell.obs{white-space:normal}.conv .obs-t{font-size:12.5px;white-space:normal;text-align:left}
 table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn{margin:4px 0 0}
+
+/* réglages : pas de défilement horizontal */
+.pop{overflow-x:hidden}
+.pop .ps-sync{margin:0 -10px -10px!important;padding:9px 10px 10px!important}
+.drawer{overflow-x:hidden}
+/* Planning camions : étiquette et camions sur la même ligne */
+.hb-body>.chips{flex-wrap:nowrap;overflow:hidden}
+.hb-body>.chips>*{flex:none}
+.hb-body>.chips>.lbl{flex:none;min-width:96px}
+.hb:hover .hb-body>.chips,.hb.open .hb-body>.chips,.hb:focus-within .hb-body>.chips{flex-wrap:wrap}
+/* barres de défilement au style du site : fines, carrées, encre sur papier */
+*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--ink) 35%,transparent) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ink) 30%,transparent);border:2px solid transparent;background-clip:padding-box;border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:var(--orange);background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
 </style>
 
 <div class="app" id="app">
@@ -1453,8 +1470,8 @@ function aggInner(iso){
 
 function convChips(iso,kind){const cv=S.convocs[iso]||{};return Object.keys(cv).map(p=>{const x=cv[p];
     if(kind==='abs'&&x.st==='abs')return `<button class="chip bad" data-act="conv" data-long="1" data-d="${iso}" data-p="${esc(p)}" title="Absent${x.raison?' · '+esc(x.raison):''} · clic : modifier · clic droit : menu"><b>${esc(p)}</b> <small>${esc(x.per||'Journée')}</small>${x.raison?` <small>· ${esc(x.raison)}</small>`:''}<span class="x" data-act="conv-x" data-d="${iso}" data-p="${esc(p)}" role="button" aria-label="Annuler l'absence de ${esc(p)}">×</span></button>`;
-    if(kind==='pret'&&x.st==='pret')return `<button class="chip" data-act="conv" data-d="${iso}" data-p="${esc(p)}" title="Camion prêté · modifier"><b>${esc(p)}</b> → ${esc(x.pc)} <small>${esc(x.per)}</small></button>`;
-    if(kind==='ailleurs'&&x.st!=='abs'&&x.dep&&x.dep!==CENTRALE)return `<button class="chip info" data-act="conv" data-d="${iso}" data-p="${esc(p)}" title="Convocation · modifier"><b>${esc(p)}</b> ${esc(hm(x.h))} ${esc(x.dep)}</button>`;
+    if(kind==='pret'&&x.st==='pret')return `<button class="chip info" data-act="conv" data-d="${iso}" data-p="${esc(p)}" title="Convoqué à ${esc(x.pc)} · clic : modifier"><b>${esc(p)}</b> → ${esc(x.pc)} <small>${x.h?esc(hm(x.h)):esc(x.per||'')}</small></button>`;
+    if(kind==='ailleurs'&&x.st!=='abs'&&x.dep&&x.dep!==CENTRALE)return `<button class="chip info" data-act="conv" data-d="${iso}" data-p="${esc(p)}" title="Convoqué à ${esc(x.dep)} à ${esc(hm(x.h))}${x.aff?' · '+esc(x.aff):''} · clic : modifier"><b>${esc(p)}</b> → ${esc(x.dep)} <small>${esc(hm(x.h))}</small></button>`;
     return ''}).join('')}
 /* ---- disposition des encadrés : défaut de la centrale (partagé) + choix de chaque centraliste (sur son poste) ---- */
 const BOXES={ech:.9,vie:1.25,agg:1.6},BOX_N={ech:'Planning camions',vie:'Journal de bord',agg:'Agrégats · ciments'};
