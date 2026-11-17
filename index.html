@@ -1259,6 +1259,8 @@ table.conv th,table.conv td{overflow:hidden;text-overflow:ellipsis}
   .row.ph:not(.open)>.r-time::after{content:"▼";position:absolute;left:6px;bottom:4px;font-size:9px;color:var(--faint)}
   .row.ph>.r-time{min-height:44px}
 }
+.conv .cell.obs{white-space:normal}.conv .obs-t{font-size:12.5px;white-space:normal;text-align:left}
+table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn{margin:4px 0 0}
 </style>
 
 <div class="app" id="app">
@@ -1761,12 +1763,12 @@ function camionsHTML(){
   const mo=view.date.slice(0,7),y=+mo.slice(0,4),m=+mo.slice(5,7),nd=new Date(Date.UTC(y,m,0)).getUTCDate();
   const ds=[];for(let i=1;i<=nd;i++){const d=`${mo}-${pad(i)}`;if(!isWE(d)||weOpen(d)||hasOrders(d))ds.push(d)}
   const mn=MOISL[m-1];
-  return `<div class="sec-h"><h2>Convocation</h2><div class="mnav"><button class="ib" data-act="cmonth" data-v="-1" aria-label="Mois précédent">‹</button><b>${esc(mn.charAt(0).toUpperCase()+mn.slice(1))} ${y}</b><button class="ib" data-act="cmonth" data-v="1" aria-label="Mois suivant">›</button></div><p>Le mois complet. Une centrale indiquée = premier chargement de 7,5 m³ là-bas. Clic droit sur un camion pour le modifier.</p><button class="btn sm" data-act="plaque-add">+ Camion</button><button class="btn sm" data-act="conv-print">Imprimer ${esc(mn)} (rempli ou vide)</button></div>
-  <div class="tbl-wrap"><table class="conv zebra"><thead><tr><th>Jour</th>${pl.map(p=>`<th class="plq" data-plq="${esc(p.c)}" title="Clic droit pour modifier · repère sur les bulles : ${esc(p.c)}">${esc(plDisp(p))}</th>`).join('')}<th>1er chargement ailleurs</th></tr></thead><tbody>
-  ${ds.map(d=>{const cv=S.convocs[d]||{};const g={};pl.forEach(p=>{const x=cv[p.c];if(x&&x.st!=='abs'&&x.dep&&x.dep!==CENTRALE)g[x.dep]=(g[x.dep]||0)+7.5});
-    return `<tr class="${d===TODAY?'today':''} ${dow(d)===1?'wk1':''} ${isWE(d)?'we':''}"><td class="d">${esc(dayShort(d))}</td>${pl.map(p=>{const x=cv[p.c];return `<td><button class="cell ${x&&x.st==='abs'?'abs':''}" data-act="conv" data-d="${d}" data-p="${esc(p.c)}">${!x?'<span class="muted">—</span>':x.st==='abs'?'<b class="abs-t">ABSENT</b>':`<b>${esc(hm(x.h))}${x.dep&&x.dep!==CENTRALE?' '+esc(x.dep):''}</b>${x.st==='pret'?`<span class="dep pret">Prêté → ${esc(x.pc)} · ${esc(x.per)}</span>`:''}${x.aff?`<span class="aff">${esc(x.aff)}</span>`:''}`}</button></td>`}).join('')}
-    <td>${Object.keys(g).map(k=>`<span class="chip info">${esc(k)} · ${fmt(g[k])} m³</span>`).join(' ')||'<span class="muted">—</span>'}</td></tr>`}).join('')}
-  </tbody>${(()=>{const T=toursBy(mo+'-01',mo+'-'+pad(nd));const per=mo===TODAY.slice(0,7)?'depuis le 1er':'sur le mois';return `<tfoot><tr class="tours-r"><td class="d">Tours ${per}</td>${pl.map(p=>`<td><b>${T[p.c]||0}</b></td>`).join('')}<td><b>${pl.reduce((a,p)=>a+(T[p.c]||0),0)}</b> au total <button class="btn sm" data-act="tours-print">Imprimer</button> <button class="btn sm" data-act="tours-per">Par période…</button></td></tr></tfoot>`})()}</table></div>`;
+  return `<div class="sec-h"><h2>Convocation</h2><div class="mnav"><button class="ib" data-act="cmonth" data-v="-1" aria-label="Mois précédent">‹</button><b>${esc(mn.charAt(0).toUpperCase()+mn.slice(1))} ${y}</b><button class="ib" data-act="cmonth" data-v="1" aria-label="Mois suivant">›</button></div><button class="btn sm" data-act="plaque-add">+ Camion</button><button class="btn sm" data-act="conv-print">Imprimer ${esc(mn)} (rempli ou vide)</button></div>
+  <div class="tbl-wrap"><table class="conv zebra"><thead><tr><th>Jour</th>${pl.map(p=>`<th class="plq" data-plq="${esc(p.c)}" title="Clic droit pour modifier · repère sur les bulles : ${esc(p.c)}">${esc(plDisp(p))}</th>`).join('')}<th>Observations</th></tr></thead><tbody>
+  ${ds.map(d=>{const cv=S.convocs[d]||{};const obs=(dayRO(d)||{}).convObs||'';
+    return `<tr class="${d===TODAY?'today':''} ${dow(d)===1?'wk1':''} ${isWE(d)?'we':''}"><td class="d">${esc(dayShort(d))}</td>${pl.map(p=>{const x=cv[p.c];return `<td><button class="cell ${x&&x.st==='abs'?'abs':''}" data-act="conv" data-d="${d}" data-p="${esc(p.c)}">${!x?'<span class="muted">—</span>':x.st==='abs'?'<b class="abs-t">ABSENT</b>':`<b>${esc(hm(x.h))}${x.st==='pret'&&x.pc?' '+esc(x.pc):x.dep&&x.dep!==CENTRALE?' '+esc(x.dep):''}</b>${x.aff?`<span class="aff">${esc(x.aff)}</span>`:''}`}</button></td>`}).join('')}
+    <td><button class="cell obs" data-act="conv-obs" data-d="${d}" title="Observation du jour">${obs?`<span class="obs-t">${esc(obs)}</span>`:'<span class="muted">—</span>'}</button></td></tr>`}).join('')}
+  </tbody>${(()=>{const T=toursBy(mo+'-01',mo+'-'+pad(nd));const per=mo===TODAY.slice(0,7)?'depuis le 1er':'sur le mois';return `<tfoot><tr class="tours-r"><td class="d">Tours ${per}</td>${pl.map(p=>`<td><b>${T[p.c]||0}</b></td>`).join('')}<td class="tours-tot"><b>${pl.reduce((a,p)=>a+(T[p.c]||0),0)}</b> au total<br><button class="btn sm" data-act="tours-per">Imprimer par période</button></td></tr></tfoot>`})()}</table></div>`;
 }
 /* tours chargés par camion de la centrale entre deux dates (jusqu'à aujourd'hui) */
 function toursBy(a,b){const T={};const hi=b<TODAY?b:TODAY;S.orders.forEach(o=>{if(o.date<a||o.date>hi||statut(o)==='annulee')return;o.tours.forEach(t=>{if(t.s&&t.p&&!t.mv)T[t.p]=(T[t.p]||0)+1})});return T}
@@ -1824,7 +1826,7 @@ const AIDE=[
   ['centraliste','Remplir une bulle (plaque du camion)',`<ul><li><b>Clic sur une bulle vide</b> : vos camions s'affichent, plus les autres plaques déjà notées. Un clic sur la plaque → la bulle passe <b>chargée</b> (verte).</li><li>Plaque inconnue : la taper dans « Noter la plaque », puis OK. Elle ne sert que pour ce chantier. Vos camions se gèrent dans Réglages → Camions centrale.</li><li><b>[+]</b> au bout des bulles : ajouter un tour, avec le même choix de plaque.</li><li>Clic sur une bulle déjà chargée : retirer le stabilo (avec confirmation).</li><li>Charger un tour <b>avant le jour du chantier</b> demande une validation.</li></ul>`],
   ['centraliste','Modifier une bulle (clic long ou clic droit)',`<p>Rester appuyé sur la bulle (ou clic droit) : changer la plaque, le volume, noter « chargé par une autre centrale », replacer le camion, supprimer le tour.</p><p>Légende : vide = prévu · vert = chargé · pointillé = complément · nom de centrale = chargé ailleurs · bleu = camion replacé · <b>P</b> bleu = toupie rechargée pleine.</p>`],
   ['centraliste','Replacer un camion déjà chargé sur un autre chantier',`<ol><li>Clic long sur la bulle chargée → <b>Replacer sur un autre chantier…</b></li><li>Choisir le chantier. Laisser cochée « Prévoir un nouveau tour » si le premier chantier attend encore ce béton.</li></ol><p>La bulle d'origine devient bleue barrée (ses m³ ne comptent plus). Une fenêtre demande les <b>m³ replacés</b> et si la <b>toupie a été rechargée pleine</b>, puis Valider. Le camion prend la <b>première bulle grise libre</b> du nouveau chantier (en bleu ↪) ; s'il n'y en a pas, une bulle est créée. Pour revenir en arrière : clic long sur la bulle barrée → <b>Annuler le replacement</b>.</p>`],
-  ['centraliste','Planning camions : renforts, détachements, convocations',`<ul><li>Encadré <b>Planning camions</b> : <b>+ Renfort</b> (un camion vient à la centrale), <b>+ Détachement</b> (un camion part : nombre, camion prêté, convoqué ailleurs), <b>+ Absent</b>.</li><li>Page <b>04 Camions</b> : absents, prêtés, convoqués ailleurs (« 7 h 45 Grasse »).</li><li><b>Imprimer le mois</b> : PDF A4 ou A3 des convocations, avec horaires ou grille vide.</li><li>Ligne du bas : <b>tours chargés par camion</b> depuis le 1er du mois. <b>Imprimer</b> les tours du mois, ou <b>Par période…</b> d'un mois à un autre.</li><li><b>Clic droit sur un camion</b> (en-tête de colonne, ou dans Réglages → Camions centrale) pour modifier son n° de parc ou sa plaque entière (optionnelle).</li></ul>`]]],
+  ['centraliste','Planning camions : renforts, détachements, convocations',`<ul><li>Encadré <b>Planning camions</b> : <b>+ Renfort</b> (un camion vient à la centrale), <b>+ Détachement</b> (un camion part : nombre, camion prêté, convoqué ailleurs), <b>+ Absent</b>.</li><li>Page <b>04 Camions</b> : absents, prêtés, convoqués ailleurs (« 7 h 45 Grasse »).</li><li><b>Imprimer le mois</b> : PDF A4 ou A3 des convocations, avec horaires ou grille vide.</li><li>Ligne du bas : <b>tours chargés par camion</b> depuis le 1er du mois. <b>Imprimer par période</b> (sous le total) : d'un mois à un autre, ou un seul mois.</li><li>Onglet <b>Convocation</b> : le mois complet. Clic sur une case : <b>Convoqué</b> (heure et centrale : une autre centrale = le camion y est convoqué directement), <b>Absent</b> (période, raison) ou pas convoqué ; « Affecté au chantier » se remplit librement (badge, accès…). Colonne <b>Observations</b> : une note libre par jour.</li><li><b>Clic droit sur un camion</b> (en-tête de colonne, ou dans Réglages → Camions centrale) pour modifier son n° de parc ou sa plaque entière (optionnelle).</li></ul>`]]],
  ['Centrale',[
   ['tous','Ouvrir la centrale un week-end',`<p>Le week-end n'a pas de journée planning. En allant sur un samedi ou un dimanche, le bouton <b>Créer une journée planning ce jour</b> ouvre la centrale exceptionnellement (avec confirmation). Une commande saisie un week-end propose aussi la création : second clic sur Enregistrer.</p>`],
   ['centraliste','Journal de bord',`<ul><li>Centralistes présents et horaires, remplaçant : <b>+ Présent</b>.</li><li>Passation entre postes : <b>+ Passation</b> ; clic pour la marquer faite.</li><li>Entretien et RDV labo : <b>+ Événement</b>, <b>+ RDV labo</b>.</li><li><b>+ Changement produit</b> : ciment, adjuvant, agrégat, silo ou formule, avec l'heure ; noté aussi au journal.</li><li>Tous les boutons <b>+</b> sont sur la ligne du bas de chaque encadré.</li></ul>`],
@@ -2314,6 +2316,7 @@ function act(a,el,o,e){
     case 'conv-print':return convPrintPop(el);
     // camions
     case 'conv':{const d=el.dataset.d,p=el.dataset.p;return convPop(el,d,p)}
+    case 'conv-obs':{const d=el.dataset.d;return formPop(el,'Observation · '+dayShort(d),[{k:'t',label:'Observation',val:(dayRO(d)||{}).convObs||'',ph:''}],v=>{day(d).convObs=String(v.t||'').trim().slice(0,200)})}
     case 'conv-x':{const d=el.dataset.d,p=el.dataset.p,x=(S.convocs[d]||{})[p];if(!x)return;const lbl=x.st==='abs'?"l'absence":'cette ligne';return confirmPop(el,`Annuler ${lbl} de ${p} ?`,dayShort(d),'Oui, annuler',()=>{delete S.convocs[d][p];if(x.st==='abs')jlog(d,`Absence annulée : ${p}`);toast('Annulé')},true)}
     case 'plaque-add':return formPop(el,'Ajouter un camion',[{k:'c',label:'N° de parc ou repère (affiché sur les bulles)',val:'',ph:'7656 ou EF'},{k:'p',label:'Plaque entière (optionnel)',val:'',ph:'EF-507-VT'}],v=>{if(!v.c)return 'keep';if(!S.config)S.config=CONFIG0();S.config.flotte=FLEET().concat([{c:v.c.toUpperCase().slice(0,8),p:v.p}])});
     case 'export':return exportPop(el);
@@ -2401,16 +2404,17 @@ function semiTourPop(anchor,d,i,k){
    tog(){t.s=t.s?0:1},del(){x.tours.splice(k,1)}});
 }
 function convPop(anchor,d,p){const x=(S.convocs[d]||{})[p]||{};
+  // un camion « prêté » = convoqué directement dans l'autre centrale
+  const dep0=x.st==='pret'&&x.pc?x.pc:(x.dep||CENTRALE);
   formPop(anchor,`Camion ${p} · ${dayShort(d)}`,[
-    {k:'st',label:'Ce jour-là',type:'select',opts:[['conv','Convoqué'],['pret','Prêté à une autre centrale'],['abs','Absent'],['none','Pas convoqué']],val:x.st||(x.h?'conv':'conv')},
+    {k:'st',label:'Ce jour-là',type:'select',opts:[['conv','Convoqué'],['abs','Absent'],['none','Pas convoqué']],val:x.st==='abs'?'abs':'conv'},
     {k:'h',label:'Heure de convocation',type:'time',val:x.h||'06:00',step:900},
-    {k:'dep',label:'Convoqué à (centrale du 1er chargement)',type:'select',opts:[CENTRALE].concat(AG()),val:x.dep||CENTRALE},
-    {k:'pc',label:'Si prêté : à quelle centrale',type:'select',opts:AG(),val:x.pc||AG()[0]},
-    {k:'per',label:'Période (prêté ou absent)',type:'select',opts:['Journée','Matin','Après-midi'],val:x.per||'Journée'},
+    {k:'dep',label:'Convoqué à (centrale)',type:'select',opts:[CENTRALE].concat(AG()),val:dep0},
+    {k:'per',label:'Si absent : période',type:'select',opts:['Journée','Matin','Après-midi'],val:x.per||'Journée'},
     {k:'raison',label:"Si absent : raison",val:x.raison||'',ph:'Ex. congé, maladie, garage'},
-    {k:'aff',label:'Affecté au chantier (badge, accès…)',val:x.aff||'',list:S.chantiers.filter(c=>c.nom).map(c=>c.nom)}],
+    {k:'aff',label:'Affecté au chantier (badge, accès…)',val:x.aff||'',ph:''}],
   v=>{S.convocs[d]=S.convocs[d]||{};if(v.st==='none'){delete S.convocs[d][p];return}
-    S.convocs[d][p]={st:v.st,h:v.st==='abs'?'':v.h,dep:v.dep,aff:v.aff,pc:v.st==='pret'?v.pc:'',per:v.st==='pret'||v.st==='abs'?v.per:'',raison:v.st==='abs'?v.raison:''}});
+    S.convocs[d][p]={st:v.st,h:v.st==='abs'?'':v.h,dep:v.st==='abs'?CENTRALE:v.dep,aff:v.aff,per:v.st==='abs'?v.per:'',raison:v.st==='abs'?v.raison:''}});
 }
 const convOf=(d,p)=>(S.convocs[d]||{})[p]||null;
 const absentOn=(d,p)=>{const x=convOf(d,p);return !!(x&&x.st==='abs')};
@@ -3020,7 +3024,7 @@ function dayPage(doc,d,k,part,big,nParts){
 async function convPDF(month,filled,fm){
   const J=await loadPdf();const big=fm==='A3';
   const pl=FLEET();const y=+month.slice(0,4),m=+month.slice(5,7);const nd=new Date(Date.UTC(y,m,0)).getUTCDate();const ds=[];for(let i=1;i<=nd;i++){const d=`${month}-${pad(i)}`;if(!isWE(d)||weOpen(d))ds.push(d)}
-  const body=ds.map(d=>{const cv=S.convocs[d]||{};return [dayShort(d)].concat(pl.map(p=>{const x=cv[p.c];if(!filled||!x)return '';if(x.st==='abs')return 'ABSENT';return hm(x.h)+(x.dep&&x.dep!==CENTRALE?' '+x.dep:'')+(x.st==='pret'?'\nprêté -> '+x.pc+' ('+x.per+')':'')+(x.aff?'\n'+x.aff:'')})).concat([''])}).map(r=>r.map(pdfT));
+  const body=ds.map(d=>{const cv=S.convocs[d]||{};return [dayShort(d)].concat(pl.map(p=>{const x=cv[p.c];if(!filled||!x)return '';if(x.st==='abs')return 'ABSENT';return hm(x.h)+(x.dep&&x.dep!==CENTRALE?' '+x.dep:'')+(x.st==='pret'?'\nprêté -> '+x.pc+' ('+x.per+')':'')+(x.aff?'\n'+x.aff:'')})).concat([filled?((dayRO(d)||{}).convObs||''):''])}).map(r=>r.map(pdfT));
   const head=[['Jour'].concat(pl.map(p=>plDisp(p))).concat(['Observations'])].map(r=>r.map(pdfT));
   // Le mois tient toujours sur une seule page : on réduit le texte jusqu'à ce que tout tienne.
   let doc=null;
