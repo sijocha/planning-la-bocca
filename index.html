@@ -973,15 +973,17 @@ body.hb-dragging .hb:hover{max-height:var(--headH)!important;overflow:hidden!imp
 .aide-b b{font-weight:700}
 @media (max-width:760px){.aide{columns:1}.aide-q{max-width:none}}
 
-/* statut de la commande : petite barre à gauche */
-.row.st-attente{border-left-color:#FF8A00!important}
-.row.st-encours{border-left-color:#1E9E4A!important}
-.row.st-terminee{border-left-color:#2F6FD6!important}
-.row.st-attente,.row.st-attente:hover{background-image:linear-gradient(90deg,rgba(255,138,0,.17),rgba(255,138,0,0) 42%)}
-.row.st-terminee,.row.st-terminee:hover{background-image:linear-gradient(90deg,rgba(47,111,214,.15),rgba(47,111,214,0) 42%)}
-.card.st-attente{background-image:linear-gradient(90deg,rgba(255,138,0,.17),rgba(255,138,0,0) 60%)}
-.card.st-terminee{background-image:linear-gradient(90deg,rgba(47,111,214,.15),rgba(47,111,214,0) 60%)}
-.card.st-attente{border-left-color:#FF8A00!important}.card.st-encours{border-left-color:#1E9E4A!important}.card.st-terminee{border-left-color:#2F6FD6!important}
+/* statut de la commande : barre et dégradé à DROITE de la ligne */
+.row,.card{border-left:1px solid var(--line)!important;border-right:4px solid var(--line-strong)}
+.row.st-attente{border-right-color:#FF8A00!important}
+.row.st-encours{border-right-color:#1E9E4A!important}
+.row.st-terminee{border-right-color:#2F6FD6!important}
+.row.st-annulee{border-right-color:var(--bad-ink)!important}
+.row.st-attente,.row.st-attente:hover{background-image:linear-gradient(270deg,rgba(255,138,0,.17),rgba(255,138,0,0) 42%)}
+.row.st-terminee,.row.st-terminee:hover{background-image:linear-gradient(270deg,rgba(47,111,214,.15),rgba(47,111,214,0) 42%)}
+.card.st-attente{background-image:linear-gradient(270deg,rgba(255,138,0,.17),rgba(255,138,0,0) 60%)}
+.card.st-terminee{background-image:linear-gradient(270deg,rgba(47,111,214,.15),rgba(47,111,214,0) 60%)}
+.card.st-attente{border-right-color:#FF8A00!important}.card.st-encours{border-right-color:#1E9E4A!important}.card.st-terminee{border-right-color:#2F6FD6!important}.card.st-annulee{border-right-color:var(--bad-ink)!important}
 /* menu du badge : sections séparées, contrastées */
 .pop .ps{display:flex;flex-direction:column;gap:4px;padding:9px 0 8px;border-top:1px solid var(--line-strong)}
 .pop .pop-h+.ps{border-top:2px solid var(--ink);margin-top:4px}
@@ -1180,7 +1182,7 @@ button.tag{cursor:pointer}
 .an-v{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
 .an-s small{font:500 11px var(--mono);color:var(--muted);text-align:center;letter-spacing:.02em}
 .an .t,.an .chip,.an .mo,.an .tag{pointer-events:none}
-.an-row{display:flex;gap:12px;align-items:center;min-width:min(320px,90%);padding:7px 12px;border-left:4px solid var(--c);background:linear-gradient(90deg,color-mix(in srgb,var(--g,var(--c)) 18%,transparent),transparent 50%),var(--panel);font-size:14px}
+.an-row{display:flex;gap:12px;align-items:center;min-width:min(320px,90%);padding:7px 12px;border-right:4px solid var(--c);border-left:1px solid var(--line);background:linear-gradient(270deg,color-mix(in srgb,var(--g,var(--c)) 18%,transparent),transparent 50%),var(--panel);font-size:14px}
 .an-list{display:flex;flex-direction:column;gap:4px;min-width:200px;padding:6px;border:1px solid var(--ink);background:var(--panel)}
 .an-q{font:700 15px var(--mono);border:1px solid var(--line-strong);padding:4px 10px;background:var(--panel)}
 .plus-t.on span{background:#FF8A00;color:#fff;border-style:solid}
@@ -1228,6 +1230,15 @@ button.tag{cursor:pointer}
 table.conv{table-layout:fixed}
 table.conv th:first-child,table.conv td.d{width:96px}
 table.conv th,table.conv td{overflow:hidden;text-overflow:ellipsis}
+
+/* blocs, boutons, petits encadrés : fond transparent teinté (jamais sans fond) */
+.btn:not(.primary):not(.danger):not(.strong),.ib,.seg button:not(.on),.chip.add,.s-add,.t-add,.pk-m,.pop-c:not(.on),.pop-b,.pop .ps .pop-b:not(.strong),.chip.more{background-color:color-mix(in srgb,var(--ink) 6%,transparent)!important}
+.row>.r-menu{background-color:color-mix(in srgb,var(--ink) 3%,transparent)!important}
+.btn:not(.primary):not(.danger):not(.strong):hover,.ib:hover,.seg button:not(.on):hover,.chip.add:hover,.s-add:hover,.t-add:hover,.r-menu:hover,.pop-c:not(.on):hover,.pop-b:hover,.pop .ps .pop-b:not(.strong):hover{background-color:color-mix(in srgb,var(--ink) 13%,transparent)!important;color:var(--ink)}
+.chip:not(.on):not(.ok):not(.bad):not(.warn):not(.info):not(.prod):not(.panne):not(.add){background-color:color-mix(in srgb,var(--ink) 4%,var(--panel))}
+.mo:not(.on):not(.warn):not(.bad):not(.bag){background-color:color-mix(in srgb,var(--ink) 5%,transparent)}
+.lk-r,.aide-d{background-color:color-mix(in srgb,var(--ink) 3%,var(--panel))}
+.phviews button:not(.on){background-color:color-mix(in srgb,var(--ink) 5%,transparent)}
 </style>
 
 <div class="app" id="app">
@@ -1777,8 +1788,8 @@ function adjHTML(){
 /* ---- Mode d'emploi : un dépliant par élément ---- */
 const AIDE=[
  ['Pour commencer',[
-  ['tous','Se connecter et changer d\'utilisateur',`<p>À l'ouverture : <b>Se connecter avec Google</b>, avec une adresse inscrite par la centrale. Le <b>rôle</b> (centraliste, commercial, labo, lecture seule) est donné par cette liste. Puis votre <b>prénom</b>, affiché auprès des autres et dans le journal.</p><ul><li>Au poste de la centrale (compte commun) : <b>badge du compte</b> (rond en haut à droite) → <b>Changer de prénom au poste</b> à chaque prise de poste.</li><li>Se déconnecter : badge du compte → <b>Se déconnecter</b>.</li><li>Quand quelqu'un modifie une commande, les autres voient « En cours de modification » avec son nom.</li></ul>`],
-  ['tous','Lire l\'écran du jour',`<p>Une ligne par chantier, de haut en bas dans l'ordre des heures, regroupées en <b>Matin</b> et <b>Après-midi</b>. Le trait rouge marque l'heure actuelle.</p><ul><li><b>Ligne 1</b> : heure, client, m³ livrés / total, chantier, formule, type de camion, pompe, commentaires à droite.</li><li><b>Ligne 2</b> : les bulles des tours (une bulle = un camion).</li><li>Au-dessus du premier chantier : nombre de camions et de chantiers, et la légende prévu · chargé · complément.</li><li>Une ligne sur deux est sur fond gris pour mieux suivre.</li><li><b>Barre à gauche</b> de la ligne = statut : orange en attente, vert en cours, bleu terminée.</li></ul>`],
+  ['tous','Se connecter et changer d\'utilisateur',`<p>À l'ouverture : <b>Se connecter avec Google</b>, avec une adresse inscrite par la centrale. Le <b>rôle</b> (centraliste, commercial, labo, lecture seule) est donné par cette liste. Puis votre <b>prénom</b>, affiché auprès des autres et dans le journal.</p><ul><li>Au poste de la centrale (compte commun) : <b>badge du compte</b> (rond en haut à droite) → <b>Accueil centrale</b> à chaque prise de poste.</li><li>Se déconnecter : badge du compte → <b>Se déconnecter</b>.</li><li>Quand quelqu'un modifie une commande, les autres voient « En cours de modification » avec son nom.</li></ul>`],
+  ['tous','Lire l\'écran du jour',`<p>Une ligne par chantier, de haut en bas dans l'ordre des heures, regroupées en <b>Matin</b> et <b>Après-midi</b>. Le trait rouge marque l'heure actuelle.</p><ul><li><b>Ligne 1</b> : heure, client, m³ livrés / total, chantier, formule, type de camion, pompe, commentaires à droite.</li><li><b>Ligne 2</b> : les bulles des tours (une bulle = un camion).</li><li>Au-dessus du premier chantier : nombre de camions et de chantiers, et la légende prévu · chargé · complément.</li><li>Une ligne sur deux est sur fond gris pour mieux suivre.</li><li><b>Barre à droite</b> de la ligne = statut : orange en attente, vert en cours, bleu terminée.</li></ul>`],
   ['tous','Changer de jour, de semaine ou de vue',`<ul><li><b>‹ ›</b> autour de la date, ou les flèches <b>← →</b> du clavier. Sur tablette : glisser vers la gauche ou la droite.</li><li>Clic sur la <b>grande date</b> : calendrier ou date tapée pour aller à un jour précis. <b>Aujourd'hui</b> pour revenir.</li><li><b>Jour / Semaine</b> en haut à gauche.</li><li>En bas (sur téléphone : juste au-dessus des boutons) : <b>Simple</b> (lignes serrées), <b>Normal</b>, <b>Détaillé</b> (téléphone, notes, commandes annulées).</li><li><b>Recherche</b> « Client ou chantier » en haut : clic sur un résultat pour y aller.</li></ul>`]]],
  ['Commandes',[
   ['tous','Saisir une commande',`<ol><li><b>+ Commande</b> en haut à droite (ou la touche <b>N</b>).</li><li>Remplir : client, date et heure, m³, chantier ou adresse, formule, type de camion (8x4, SP6, SP4) et nombre, pompe, paiement (comptant ou en compte), commentaires.</li><li><b>Enregistrer</b>. Les tours sont créés selon le volume.</li></ol><p>Une note libre (« Prendre 1 journée ») va en commentaire. Si la centrale est fermée sur l'heure choisie, une alerte rouge s'affiche : un second clic sur Enregistrer place quand même la commande.</p>`],
@@ -2403,7 +2414,7 @@ function settingsPop(anchor){
   const lastWD=(()=>{if(isWE(d))return false;let n=addDays(d,1);while(isWE(n))n=addDays(n,1);return n.slice(0,7)!==d.slice(0,7)})();
   const moisN=MOISL[D(d).getUTCMonth()];
   openPop(anchor,`<div class="pop-h">Réglages</div>
-   <section class="ps"><div class="pop-l">Vous êtes</div><p class="ps-me"><b>${esc(u.nom||'?')}</b> · ${esc(ROLES[u.role]||'')}</p><button class="pop-b" data-pa="who">Changer de prénom au poste</button></section>
+   <section class="ps"><div class="pop-l">Vous êtes</div><p class="ps-me"><b>${esc(u.nom||'?')}</b> · ${esc(ROLES[u.role]||'')}</p><button class="pop-b" data-pa="who">Accueil centrale</button></section>
    <section class="ps"><div class="pop-l">Compte Google</div><p class="ps-me">${esc(ME?ME.email:'')} · ${esc(ME?(ROLE_NOM[ME.role]||''):'')}</p><button class="pop-b" data-pa="logout">Se déconnecter</button></section>
    ${isAdmin()?`<section class="ps"><div class="pop-l">Administration</div><button class="pop-b" data-pa="importer">Importer une sauvegarde (.json)…</button></section>`:''}
    ${ce?`<section class="ps"><div class="pop-l">Journée du ${esc(dayShort(d).toLowerCase())}</div>${c?`<button class="pop-b" data-pa="clot">Clôturée à ${esc(hm(c.at))} · retélécharger le PDF</button>`:`<button class="pop-b strong" data-pa="clot">Clôturer la journée</button>`}
@@ -3284,7 +3295,7 @@ function boot(){
   const q=document.getElementById('q'),qres=document.getElementById('qres');
   q.addEventListener('input',()=>{const s=q.value.trim().toLowerCase();if(s.length<2){qres.hidden=true;return}
     const dd=parseDate(s);const dateBtn=dd?`<button data-act="goto" data-d="${dd}"><span class="mono" style="font-size:12.5px">${esc(dayShort(dd))}</span><span><b>Ouvrir le planning du ${esc(dayLong(dd))}</b> · ${fmt(totals(dd).m3)} m³</span></button>`:'';
-    const res=S.orders.filter(o=>{const c=cl(o.cl),ch=chan(o.ch);return (c.n+' '+(ch?ch.nom+' '+ch.adr:'')).toLowerCase().includes(s)}).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
+    const res=S.orders.filter(o=>{const c=cl(o.cl),ch=chan(o.ch);return (c.n+' '+(ch?ch.nom+' '+ch.adr:'')).toLowerCase().includes(s)}).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
     qres.innerHTML=dateBtn+(res.length?res.map(o=>`<button data-act="focus" data-oid="${o.id}"><span class="mono" style="font-size:12.5px">${esc(dayShort(o.date))}</span><span><b>${esc(cl(o.cl).n)}</b> · ${esc(siteName(o))} · ${fmt(total(o))} m³${o.kind==='aplacer'?' · à placer':''}</span></button>`).join(''):(dateBtn?'':'<p class="empty">Aucun résultat</p>'));qres.hidden=false});
   q.addEventListener('keydown',e=>{if(e.key==='Escape'){q.value='';qres.hidden=true;q.blur()}});
   // clavier
