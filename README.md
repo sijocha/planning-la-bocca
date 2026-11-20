@@ -17,6 +17,12 @@ Planning des livraisons de béton de la centrale de Cannes La Bocca.
 
 Scripts SQL qui ont créé la base, dans l'ordre : structure, rôles et règles d'accès, stockage des données de la page. Ils servent de référence et de reprise en cas de besoin ; ils ne contiennent ni données ni adresses e-mail.
 
+## Style et animations
+
+- `ameliorations-ui.css` : couche de style chargée après le style de la page (couleurs unifiées clair / sombre, angles droits, formule affichée en entier, pastilles d'état, intercalaire de l'après-midi, animations d'entrée façon Material 3). Retirer la ligne `<link … ameliorations-ui.css>` suffit pour revenir à l'ancien rendu.
+- `motion-m3.js` : animations de fermeture des menus, du tiroir, du chat et des messages, sans toucher à la logique.
+- `supabase/06_prenoms_poste.sql` : prénoms des personnes autorisées pour l'écran « Qui prend le poste ? » (à exécuter une fois dans Supabase).
+
 ## Dossier `vendor/`
 
 Copie figée de la bibliothèque Supabase (supabase-js 2.119.0, licence MIT). La page ne dépend d'aucun serveur tiers pour son code : une mise à jour extérieure ne peut pas la casser.

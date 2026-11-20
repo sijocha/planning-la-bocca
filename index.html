@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="fr"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Planning La Bocca</title>
 <script>window.STANDALONE=true;</script>
 <script src="vendor/supabase-2.119.0.js"></script>
@@ -1373,6 +1373,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
+<link rel="stylesheet" href="ameliorations-ui.css">
 
 <div class="app" id="app">
   <aside class="side" id="side" aria-label="Navigation"></aside>
@@ -2153,16 +2154,26 @@ function openMap(o){
 }
 const NAV_IC={chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',planning:'<path d="M3 21h18"/><path d="M5 21V9h5v12"/><path d="M5 9l2.5-4L10 9"/><path d="M10 13h10v8"/><path d="M13 13v-3h5v3"/><path d="M14 21v-4h3v4"/>',demandes:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',agregats:'<path d="M2 20h20"/><circle cx="8" cy="16" r="3.2"/><circle cx="15.8" cy="16.6" r="2.6"/><circle cx="12.2" cy="10.6" r="2.6"/><circle cx="18.6" cy="11.4" r="1.6"/><circle cx="5.6" cy="10.4" r="1.3"/>',camions:'<path d="M2 17v-5h3.5l2-3.5H10V17"/><ellipse cx="16" cy="11" rx="6" ry="3.6" transform="rotate(-14 16 11)"/><path d="M12.6 8.6l5.6 4.6"/><path d="M10 17h12"/><circle cx="6" cy="18.2" r="2"/><circle cx="18" cy="18.2" r="2"/>',adjuvants:'<path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z"/><path d="M9.2 14.5a2.8 2.8 0 0 0 2.8 2.8"/>',aide:'<circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.2h.01"/>',liens:'<path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>'};
 const NAV_C={chat:'#2f5d55',planning:'#151515',demandes:'#FF4D00',agregats:'#FFC21A',camions:'#00B140',adjuvants:'#1E8CFF',liens:'#FF2E93'};
+NAV_IC.plus='<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>';NAV_C.plus='#151515';
+let navRest=[];
+function navMore(el){
+  if(!popEl.hidden&&popAnchor===el){closePop();return}
+  const nChat=chatUnread();
+  const h=`<div class="nav-more">${navRest.map(([k,l])=>`<button class="pop-b ${k===view.tab?'on':''}" data-pa="go" data-v="${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg>${esc(l)}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}</div>`;
+  openPop(el,h,{go(b){const v=b.dataset.v;setTimeout(()=>act(v==='chat'?'chat':'tab',{dataset:{v}},null,{}));return 'close'}});
+}
 function sideHTML(){
   const nd=S.orders.filter(o=>o.kind==='aplacer').length+S.demandes.filter(r=>!r.done).length;
   const mine=S.demandes.filter(r=>!r.done&&r.pour===role()).length;
   const nd2=role()==='centraliste'?nd:mine;
   const all=[['planning',role()==='centraliste'?'Aujourd\'hui':(isPhone()?'Planning':'Commandes'),role()==='centraliste'?'Aujourd.':'Commandes'],['demandes','Demandes','Demandes'],['agregats','Agrégats','Agrégats'],['camions','Camions','Camions'],['adjuvants','Adjuvants','Adjuv.'],['liens','Raccourcis','Liens']];
   const it=(role()==='centraliste'?all:all.slice(0,2)).concat(prefs.aideOn?[['aide','Mode d\'emploi','Aide']]:[]).concat(isPhone()?[['chat','Chat','Chat']]:[]);
+  // Téléphone : 4 entrées au plus, le reste dans « Plus »
+  if(isPhone()&&it.length>4){navRest=it.slice(3);it.splice(3,it.length,['plus','Plus','Plus'])}else navRest=[];
   const nChat=chatUnread();
   return `<div class="brand"><b>La Bocca</b><span>// Planning centrale</span></div>
   <div class="nav-wrap"><span class="nav-ind" aria-hidden="true"></span><span class="nav-hov" aria-hidden="true"></span>
-  ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${role()!=='centraliste'?'named':''} ${i===0?'main':''} ${(k==='chat'?chatOn():view.tab===k&&!(isPhone()&&chatOn()))?'on':''}" ${k==='chat'?'data-act="chat"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
+  ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${role()!=='centraliste'?'named':''} ${i===0?'main':''} ${(k==='chat'?chatOn():k==='plus'?navRest.some(x=>x[0]===view.tab||(x[0]==='chat'&&chatOn())):view.tab===k&&!(isPhone()&&chatOn()))?'on':''}" ${k==='chat'?'data-act="chat"':k==='plus'?'onclick="event.stopPropagation();navMore(this)"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
   </div><div class="side-rz" title="Glisser pour élargir ou réduire le menu · double-clic : carrés / normal" aria-hidden="true"></div>
   <div class="grow"></div>
   <div class="mini"><span class="lbl">// Données</span><span>Partagées en direct</span></div>`;
@@ -3558,4 +3569,5 @@ let suppressClick=false;
 if(typeof document!=='undefined'&&document.getElementById('main'))boot();
 </script>
 
+<script src="motion-m3.js"></script>
 </body></html>
