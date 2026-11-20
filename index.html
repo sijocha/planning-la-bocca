@@ -1373,7 +1373,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css">
+<link rel="stylesheet" href="ameliorations-ui.css?v=2">
 
 <div class="app" id="app">
   <aside class="side" id="side" aria-label="Navigation"></aside>
@@ -2365,7 +2365,7 @@ function act(a,el,o,e){
     case 'menu':return orderMenu(o,el);
     case 'tour':{const t=o.tours[i];if(t.mv)return tourPop(o,i,el);if(!t.s&&!t.p&&!t.c)return platePick(o,i,el);if(!t.s){if(o.date>TODAY){const id=o.id;setEditing(id);return early(o,el,()=>{byId(id).tours[i].s=1})}t.s=1;break}const id=o.id;setEditing(id);return confirmPop(el,'Retirer le stabilo ?',`Tour ${i+1}${t.p?' · '+t.p:''} · ${fmt(t.v)} m³ est noté chargé.`,'Oui, pas chargé',()=>{byId(id).tours[i].s=0},true)}
     case 'plus':{const id=o.id;setEditing(id);return openPop(el,`<div class="pop-h">Complément à confirmer</div><p class="muted" style="margin:0;font-size:13px">${esc(cl(o.cl).n)} · ${fmt(total(o))} m³ <b>et plus</b> : le client prendra sans doute 1 tour de plus, quantité à confirmer.</p><button class="pop-b on" data-pa="add">Complément confirmé : ajouter le tour…</button><button class="pop-b" data-pa="no">Pas de complément : retirer le [+]</button>`,
-      {add(){const a=popAnchor;byId(id).plus=false;commit();jlog(byId(id).date,`Complément confirmé : ${siteName(byId(id))}`);setTimeout(()=>platePick(byId(id),null,document.querySelector(`#row-${id} .t-add`)||a));return 'close'},no(){byId(id).plus=false;toast('Complément retiré')}})}
+      {add(){const a=popAnchor;byId(id).plus=false;commit();jlog(byId(id).date,`Complément confirmé : ${siteName(byId(id))}`);render(true);platePick(byId(id),null,document.querySelector(`#row-${id} .t-add`)||a);return 'keep'},no(){byId(id).plus=false;toast('Complément retiré')}})}
     case 'addtour':return platePick(o,null,el);
     case 'pill':o.pills[i].on=!o.pills[i].on;break;
     case 'pill-x':{e.stopPropagation();const id=o.id;setEditing(id);return confirmPop(el,'Supprimer ce commentaire ?',o.pills[i].t,'Oui, supprimer',()=>{byId(id).pills.splice(i,1)},true)}
@@ -3571,5 +3571,5 @@ let suppressClick=false;
 if(typeof document!=='undefined'&&document.getElementById('main'))boot();
 </script>
 
-<script src="motion-m3.js"></script>
+<script src="motion-m3.js?v=2"></script>
 </body></html>
