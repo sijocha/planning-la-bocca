@@ -5,7 +5,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700;800&family=Roboto:wght@500&display=swap" rel="stylesheet">
 <style>
 /* Mise en page : rail de navigation à gauche, barre du jour (date en grand), bandeau d'en-tête limité à ~15 % de la hauteur, liste des chantiers en lignes serrées sur toute la largeur, bandeau du bas persistant. Esprit fiche technique : fond blanc cassé, noir, or. */
 :root{
@@ -1279,6 +1279,99 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ink) 30%,transparent);border:2px solid transparent;background-clip:padding-box;border-radius:0}
 ::-webkit-scrollbar-thumb:hover{background:var(--orange);background-clip:padding-box}
 ::-webkit-scrollbar-corner{background:transparent}
+/* ===== Connexion et prise de poste : deux panneaux (encre à gauche, papier à droite) ===== */
+#gate.gate{display:block;padding:0;background:var(--bg);place-items:initial;overflow:auto;
+  --g2-ink:#151515;--g2-inv:#151515;--g2-inv-ink:#efeee8;--g2-inv-soft:#b2b6b1;--g2-org:var(--orange,#ff4d00);--g2-ok:#2e7d4f;--g2-bad:#c8321f;
+  --g2-gbg:#ffffff;--g2-gst:#747775;--g2-gink:#1f1f1f;
+  --g2-in:cubic-bezier(.05,.7,.1,1);--g2-out:cubic-bezier(.3,0,.8,.15)}
+:root[data-theme="dark"] #gate.gate{--g2-inv:#262624;--g2-ok:#5dbb7e;--g2-bad:#ff6b57;--g2-gbg:#131314;--g2-gst:#8e918f;--g2-gink:#e3e3e3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #gate.gate{--g2-inv:#262624;--g2-ok:#5dbb7e;--g2-bad:#ff6b57;--g2-gbg:#131314;--g2-gst:#8e918f;--g2-gink:#e3e3e3}}
+#gate .g2{display:grid;grid-template-columns:minmax(360px,45%) 1fr;min-height:100%;min-height:100dvh}
+#gate .g2-side{position:relative;background:var(--g2-inv);color:var(--g2-inv-ink);padding:max(28px,env(safe-area-inset-top,0px)) 40px 28px max(40px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;justify-content:space-between;gap:28px;overflow:hidden}
+#gate .g2-side::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(239,238,232,.06) 6px 7px)}
+#gate .g2-side>*{position:relative}
+#gate .g2-cn{position:absolute;width:18px;height:18px;border:0 solid rgba(239,238,232,.5)}
+#gate .g2-c1{top:14px;left:14px;border-top-width:1px;border-left-width:1px}#gate .g2-c2{top:14px;right:14px;border-top-width:1px;border-right-width:1px}
+#gate .g2-c3{bottom:14px;left:14px;border-bottom-width:1px;border-left-width:1px}#gate .g2-c4{bottom:14px;right:14px;border-bottom-width:1px;border-right-width:1px}
+#gate .g2-led{display:inline-block;width:8px;height:8px;border-radius:50%!important;background:var(--g2-org);flex:none}
+#gate .g2-led.ok{background:var(--g2-ok)}
+#gate .g2-pulse{animation:g2pulse 2.4s ease-out infinite}
+@keyframes g2pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--g2-org) 55%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+#gate .g2-lbl{display:inline-flex;align-items:center;gap:8px;font:500 11px/1.6 var(--mono);letter-spacing:.16em;text-transform:uppercase}
+#gate .g2-top{display:flex;justify-content:space-between;align-items:center;gap:16px}
+#gate .g2-clock{font:500 12px var(--mono);letter-spacing:.08em;color:var(--g2-inv-soft);white-space:nowrap}
+#gate .g2-brand h1{margin:0;font:700 clamp(64px,8vw,104px)/.92 var(--ui);letter-spacing:-.01em;text-transform:uppercase;color:inherit}
+#gate .g2-brand p{margin:14px 0 0;font:400 13px/1.7 var(--mono);color:var(--g2-inv-soft);max-width:36ch}
+#gate .g2-ruler{display:flex;flex-wrap:wrap;gap:8px 22px;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--g2-inv-soft);border-top:1px solid rgba(239,238,232,.18);padding-top:14px}
+#gate .g2-ruler b{color:var(--g2-inv-ink);font-weight:600}
+#gate .g2-date{margin:0;font:700 clamp(44px,5vw,64px)/.95 var(--ui);text-transform:uppercase}
+#gate .g2-week{font:500 12px var(--mono);letter-spacing:.14em;color:var(--g2-inv-soft);margin-top:8px;text-transform:uppercase}
+#gate .g2-kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(239,238,232,.18);border:1px solid rgba(239,238,232,.18);margin:26px 0 16px}
+#gate .g2-kpi{background:var(--g2-inv);padding:14px 16px}
+#gate .g2-kpi b{display:block;font:600 38px/1 var(--mono);letter-spacing:-.02em}
+#gate .g2-kpi span{display:flex;align-items:center;gap:7px;margin-top:6px;font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--g2-inv-soft)}
+#gate .g2-first,#gate .g2-online{font:400 13px/1.7 var(--mono);color:var(--g2-inv-soft);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#gate .g2-first b{color:var(--g2-inv-ink);font-weight:600}
+#gate .g2-main{display:grid;place-items:center;padding:40px 24px max(40px,env(safe-area-inset-bottom,0px))}
+#gate form.g2-card{width:min(400px,100%);display:flex;flex-direction:column;gap:18px;animation:g2in .4s var(--g2-in) both}
+@keyframes g2in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#gate.g2-leaving form.g2-card{animation:g2leave .28s var(--g2-out) forwards}
+@keyframes g2leave{to{opacity:0;transform:translateX(-24px)}}
+#gate .g2-card h2{margin:0;font:600 40px/1.02 var(--ui);letter-spacing:-.01em}
+#gate .g2-intro{margin:0;font:400 13px/1.7 var(--mono);color:var(--muted)}
+#gate .g2-hint{margin:-8px 0 0;font:400 11px/1.6 var(--mono);color:var(--muted)}
+#gate .g2-gbtn{position:relative;display:flex;align-items:center;justify-content:center;gap:12px;height:48px;width:100%;padding:0 16px 0 12px;background:var(--g2-gbg);color:var(--g2-gink);border:1px solid var(--g2-gst);border-radius:0;cursor:pointer;font-family:Roboto,Arial,sans-serif;font-weight:500;font-size:14px;line-height:20px;letter-spacing:.25px;text-transform:none;transition:transform .1s cubic-bezier(.2,0,0,1)}
+#gate .g2-gbtn::after{content:"";position:absolute;inset:0;background:var(--g2-gink);opacity:0;transition:opacity .15s}
+#gate .g2-gbtn:hover::after{opacity:.08}#gate .g2-gbtn:active{transform:scale(.98)}
+#gate .g2-gbtn:focus-visible{outline:2px solid var(--g2-org);outline-offset:3px}
+#gate .g2-gbtn svg{width:20px;height:20px;flex:none}
+#gate .g2-prog{position:absolute;left:-1px;right:-1px;bottom:-4px;height:2px;background:var(--g2-org);transform:scaleX(0);transform-origin:left}
+#gate .g2-gbtn.busy .g2-prog{animation:g2prog 1.8s cubic-bezier(.2,0,0,1) forwards}
+@keyframes g2prog{to{transform:scaleX(.85)}}
+#gate .g2-state{border:1px solid var(--line);border-left:4px solid var(--g2-bad);background:var(--panel);padding:12px 14px;font:400 13px/1.6 var(--mono)}
+#gate .g2-state.off{border-left-color:var(--g2-org)}
+#gate .g2-state b{display:block;font:600 15px var(--ui);margin-bottom:2px}
+#gate .g2-acct{display:flex;align-items:center;gap:10px;font:400 12px var(--mono);color:var(--muted);min-width:0}
+#gate .g2-acct span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#gate .g2-av{width:28px;height:28px;border-radius:50%!important;display:grid;place-items:center;background:var(--ink);color:var(--bg);font:600 11px var(--mono);flex:none;font-style:normal}
+#gate .g2-field{display:grid;gap:6px}
+#gate .g2-field>label,#gate .g2-flbl{font:500 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+#gate .g2-people{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+#gate .g2-person{display:grid;justify-items:center;gap:5px;padding:12px 6px;border:1px solid var(--line);background:var(--panel);cursor:pointer;color:var(--ink);transition:border-color .15s,transform .1s;min-width:0}
+#gate .g2-person:hover{border-color:var(--ink)}#gate .g2-person:active{transform:scale(.97)}
+#gate .g2-person .g2-av{width:40px;height:40px;font-size:14px;background:var(--sunk);color:var(--ink)}
+#gate .g2-person b{font:600 14px/1.1 var(--ui);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#gate .g2-person small{font:500 9.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#gate .g2-person[aria-pressed="true"]{border:2px solid var(--ink);padding:11px 5px}
+#gate .g2-person[aria-pressed="true"] .g2-av{background:var(--ink);color:var(--bg)}
+#gate .g2-loading{font:400 12px var(--mono);color:var(--muted);grid-column:1/-1}
+#gate .g2-input{height:44px;border:1px solid color-mix(in srgb,var(--ink) 28%,transparent);background:var(--bg);padding:0 12px;font:500 15px var(--ui);border-radius:0;outline:none;color:var(--ink);width:100%}
+#gate .g2-input:focus{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+#gate .g2-roles{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--ink)}
+#gate .g2-roles label{position:relative;border-left:1px solid var(--ink);cursor:pointer}
+#gate .g2-roles label:first-child{border-left:0}
+#gate .g2-roles input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+#gate .g2-roles span{display:block;padding:10px 6px;text-align:center;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;transition:background-color .15s,color .15s}
+#gate .g2-roles input:checked+span{background:var(--ink);color:var(--bg)}
+#gate .g2-roles input:focus-visible+span{outline:2px solid var(--g2-org);outline-offset:-4px}
+#gate .g2-go{display:flex;align-items:center;justify-content:space-between;width:100%;height:52px;padding:0 18px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;font:500 13px var(--mono);letter-spacing:.14em;text-transform:uppercase;border-radius:0;transition:background-color .16s,color .16s,transform .1s}
+#gate .g2-go>span{display:inline-flex;align-items:center;gap:10px}
+#gate .g2-go kbd{font:400 10.5px var(--mono);opacity:.7;border:1px solid currentColor;padding:1px 5px}
+#gate .g2-go:hover{background:transparent;color:var(--ink)}#gate .g2-go:active{transform:scale(.98)}
+#gate .g2-out{align-self:flex-start;background:none;border:0;padding:0;font:400 12px var(--mono);color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-transform:none;letter-spacing:0;height:auto}
+#gate .g2-small{margin:0;font:400 12px/1.6 var(--mono);color:var(--muted)}
+#gate .err{min-height:0}
+#gate .err:empty{display:none}
+#gate .g2-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;font:400 10.5px var(--mono);letter-spacing:.06em;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;margin-top:4px}
+@media (max-width:820px){
+  #gate .g2{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  #gate .g2-side{padding:max(20px,env(safe-area-inset-top,0px)) 20px 20px;gap:16px}
+  #gate .g2-brand h1{font-size:56px}#gate .g2-brand p,#gate .g2-ruler,#gate .g2-first,#gate .g2-online{display:none}
+  #gate .g2-date{font-size:40px}#gate .g2-kpis{margin:14px 0 4px}#gate .g2-kpi{padding:10px 12px}#gate .g2-kpi b{font-size:26px}
+  #gate .g2-main{place-items:start center;padding:26px 20px max(32px,env(safe-area-inset-bottom,0px))}
+  #gate .g2-card h2{font-size:32px}
+}
+@media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
 
 <div class="app" id="app">
@@ -1967,7 +2060,7 @@ function whoHTML(){
 /* ---------- rendu global ---------- */
 let renderPending=false,lastAnim='';
 const migDone=new WeakSet();
-function render(force){
+function render(force){if(typeof gateDay==='function'&&!document.getElementById('gate').hidden)gateDay();
   plRefresh();
   if(!S)return;
   if(histNeed())return;
@@ -2678,50 +2771,120 @@ function saveOrderForm(f){
 }
 
 /* =====================================================================
-   Accès : connexion avec un compte Google autorisé, puis prénom affiché
+   Accès : connexion avec un compte Google autorisé, puis prise de poste
+   (prénoms des personnes autorisées, lus dans Supabase)
    ===================================================================== */
+const G_SVG=`<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
+const G_J=['DIM.','LUN.','MAR.','MER.','JEU.','VEN.','SAM.'],G_M=['JANV.','FÉVR.','MARS','AVR.','MAI','JUIN','JUIL.','AOÛT','SEPT.','OCT.','NOV.','DÉC.'];
+let gClockT=null,gNoms=null;
+const gInit=n=>String(n||'?').trim().split(/[\s.\-_@]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+const gPrenom=n=>{const s=String(n||'').trim();if(!s)return'';const w=s.includes('@')?s.split('@')[0].split(/[._-]/)[0]:s.split(/\s+/)[0];return w.charAt(0).toUpperCase()+w.slice(1)};
+function gClock(){const d=new Date();const t=`${pad(d.getHours())}:${pad(d.getMinutes())} · ${G_J[d.getDay()]} ${d.getDate()} ${G_M[d.getMonth()]}`;document.querySelectorAll('#gate [data-gclock]').forEach(e=>e.textContent=t)}
+function gStartClock(){gClock();clearInterval(gClockT);gClockT=setInterval(()=>{if(document.getElementById('gate').hidden){clearInterval(gClockT);return}gClock()},15000)}
+const gCorners='<i class="g2-cn g2-c1"></i><i class="g2-cn g2-c2"></i><i class="g2-cn g2-c3"></i><i class="g2-cn g2-c4"></i>';
+function gSideBrand(){return `<aside class="g2-side" aria-hidden="true">${gCorners}
+  <div class="g2-top"><span class="g2-lbl"><i class="g2-led g2-pulse"></i>// Planning centrale</span><span class="g2-clock" data-gclock></span></div>
+  <div class="g2-brand"><h1>${esc(String(CENTRALE||'La Bocca')).replace(/\s+/,'<br>')}</h1><p>Centrale de Cannes La Bocca — planning des livraisons béton.</p></div>
+  <div class="g2-ruler"><span>Connexion <b>Google</b></span><span>Données <b>en Europe</b></span><span>Version <b>bêta</b></span></div></aside>`}
+function gSideDay(){return `<aside class="g2-side">${gCorners}
+  <div class="g2-top"><span class="g2-lbl"><i class="g2-led g2-pulse"></i>// Journée du jour</span><span class="g2-clock" data-gclock></span></div>
+  <div id="g2-day"></div>
+  <div class="g2-ruler"><span>Synchro <b id="g2-sync">en cours</b></span></div></aside>`}
+// Chiffres de la journée : remplis dès que les données arrivent (appelé aussi par render)
+function gateDay(){
+  const box=document.getElementById('g2-day');if(!box)return;
+  const d=D(TODAY);const jour=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][d.getUTCDay()];
+  let t={m3:0,n:0,c:0},ap=0,first=null,ok=false;
+  try{if(S&&S.orders){t=totals(TODAY);ap=S.orders.filter(o=>o.kind==='aplacer').length;first=ordersOn(TODAY).filter(o=>statut(o)!=='annulee')[0]||null;ok=true}}catch(e){}
+  const ps=(typeof peers!=='undefined'?peers:[]).filter(p=>p.kind==='viewer'&&p.presence&&p.presence.nom&&!p.isMe);
+  const names=[...new Set(ps.map(p=>p.presence.nom))];
+  const v=x=>ok?esc(String(x)):'–';
+  let fl='';if(first){let cn='';try{cn=cl(first.cl).n}catch(e){}fl=`<div class="g2-first">Premier départ : <b>${esc(first.h||'')} · ${esc(cn)}</b>${siteName(first)?' · '+esc(siteName(first)):''} · ${fmt(total(first))} m³</div>`}
+  box.innerHTML=`<p class="g2-date">${jour}<br>${d.getUTCDate()} ${G_M[d.getUTCMonth()].toLowerCase()}</p>
+    <div class="g2-week">Semaine ${typeof isoWeek==='function'?isoWeek(TODAY):''} · ${d.getUTCFullYear()}</div>
+    <div class="g2-kpis"><div class="g2-kpi"><b>${ok?fmt(t.m3):'–'}</b><span>m³ prévus</span></div><div class="g2-kpi"><b>${v(t.c)}</b><span>chantiers</span></div>
+      <div class="g2-kpi"><b>${v(t.n)}</b><span>tours</span></div><div class="g2-kpi"><b>${v(ap)}</b><span>${ap?'<i class="g2-led g2-pulse"></i>':''}à valider</span></div></div>
+    ${fl}${names.length?`<div class="g2-online"><i class="g2-led ok"></i>En ligne : ${names.map(esc).join(', ')}</div>`:''}`;
+  const sy=document.getElementById('g2-sync');if(sy)sy.textContent=ok?'en direct':'en cours';
+}
+// Prénoms des personnes autorisées (Supabase), puis ceux déjà utilisés sur cet appareil
+async function gateNoms(){
+  const out=[];const seen=new Set();
+  const add=(n,r)=>{const p=gPrenom(n);if(!p)return;const k=p.toLowerCase();if(seen.has(k))return;seen.add(k);out.push({p,r:r||''})};
+  (prefs.recents||[]).forEach(n=>add(n));
+  if(prefs.user&&prefs.user.nom)add(prefs.user.nom);
+  let rows=null;
+  try{const r=await SB.rpc('prenoms_poste');if(!r.error&&Array.isArray(r.data))rows=r.data.map(x=>({n:x.prenom,r:x.role}))}catch(e){}
+  if(!rows&&isAdmin()){try{const r=await SB.from('autorisations').select('nom,email,role,actif').eq('actif',true);if(!r.error&&r.data)rows=r.data.map(x=>({n:x.nom||x.email,r:x.role}))}catch(e){}}
+  if(ME)add(ME.nom||ME.email,ME.role);
+  (rows||[]).filter(x=>x.r!=='lecture').sort((a,b)=>String(a.n).localeCompare(String(b.n),'fr')).forEach(x=>add(x.n,x.r));
+  return out;
+}
+function gatePeople(list){
+  const box=document.getElementById('g2-people');if(!box)return;
+  const cur=(document.getElementById('g-nom')||{}).value||'';
+  box.innerHTML=list.map((x,i)=>`<button type="button" class="g2-person" data-gp="${esc(x.p)}" data-gr="${esc(ROLE_UI[x.r]||'')}" aria-pressed="${x.p.toLowerCase()===cur.toLowerCase()}"><i class="g2-av">${esc(gInit(x.p))}</i><b>${esc(x.p)}</b>${x.r?`<small>${esc(ROLE_NOM[x.r]||x.r)}</small>`:''}</button>`).join('')
+    +`<button type="button" class="g2-person" data-gp="" aria-pressed="false"><i class="g2-av">+</i><b>Autre</b><small>Prénom libre</small></button>`;
+  box.querySelectorAll('.g2-person').forEach(b=>b.onclick=()=>{
+    box.querySelectorAll('.g2-person').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    const inp=document.getElementById('g-nom'),oth=document.getElementById('g2-other');
+    if(b.dataset.gp){inp.value=b.dataset.gp;oth.hidden=true;const r=b.dataset.gr&&document.querySelector(`#gate input[name="g-role"][value="${b.dataset.gr}"]`);if(r)r.checked=true;document.getElementById('g-err').textContent=''}
+    else{inp.value='';oth.hidden=false;inp.focus()}
+  });
+}
 function showGate(){
-  const g=document.getElementById('gate');
-  const head=`<div><p class="mono" style="font-size:12px;letter-spacing:.08em">CENTRALE DE CANNES LA BOCCA</p><h1>Planning des livraisons</h1></div>`;
-  if(!ME){
-    g.innerHTML=`<form id="gateform" autocomplete="off" data-step="login">${head}
-      <p style="font-size:15px;margin:0">Connectez-vous avec votre compte Google. Seules les adresses autorisées par la centrale ont accès au planning.</p>
-      <button class="btn primary" type="submit" style="height:50px;font-size:16px;gap:10px"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Se connecter avec Google</button>
+  const g=document.getElementById('gate');g.classList.remove('g2-leaving');
+  if(!ME||!ME.actif){
+    const refus=!!ME;const off=!navigator.onLine;
+    g.innerHTML=`<div class="g2">${gSideBrand()}<main class="g2-main"><form id="gateform" class="g2-card" autocomplete="off" data-step="${refus?'refus':'login'}">
+      <span class="g2-lbl"><i class="g2-led"></i>// Connexion</span>
+      <h2>Ouvrir le planning</h2>
+      ${refus?`<div class="g2-state" role="alert"><b>Ce compte n'est pas autorisé</b><span class="mono">${esc(ME.email)}</span> n'est pas dans la liste des accès de la centrale. Demandez à l'administrateur de l'ajouter, puis reconnectez-vous.</div>
+        <button class="g2-gbtn" type="submit">${G_SVG}<span>Changer de compte Google</span><i class="g2-prog"></i></button>`
+      :`<p class="g2-intro">Connectez-vous avec votre compte Google. Seules les adresses autorisées par la centrale ont accès au planning.</p>
+        <button class="g2-gbtn" type="submit" id="g2-gbtn">${G_SVG}<span id="g2-glabel">Se connecter avec Google</span><i class="g2-prog"></i></button>
+        <p class="g2-hint">Période de test : utilisez l'adresse ajoutée par l'administrateur.</p>
+        ${off?`<div class="g2-state off" role="status"><b>Pas de réseau</b>La connexion sera possible dès le retour du réseau.</div>`:''}`}
       <p class="err" id="g-err" role="alert"></p>
-    </form>`;
-    g.hidden=false;return;
-  }
-  if(!ME.actif){
-    g.innerHTML=`<form id="gateform" autocomplete="off" data-step="refus">${head}
-      <p style="font-size:15px;margin:0">Le compte <b>${esc(ME.email)}</b> n'est pas encore autorisé à ouvrir le planning.</p>
-      <p style="font-size:14px;margin:0">Demandez au centraliste de l'ajouter à la liste des accès, puis reconnectez-vous.</p>
-      <button class="btn primary" type="submit" style="height:46px;font-size:15px">Changer de compte</button>
-    </form>`;
-    g.hidden=false;return;
+      <div class="g2-foot"><span>Données hébergées en Europe</span><span>Planning ${esc(String(CENTRALE||''))}</span></div>
+    </form></main></div>`;
+    g.hidden=false;gStartClock();
+    const gb=document.getElementById('g2-gbtn');if(gb)gb.addEventListener('click',()=>{gb.classList.add('busy');const l=document.getElementById('g2-glabel');if(l)l.textContent='Ouverture de Google…'});
+    return;
   }
   const u=prefs.user||{};
-  const nom0=u.nom||String(ME.nom||'').split(/[\s@]/)[0]||'';
-  const roleUI=isAdmin()?`<div class="fl">Ouvrir en tant que<div class="radios">${Object.entries(ROLES).map(([k,l])=>`<label><input type="radio" name="g-role" value="${k}" ${(u.role||'centraliste')===k?'checked':''}><span>${l}</span></label>`).join('')}</div></div>`
-    :`<p style="font-size:14px;margin:0">Rôle : <b>${esc(ROLE_NOM[ME.role]||ME.role)}</b></p>`;
-  g.innerHTML=`<form id="gateform" autocomplete="off" data-step="nom">${head}
-    <p class="mono" style="font-size:12.5px;margin:0">Connecté : ${esc(ME.email)}</p>
+  const nom0=u.nom||gPrenom(ME.nom||ME.email)||'';
+  const roleUI=isAdmin()?`<div class="g2-field"><span class="g2-flbl">Ouvrir en tant que (admin)</span><div class="g2-roles" role="radiogroup">${Object.entries(ROLES).map(([k,l])=>`<label><input type="radio" name="g-role" value="${k}" ${(u.role||'centraliste')===k?'checked':''}><span>${l}</span></label>`).join('')}</div></div>`
+    :`<p class="g2-small">Rôle : <b>${esc(ROLE_NOM[ME.role]||ME.role)}</b></p>`;
+  g.innerHTML=`<div class="g2">${gSideDay()}<main class="g2-main"><form id="gateform" class="g2-card" autocomplete="off" data-step="nom">
+    <div class="g2-acct"><i class="g2-av">${esc(gInit(ME.nom||ME.email))}</i><span>${esc(ME.email)} · ${esc(ROLE_NOM[ME.role]||'')}</span></div>
+    <span class="g2-lbl"><i class="g2-led"></i>// Prise de poste</span>
+    <h2>Bonjour, qui prend le poste&nbsp;?</h2>
+    <div class="g2-field"><span class="g2-flbl">Personnes autorisées</span><div class="g2-people" id="g2-people" role="group" aria-label="Choisir un prénom"><span class="g2-loading">Chargement des prénoms…</span></div></div>
+    <div class="g2-field" id="g2-other" hidden><label for="g-nom">Autre prénom</label><input class="g2-input" id="g-nom" value="${esc(nom0)}" maxlength="24" placeholder="Prénom"></div>
     ${roleUI}
-    <label class="fl">Prénom affiché<input id="g-nom" value="${esc(nom0)}" required placeholder="Karim" maxlength="24"></label>
     <p class="err" id="g-err" role="alert"></p>
-    <button class="btn primary" type="submit" style="height:46px;font-size:16px">Ouvrir le planning</button>
-    <p style="font-size:13px;margin:0">Au poste de la centrale, chaque centraliste indique son prénom en prenant son poste : il s'affiche auprès des autres et dans le journal quand il modifie une ligne.</p>
-    <button class="btn ghost" type="button" onclick="supaLogout()" style="align-self:flex-start">Se déconnecter</button>
-  </form>`;
-  g.hidden=false;setTimeout(()=>{const n=g.querySelector('#g-nom');if(n)n.focus()},30);
+    <button class="g2-go" type="submit"><span><i class="g2-led"></i>Ouvrir le planning →</span><kbd>Entrée</kbd></button>
+    <p class="g2-small">Votre prénom apparaît auprès des autres et dans le journal à chaque modification.</p>
+    <button class="g2-out" type="button" onclick="supaLogout()">Pas vous ? Se déconnecter</button>
+  </form></main></div>`;
+  g.hidden=false;gStartClock();gateDay();
+  const fill=list=>{gNoms=list;gatePeople(list);if(!list.length){document.getElementById('g2-other').hidden=false}};
+  if(gNoms)fill(gNoms);
+  gateNoms().then(fill).catch(()=>fill(gNoms||[]));
 }
 function gateSubmit(f){
   const step=f.dataset.step;
   if(step==='login')return supaLogin();
   if(step==='refus')return supaLogout();
-  const nom=f.querySelector('#g-nom').value.trim();if(!nom){f.querySelector('#g-err').textContent='Indiquez votre prénom.';return}
+  const nom=f.querySelector('#g-nom').value.trim();if(!nom){f.querySelector('#g-err').textContent='Choisissez votre prénom.';return}
   const r=f.querySelector('input[name="g-role"]:checked');
-  prefs.user={nom:nom.slice(0,24),role:isAdmin()&&r?r.value:(ROLE_UI[ME.role]||'commercial')};prefs.gate=TODAY;prefs.email=ME.email;savePrefs();
-  document.getElementById('gate').hidden=true;
+  prefs.user={nom:nom.slice(0,24),role:isAdmin()&&r?r.value:(ROLE_UI[ME.role]||'commercial')};prefs.gate=TODAY;prefs.email=ME.email;
+  prefs.recents=[prefs.user.nom,...(prefs.recents||[]).filter(n=>n.toLowerCase()!==prefs.user.nom.toLowerCase())].slice(0,6);
+  savePrefs();
+  const g=document.getElementById('gate');
+  const done=()=>{g.hidden=true;g.classList.remove('g2-leaving');clearInterval(gClockT)};
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)done();else{g.classList.add('g2-leaving');setTimeout(done,280)}
   if(room)room.presence({nom:prefs.user.nom,role:prefs.user.role,edit:null}).catch(()=>{});
   render(true);
 }
