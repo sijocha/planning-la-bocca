@@ -106,13 +106,6 @@ p.half-l.val { color: var(--ink) !important; display: flex; align-items: center;
 p.half-l.val::before { content: ""; width: 8px; height: 8px; border-radius: 50% !important; background: var(--orange); animation: m3-pulse 2.4s ease-out infinite; }
 @media (max-width: 760px) { .prow { flex-wrap: wrap !important; } .prow .pacts { flex: 1 0 100%; display: flex; flex-wrap: wrap; gap: 6px; } .prow .pacts .btn { flex: 1 1 auto; justify-content: center; } }
 
-/* ---------- 6. Intercalaire matin / après-midi (section encre) ---------- */
-p.half-l.pm { background: var(--inv) !important; color: var(--inv-ink) !important; padding: 8px 12px !important; margin-top: 10px !important; border: 0 !important; }
-p.half-l.pm::after { display: none !important; }
-:root[data-theme="dark"] p.half-l.pm { background: #34342f !important; color: var(--ink) !important; box-shadow: inset 0 1px 0 var(--line-strong); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme]) p.half-l.pm { background: #34342f !important; color: var(--ink) !important; } }
-p.half-l.pm.closed { background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(239,238,232,.08) 6px 7px) !important; }
-
 /* ---------- 7. Textures ---------- */
 .tex-hatch { background-image: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--ink) 5%, transparent) 6px 7px); }
 .tex-dot { background-image: radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1.4px); background-size: 22px 22px; }
