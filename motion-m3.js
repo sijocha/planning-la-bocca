@@ -27,11 +27,31 @@
   }
 
   // 1. Popovers et menus (closePop)
+  //    Si une nouvelle fenêtre s'ouvre pendant l'animation de sortie (ex. « Complément confirmé :
+  //    ajouter le tour… » qui enchaîne sur « Nouveau tour »), la fermeture en attente est annulée :
+  //    sinon elle viderait la nouvelle fenêtre 150 ms plus tard.
+  var popClosing = null;
   if (typeof window.closePop === 'function') {
     var _closePop = window.closePop;
     window.closePop = function () {
       var el = document.getElementById('pop');
-      leave(el, 150, function () { _closePop(); });
+      if (popClosing) return;                    // une sortie est déjà en cours
+      var tok = {}; popClosing = tok;
+      leave(el, 150, function () {
+        if (popClosing !== tok) return;          // annulée par une nouvelle ouverture
+        popClosing = null; _closePop();
+      });
+    };
+  }
+  if (typeof window.openPop === 'function') {
+    var _openPop = window.openPop;
+    window.openPop = function () {
+      if (popClosing) {
+        popClosing = null;
+        var el = document.getElementById('pop');
+        if (el) el.classList.remove('is-leaving');
+      }
+      return _openPop.apply(this, arguments);
     };
   }
 

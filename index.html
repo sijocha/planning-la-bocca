@@ -1534,14 +1534,15 @@ function platePick(o,i,anchor){const id=o.id;setEditing(id);const t=i==null?null
   const btn=p=>{const ab=absentOn(o.date,p.c);return `<button class="pop-c ${t&&t.p===p.c?'on':''} ${ab?'off':''}" data-pa="pk" data-v="${esc(p.c)}" title="${esc(p.p||'')}${ab?' · absent ce jour':''}">${esc(p.c)}</button>`};
   const mine=FLEET(),oth=onSite(o);
   openPop(anchor,`<div class="pop-h">${t?`Tour ${i+1}`:'Nouveau tour'}</div>
-    <label class="fl pk-v">Cubage chargé (m³)<input id="pk-v" type="number" step="0.5" min="0.5" max="${cap}" value="${t?t.v:cap}" inputmode="decimal"></label>
+    <label class="fl pk-v">Cubage chargé (m³)<input id="pk-v" type="text" value="${fmt(t?t.v:cap)}" inputmode="decimal" autocomplete="off"></label>
     <div class="pop-l">Mes camions</div><div class="pop-grid">${mine.map(btn).join('')}</div>
     ${oth.length?`<div class="pop-l">Sur ce chantier</div><div class="pop-grid">${oth.map(btn).join('')}</div>`:''}
     <form data-pa="typed" class="pk-f"><input id="pk-t" placeholder="Noter la plaque (ex. EF507VT)" aria-label="Plaque" autocomplete="off"><button class="btn primary" type="submit">OK</button></form>
     <button class="pop-b" data-pa="none">${t?'Chargé sans plaque':'Ajouter sans plaque'}</button>`,
-  {pk(el){if(!vol())return 'keep';const c=el.dataset.v;return early(o,null,()=>put(c))},typed(f){if(!vol())return 'keep';const v=f.querySelector('#pk-t').value;if(!plN(v))return 'keep';const c=plateOf(v,byId(id));return early(o,null,()=>put(c))},none(){if(!vol())return 'keep';return i==null?put(''):early(o,null,()=>put(''))}});
+  {pk(el){const v=vol();if(!v)return 'keep';const c=el.dataset.v;return early(o,null,()=>put(c,v))},typed(f){const v=vol();if(!v)return 'keep';const t=f.querySelector('#pk-t').value;if(!plN(t))return 'keep';const c=plateOf(t,byId(id));return early(o,null,()=>put(c,v))},none(){const v=vol();if(!v)return 'keep';return i==null?put('',v):early(o,null,()=>put('',v))}});
   function vol(){const e=popEl.querySelector('#pk-v');const v=e?num(e.value):cap;if(!(v>0)||v>cap+.01){toast(`Cubage entre 0,5 et ${fmt(cap)} m³`);e&&e.focus();return 0}return v}
-  function put(c){const x=byId(id);const v=vol()||cap;if(i==null){x.tours.push(c?{v,s:1,x:1,p:c}:{v,s:0,x:1});toast(c?`Bulle ${c} ajoutée (chargée)`:'Bulle ajoutée')}else{const u=x.tours[i];u.p=c;u.s=1;u.v=v;toast(c?`Tour ${i+1} chargé · ${c} · ${fmt(v)} m³`:`Tour ${i+1} chargé · ${fmt(v)} m³`)}}
+  // le cubage est lu AVANT une éventuelle confirmation (qui remplace le contenu de la fenêtre)
+  function put(c,v){const x=byId(id);v=v||cap;if(i==null){x.tours.push(c?{v,s:1,x:1,p:c}:{v,s:0,x:1});toast(c?`Bulle ${c} ajoutée (chargée)`:'Bulle ajoutée')}else{const u=x.tours[i];u.p=c;u.s=1;u.v=v;toast(c?`Tour ${i+1} chargé · ${c} · ${fmt(v)} m³`:`Tour ${i+1} chargé · ${fmt(v)} m³`)}}
   setTimeout(()=>{const n=popEl.querySelector('#pk-t');if(n&&window.matchMedia('(pointer:fine)').matches)n.focus()},20);
 }
 function author(){const u=prefs.user;if(!u)return 'Anonyme';return u.role==='centraliste'?u.nom:`${u.nom} (${u.role==='labo'?'labo':'commercial'})`}
@@ -1707,7 +1708,7 @@ function rowHTML(o,editors){
     <div class="r-pom">${pom}</div>
     <div class="r-pills" ${o.pills.length>1?'data-more="1"':''}>${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${o.pompe&&o.pompe.city?'<span class="mo bag" title="Citybag à prévoir (chantier avec pompe)">Citybag</span>':''}${pillsRow(o)}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande" title="Statut, modifier, dupliquer…">⋯</button>
-    ${PH?phT:SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button></div>`}
+    ${PH?phT:SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" data-long="1" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button></div>`}
     ${prefs.vue==='detail'||OPEN?detLine(o,c,ch,sap):''}
   </article>`;
 }
@@ -1749,7 +1750,7 @@ function rowCompact(o,editors){
     <div class="r-vol"><b>${fmt(livre(o))}</b>/${fmt(total(o))}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}</div>
     <div class="c r-ch">${o.kind==='pour'?`<span class="tag pour" style="margin:0 5px 0 0">${esc(o.pour.toUpperCase())}</span>`:''}${esc(siteName(o))}</div>
     <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule">${esc(o.f||'?')}</button></div>
-    <div class="r-prog" title="${k}/${n} tours chargés">${bar}<span class="mono">${k}/${n}</span>${o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe fait':'Clic : bon de pompe fait'}">${esc(o.pompe.t==='BQA'?'BQA':o.pompe.t+' m')}</button>`+pompeResa(o):''}${o.cam?`<span class="mo">${esc(o.cam)}</span>`+resaBadge(o):''}${o.plus?'<button class="mo t-plus" data-act="plus" title="Complément à confirmer">+1T ?</button>':''}${o.pills.length?`<button class="tag" data-act="pills-all" title="${esc(o.pills.map(p=>p.t).join(' · '))}">${o.pills.length} info${o.pills.length>1?'s':''}</button>`:''}</div>
+    <div class="r-prog" title="${k}/${n} tours chargés">${bar}<span class="mono">${k}/${n}</span>${o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe fait':'Clic : bon de pompe fait'}">${esc(o.pompe.t==='BQA'?'BQA':o.pompe.t+' m')}</button>`+pompeResa(o):''}${o.cam?`<span class="mo">${esc(o.cam)}</span>`+resaBadge(o):''}${o.plus?'<button class="mo t-plus" data-act="plus" data-long="1" title="Complément à confirmer">+1T ?</button>':''}${o.pills.length?`<button class="tag" data-act="pills-all" title="${esc(o.pills.map(p=>p.t).join(' · '))}">${o.pills.length} info${o.pills.length>1?'s':''}</button>`:''}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande">⋯</button>
   </article>`;
 }
@@ -2293,7 +2294,7 @@ function tourPop(o,i,anchor){const id=o.id;const t=o.tours[i];const fl=FLEET().c
   <div class="pop-l">Plaque</div><div class="pop-grid">${fl.map(p=>{const ab=absentOn(o.date,p.c),x=convOf(o.date,p.c);return `<button class="pop-c ${t.p===p.c?'on':''} ${ab?'off':''}" data-pa="plaque" data-v="${esc(p.c)}" title="${esc(p.p||'')}${ab?' · absent ce jour':x&&x.st==='pret'?' · prêté à '+esc(x.pc)+' ('+esc(x.per)+')':''}">${esc(p.c)}</button>`}).join('')}<button class="pop-c" data-pa="plaque" data-v="">—</button></div>
   <form data-pa="typed" class="pk-f"><input id="pk-t" placeholder="Autre plaque (ex. EF507VT)" aria-label="Autre plaque" autocomplete="off"><button class="btn" type="submit">OK</button></form>
   <div class="pop-l">Chargé par une autre centrale</div><div class="pop-grid">${AG().map(c=>`<button class="pop-c txt ${t.c===c?'on':''}" data-pa="ext" data-v="${c}">${c}</button>`).join('')}${t.c?'<button class="pop-c txt" data-pa="ext" data-v="">Aucune</button>':''}</div>
-  <form data-pa="vol"><label class="fl">Volume du tour (m³)<input id="pv" type="number" step="0.5" min="0.5" max="${capOf(o.cam)}" value="${t.v}"></label><button class="btn" type="submit">Changer le volume</button></form>
+  <form data-pa="vol"><label class="fl">Volume du tour (m³)<input id="pv" type="text" value="${fmt(t.v)}" inputmode="decimal" autocomplete="off"></label><button class="btn" type="submit">Changer le volume</button></form>
   <button class="pop-b danger" data-pa="del">Supprimer ce tour</button>`;
   const T=()=>byId(id).tours[i];
   openPop(anchor,html,{typed(f){const v=f.querySelector('#pk-t').value;if(!plN(v))return 'keep';const c=plateOf(v,byId(id));return early(o,null,()=>{const x=T();x.p=c;x.s=1})},toggle(){const x=T();if(!x.s)return early(o,null,()=>{T().s=1});return confirmPop(null,'Retirer le stabilo ?',`Tour ${i+1}${x.p?' · '+x.p:''} · ${fmt(x.v)} m³ est noté chargé.`,'Oui, pas chargé',()=>{T().s=0},true)},plaque(el){const c=el.dataset.v;if(!c||T().s){const x=T();x.p=c;if(c)x.s=1;return}return early(o,null,()=>{const x=T();x.p=c;x.s=1})},ext(el){const c=el.dataset.v;const x=T();if(!c){delete x.c;x.s=0;return}x.c=c;x.s=1},vol(f){const v=num(f.querySelector('#pv').value);if(v>0)T().v=v},del(){return confirmPop(null,'Supprimer ce tour ?',`Tour ${i+1} · ${fmt(T().v)} m³`,'Oui, supprimer',()=>{unmove(id,i);byId(id).tours.splice(i,1)},true)},
@@ -2306,7 +2307,7 @@ function tourPop(o,i,anchor){const id=o.id;const t=o.tours[i];const fl=FLEET().c
       const k=dst.tours.findIndex(u=>!u.s&&!u.c&&!u.mv&&!u.rf&&!u.p);
       popEl.innerHTML=`<div class="pop-h">${esc(x0.p||'Camion')} → ${esc(siteName(dst))}</div>
         <p class="muted" style="margin:0;font-size:12.5px">${k>=0?`Il prendra le tour ${k+1}, première bulle libre.`:'Aucune bulle libre : une bulle sera créée.'}</p>
-        <form data-pa="mvgo" class="mv-f"><label class="fl">m³ replacés<input id="mv-v" type="number" step="0.5" min="0.5" max="${capOf(dst.cam)||12}" value="${x0.v}" required></label>
+        <form data-pa="mvgo" class="mv-f"><label class="fl">m³ replacés<input id="mv-v" type="text" value="${fmt(x0.v)}" inputmode="decimal" autocomplete="off" required></label>
         <label class="ck"><input type="checkbox" id="mv-full"> Toupie rechargée pleine à la centrale</label>
         <div class="pop-cf"><button class="btn primary" type="submit">Valider</button><button class="btn" type="button" data-pa="cfno">Annuler</button></div></form>`;
       popEl.dataset.mv=JSON.stringify({dId,re,k});placePop();setTimeout(()=>{const n=popEl.querySelector('#mv-v');if(n){n.focus();n.select()}},20);return 'keep'},
@@ -2481,6 +2482,7 @@ function pillEdit(o,i,anchor){const id=o.id;setEditing(id);const p=o.pills[i];
 function longAct(el){const a=el.dataset.act,i=+el.dataset.i;const row=el.closest('[data-id]');
   if(row&&lockStop(row.dataset.id))return;
   if(a==='conv'){const d=el.dataset.d,p=el.dataset.p;return openPop(el,`<div class="pop-h">${esc(p)} · ${esc(dayShort(d))}</div><button class="pop-b" data-pa="mod">Modifier…</button><button class="pop-b danger" data-pa="del">Annuler l'absence</button>`,{mod(){setTimeout(()=>convPop(el,d,p));return 'close'},del(){const x=(S.convocs[d]||{})[p];delete S.convocs[d][p];if(x&&x.st==='abs')jlog(d,`Absence annulée : ${p}`);toast('Absence annulée')}})}
+  if(a==='plus'&&row)return act('plus',el,byId(row.dataset.id),{});
   if(a==='tour'&&row)return tourPop(byId(row.dataset.id),i,el);
   if(a==='pill'&&row)return pillEdit(byId(row.dataset.id),i,el);
   if(a==='semi-t')return semiTourPop(el,dayOf(el),i,+el.dataset.k);
@@ -2602,7 +2604,7 @@ function openConfig(focus){
         <form class="inline-f" data-cfgform="flotte"><input id="cf-pc" placeholder="N° de parc ou repère (ex. 7656, EF)" aria-label="N° de parc ou repère" style="max-width:220px"><input id="cf-pp" placeholder="Plaque entière (optionnel, ex. EF-507-VT)" aria-label="Plaque entière, optionnel"><button class="btn sm">Ajouter</button></form>
         <p class="muted" style="font-size:12.5px;margin:6px 0 0">Les camions attitrés à ${CENTRALE}. Ils servent aux bulles de chargement, aux convocations et à l'impression.</p></div></div>
       <div class="q"><div class="ql">Camions<small>Type · m³ par tour</small></div><div>${list('camions',c.camions,x=>`<b>${esc(x.t)}</b><small>${fmt(x.cap)} m³</small>`)}
-        <form class="inline-f" data-cfgform="camions"><input id="cf-ct" placeholder="Type (ex. SP8)" aria-label="Type de camion"><input id="cf-cc" type="number" step="0.5" min="0.5" placeholder="m³" aria-label="Capacité" style="max-width:80px"><button class="btn sm">Ajouter</button></form></div></div>
+        <form class="inline-f" data-cfgform="camions"><input id="cf-ct" placeholder="Type (ex. SP8)" aria-label="Type de camion"><input id="cf-cc" type="text" inputmode="decimal" autocomplete="off" placeholder="m³" aria-label="Capacité" style="max-width:80px"><button class="btn sm">Ajouter</button></form></div></div>
       <div class="q"><div class="ql">Pompes<small>Tailles</small></div><div>${list('pompes',c.pompes,x=>x==='BQA'?'BQA (tuyaux)':esc(x)+' m')}
         <form class="inline-f" data-cfgform="pompes"><input id="cf-p" placeholder="Taille (ex. 38 ou BQA)" aria-label="Taille de pompe"><button class="btn sm">Ajouter</button></form></div></div>
       <div class="q"><div class="ql">Fournisseurs<small>Pompes</small></div><div>${list('fourn',c.fourn,x=>esc(x))}
@@ -2661,7 +2663,7 @@ function openOrderForm(o,opt){
     <div class="q"><div class="ql">Pourquoi<small>Facultatif</small></div><div class="fields"><div class="full">${radios('f-ouv',OUVRAGES,base.ouv)}</div><label class="fl full">Ou en clair (il fait quoi ?)<input id="f-ouvx" value="${esc(OUVRAGES.includes(base.ouv)?'':base.ouv)}" placeholder="Ex. dalle du garage + escalier" autocomplete="off"></label></div></div>
     <div class="q"><div class="ql">Quoi<small>Formule, m³</small></div><div class="fields">
       <label class="fl full">Formule (telle qu'on l'écrit)<input id="f-f" list="dl-f" value="${esc(base.f)}" required autocomplete="off" placeholder="C25/30 D20 S3 XC1 · ou attente formule labo"></label>
-      <div class="fl">Quantité (m³)<div class="qplus"><input id="f-m3" type="number" step="0.5" min="0.5" value="${esc(m3)}" required inputmode="decimal" aria-label="Quantité en m³"><label class="plus-t" title="Le client prendra sans doute un complément : 1 tour de plus, quantité à confirmer"><input type="checkbox" id="f-plus" ${base.plus?'checked':''}><span>[+]</span></label></div><small class="plus-h">[+] = et plus : 1 tour à confirmer</small></div>
+      <div class="fl">Quantité (m³)<div class="qplus"><input id="f-m3" type="text" value="${esc(m3==null?'':String(m3).replace('.',','))}" required inputmode="decimal" autocomplete="off" aria-label="Quantité en m³"><label class="plus-t" title="Le client prendra sans doute un complément : 1 tour de plus, quantité à confirmer"><input type="checkbox" id="f-plus" ${base.plus?'checked':''}><span>[+]</span></label></div><small class="plus-h">[+] = et plus : 1 tour à confirmer</small></div>
       <label class="fl">N° SAP (facultatif)<input id="f-sap" value="${esc(o?o.sap||'':'')}" inputmode="numeric" placeholder="8 chiffres"></label>
       <div class="full" id="f-hint"></div>
     </div></div>
