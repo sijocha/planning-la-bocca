@@ -2534,6 +2534,7 @@ function applyTheme(){const r=document.documentElement;if(prefs.theme==='auto')r
 let formCtx=null;
 function openOrderForm(o,opt){
   if(o&&o.id&&!(opt&&opt.dup)&&lockStop(o.id))return;
+  if(o&&o.id&&MODE==='shared'&&room&&room.live&&!room.live())toast('Direct interrompu : les autres ne voient pas que vous modifiez cette commande. Reconnexion en cours…');
   opt=opt||{};const isNew=!o||opt.dup;
   const base=o?clone(o):{date:view.mode==='jour'&&view.tab==='planning'?view.date:TODAY,h:'07:00',cl:'',ch:'',ouv:'',f:'',m3:'',cam:'',camNote:'',pompe:null,am:false,spec:false,pills:[]};
   if(opt.dup){base.date=opt.date;base.st=null;base.kind=base.kind==='aplacer'?'cmd':base.kind}
@@ -2909,11 +2910,11 @@ async function forceSync(quiet){
     overlayPending();saveMirror();sync.online=true;sync.cache=false;sync.err='';sync.last=new Date();render(true);if(!quiet)toast('Planning synchronisé')
   }catch(e){sync.online=false;renderSync();toast('Pas de connexion au serveur : les modifications restent sur cet appareil')}
 }
-function syncState(){const n=Object.keys(pending).length;if(MODE==='local')return 'local';if(MODE!=='shared')return 'wait';if(sync.err||!sync.online||!navigator.onLine)return 'bad';if(n||sync.cache)return 'wait';return 'ok'}
+function syncState(){const n=Object.keys(pending).length;if(MODE==='local')return 'local';if(MODE!=='shared')return 'wait';if(sync.err||!sync.online||!navigator.onLine)return 'bad';if(n||sync.cache)return 'wait';if((DB&&DB.live&&!DB.live())||(room&&room.live&&!room.live()))return 'wait';return 'ok'}
 function renderSync(){const el=document.getElementById('sync');if(el)el.innerHTML=syncHTML();
   const me=document.getElementById('me');if(!me)return;const st=syncState();const u=prefs.user;
   me.className='me sy-'+st;me.textContent=u?u.nom.slice(0,2).toUpperCase():'?';
-  const lab={ok:'synchronisé',bad:'pas synchronisé (hors ligne)',wait:'synchronisation en cours',local:'démo locale sur cet appareil'}[st];
+  const cut=MODE==='shared'&&((DB&&DB.live&&!DB.live())||(room&&room.live&&!room.live()));const lab={ok:'synchronisé en direct',bad:'pas synchronisé (hors ligne)',wait:cut?'direct interrompu, reconnexion en cours':'synchronisation en cours',local:'démo locale sur cet appareil'}[st];
   me.title=`${u?author():'Utilisateur'} · ${lab} · réglages`;me.setAttribute('aria-label',me.title)}
 
 /* =====================================================================
@@ -3124,9 +3125,13 @@ function supaDb(sb){
   async function load(name){lastLoad=Date.now();cache[name]=await fetchAll(name,FROM);emit(name)}
   const fail=(name,e)=>(subs[name]||[]).forEach(s=>s.err&&s.err(supaErr(e)));
   function reloadAll(){Object.keys(subs).forEach(n=>load(n).catch(e=>fail(n,e)))}
+  let live=false,retryT=null,tries=0;
+  // jeton à jour pour le direct (après une mise en veille, le jeton a pu expirer)
+  async function freshAuth(){try{const {data}=await sb.auth.getSession();if(data&&data.session&&sb.realtime&&sb.realtime.setAuth)sb.realtime.setAuth(data.session.access_token)}catch(e){}}
+  function retry(){if(retryT)return;live=false;const ms=Math.min(30000,1500*Math.pow(2,tries++));retryT=setTimeout(async()=>{retryT=null;try{if(chan)await sb.removeChannel(chan)}catch(e){}chan=null;await freshAuth();ensureChan()},ms)}
   function ensureChan(){
     if(chan)return;
-    chan=sb.channel('documents-direct')
+    chan=sb.channel('documents-direct-'+Math.random().toString(36).slice(2,8))
       .on('postgres_changes',{event:'*',schema:'public',table:'documents'},p=>{
         const r=p.eventType==='DELETE'?p.old:p.new;const name=r&&r.collection;if(!name||!subs[name])return;
         const m=cache[name]||(cache[name]=new Map());
@@ -3135,9 +3140,18 @@ function supaDb(sb){
           if(r.modifie_le)ver[k]=r.modifie_le;if(inWin(name,r.id,r.data))m.set(r.id,r.data);else m.delete(r.id)}
         emit(name);
       })
-      .subscribe(st=>{if(st==='SUBSCRIBED'&&Date.now()-lastLoad>4000)reloadAll()});
+      .subscribe(st=>{
+        if(st==='SUBSCRIBED'){live=true;tries=0;if(Date.now()-lastLoad>4000)reloadAll()}
+        else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED')retry();
+        if(typeof renderSync==='function')renderSync()});
   }
+  // filet de sécurité : au retour sur l'onglet, au retour du réseau, et toutes les 20 s si le direct est coupé
+  async function wake(force){await freshAuth();const joined=chan&&chan.state==='joined';if(!joined){live=false;retry()}if(force||!joined||Date.now()-lastLoad>60000)reloadAll()}
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake(true)});
+  window.addEventListener('online',()=>wake(true));window.addEventListener('focus',()=>wake(false));
+  setInterval(()=>{if(document.visibilityState!=='visible')return;const joined=chan&&chan.state==='joined';if(!joined){live=false;wake(true)}else if(Date.now()-lastLoad>90000)reloadAll()},20000);
   return {
+    live:()=>live&&!!chan&&chan.state==='joined',
     from:()=>FROM,
     async extend(d){if(d>=FROM)return;FROM=d;await Promise.all(['orders','days'].filter(n=>subs[n]).map(n=>load(n)))},
     ver:path=>ver[path]||null,
@@ -3166,13 +3180,26 @@ function supaDb(sb){
 // Présence : qui est connecté et qui modifie quelle ligne
 function supaRoom(sb){
   const key=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Math.random()).slice(2);
-  let state={},joined=false;const cbs=[];
-  const ch=sb.channel('presence-planning',{config:{presence:{key}}});
-  const peersNow=()=>{const out=[];Object.entries(ch.presenceState()).forEach(([k,arr])=>arr.forEach(pr=>{const {presence_ref,...p}=pr;out.push({kind:'viewer',presence:p,isMe:k===key,sameTab:k===key})}));return out};
-  ch.on('presence',{event:'sync'},()=>{const ps=peersNow();cbs.forEach(cb=>{try{cb({peers:ps})}catch(e){}})})
-    .subscribe(st=>{if(st==='SUBSCRIBED'){joined=true;ch.track(state).catch(()=>{})}});
+  let state={},joined=false,ch=null,retryT=null,tries=0;const cbs=[];
+  const peersNow=()=>{const out=[];if(!ch)return out;Object.entries(ch.presenceState()).forEach(([k,arr])=>arr.forEach(pr=>{const {presence_ref,...p}=pr;out.push({kind:'viewer',presence:p,isMe:k===key,sameTab:k===key})}));return out};
+  const tell=()=>{const ps=peersNow();cbs.forEach(cb=>{try{cb({peers:ps})}catch(e){}})};
+  function retry(){joined=false;if(retryT)return;const ms=Math.min(30000,1500*Math.pow(2,tries++));retryT=setTimeout(async()=>{retryT=null;try{if(ch)await sb.removeChannel(ch)}catch(e){}ch=null;try{const {data}=await sb.auth.getSession();if(data&&data.session&&sb.realtime&&sb.realtime.setAuth)sb.realtime.setAuth(data.session.access_token)}catch(e){}join()},ms)}
+  function join(){
+    ch=sb.channel('presence-planning',{config:{presence:{key}}});
+    ch.on('presence',{event:'sync'},tell)
+      .subscribe(st=>{if(st==='SUBSCRIBED'){joined=true;tries=0;ch.track(state).catch(()=>{});tell()}
+        else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED')retry();
+        if(typeof renderSync==='function')renderSync()});
+  }
+  join();
+  // au retour sur l'onglet (téléphone sorti de veille) : présence renvoyée, ou canal relancé
+  const wake=()=>{if(!ch||ch.state!=='joined')retry();else ch.track(state).catch(()=>{})};
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake()});
+  window.addEventListener('online',wake);
+  setInterval(()=>{if(document.visibilityState==='visible'&&(!ch||ch.state!=='joined'))retry()},20000);
   return {
-    presence(p){state=Object.assign({},state,p);return joined?ch.track(state):Promise.resolve()},
+    live:()=>joined&&!!ch&&ch.state==='joined',
+    presence(p){state=Object.assign({},state,p);return joined&&ch?ch.track(state):Promise.resolve()},
     onPeers(cb){cbs.push(cb);cb({peers:peersNow()})}
   };
 }
