@@ -1914,12 +1914,12 @@ function adjHTML(){
   const wk=weekKey(view.date);
   const keys=[[weekKey(addDays(view.date,-7)),'Semaine passée'],[wk,'Semaine en cours'],[weekKey(addDays(view.date,7)),'Semaine à venir']];
   const panel=([k,l])=>{const x=S.adjuvants[k]||[];return `<div class="panel ${k===wk?'cur':''}" data-wk="${k}"><h3>Semaine ${esc(k.split('-S')[1])}<small>${l}</small></h3>
-    ${x.map((a,i)=>`<div class="adj-line ${a.on?'on':''}"><input type="checkbox" id="adj-${k}-${i}" data-act="adj-on" data-i="${i}" ${a.on?'checked':''} aria-label="Commandé"><span>${esc(a.t)}</span><button class="chip" data-act="adj-x" data-i="${i}" aria-label="Retirer">×</button></div>`).join('')||'<span class="muted">Rien pour cette semaine</span>'}
+    ${x.map((a,i)=>`<div class="adj-line ${a.on?'on':''}"><label class="adj-st" title="${a.on?'Reçu · clic : remettre en attente':'Clic : valider la réception'}"><input type="checkbox" id="adj-${k}-${i}" data-act="adj-on" data-i="${i}" ${a.on?'checked':''} aria-label="Réception de ${esc(a.t)}"><span class="adj-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></span></label><span>${esc(a.t)}</span><em class="adj-state">${a.on?'Reçu':'En attente'}</em><button class="chip" data-act="adj-x" data-i="${i}" aria-label="Retirer">×</button></div>`).join('')||'<span class="muted">Rien pour cette semaine</span>'}
     <form class="inline-f" data-form="adj"><input id="adjin-${k}" placeholder="1000 L Adjuvant 1" aria-label="Nouvelle ligne"><button class="btn sm">Ajouter</button></form></div>`};
   let year='';
   if(view.adjYear){const y=D(view.date).getUTCFullYear();let d=mondayOf(y+'-01-04');const rows=[];for(let i=0;i<53;i++){const k=weekKey(d);if(!k.startsWith(String(y)))break;rows.push(k);d=addDays(d,7)}
     year=`<div class="tbl-wrap" style="margin-top:10px"><table class="year"><tbody>${rows.map(k=>`<tr class="${k===wk?'cur':''}"><td>S${esc(k.split('-S')[1])}</td><td>${(S.adjuvants[k]||[]).map(a=>esc(a.t)+(a.on?' ✓':'')).join(' · ')||'<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table></div>`}
-  return `<div class="sec-h"><h2>Commande d'adjuvants</h2><p>Comme le tableau Velléda, semaine par semaine. Cochée = commandée.</p><button class="btn sm" data-act="adj-year">${view.adjYear?'Masquer le tableau de l\'année':'Tableau de l\'année'}</button></div>
+  return `<div class="sec-h"><h2>Commande d'adjuvants</h2><p>Comme le tableau Velléda, semaine par semaine. Validée = reçue.</p><button class="btn sm" data-act="adj-year">${view.adjYear?'Masquer le tableau de l\'année':'Tableau de l\'année'}</button></div>
   <div class="grid3">${keys.map(panel).join('')}</div>${year}`;
 }
 
