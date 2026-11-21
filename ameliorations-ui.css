@@ -228,6 +228,23 @@ p.empty { padding: 28px 16px !important; background-image: radial-gradient(color
 .sheet-it.on > svg:first-child { color: var(--orange); }
 .sheet-it .n { font: 600 11px var(--mono); font-style: normal; background: var(--orange); color: #fff; padding: 1px 6px; }
 
+/* Compte dans la feuille « Plus » */
+.sheet-me { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 6px 14px; margin-bottom: 4px; border-bottom: 1px solid var(--ink); background: none; color: var(--ink); text-align: left; }
+.sheet-me:active { background: var(--sunk); }
+.sheet-av { width: 40px; height: 40px; border-radius: 50% !important; display: grid; place-items: center; background: var(--ink); color: var(--paper); font: 600 13px var(--mono); font-style: normal; flex: none; }
+.sheet-me span { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sheet-me b { font: 700 16px var(--ui); }
+.sheet-me small { font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.sheet-me .chev { width: 18px; height: 18px; color: var(--faint); flex: none; }
+
+/* Menu du compte ouvert depuis « Plus » : en feuille, comme « Plus » */
+.pop.as-sheet { left: 0 !important; right: 0 !important; top: auto !important; bottom: 0 !important; width: 100% !important; max-width: none !important; min-width: 0 !important;
+  max-height: 82vh; border: 0 !important; border-top: 1px solid var(--ink) !important; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .32), 0 -12px 32px rgba(0, 0, 0, .22) !important;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important; z-index: 85; }
+.pop.as-sheet:not([hidden]) { animation: ui-up-in .42s var(--ios-sheet) both !important; }
+.pop.as-sheet.is-leaving { animation: ui-up-out .22s var(--m3-emph-accel) both !important; }
+.pop.as-sheet::before { content: ""; display: block; width: 36px; height: 4px; background: var(--line-strong); margin: -8px auto 8px; border-radius: 2px; }
+
 /* Respect du réglage système « réduire les animations » */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }

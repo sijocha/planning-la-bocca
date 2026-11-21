@@ -1373,7 +1373,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=4">
+<link rel="stylesheet" href="ameliorations-ui.css?v=5">
 
 <div class="app" id="app">
   <aside class="side" id="side" aria-label="Navigation"></aside>
@@ -2161,10 +2161,12 @@ function navMore(el){
   if(document.querySelector('.sheet-scrim'))return closeSheet();
   const nChat=chatUnread();
   const sc=document.createElement('div');sc.className='sheet-scrim';
+  const u=prefs.user||{};const who=u.nom||(ME&&ME.nom)||'';
   sc.innerHTML=`<div class="sheet" role="dialog" aria-label="Plus"><div class="sheet-grab" aria-hidden="true"></div>
+    <button class="sheet-me" data-me="1"><i class="sheet-av">${esc(String(who||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase())}</i><span><b>${esc(who||'Mon compte')}</b><small>${esc(ROLE_NOM[(ME&&ME.role)||'']||'')} · compte et réglages</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 6l6 6-6 6"/></svg></button>
     <div class="sheet-list">${navRest.map(([k,l])=>`<button class="sheet-it ${k===view.tab?'on':''}" data-v="${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><span>${esc(l)}</span>${k==='chat'&&nChat?`<i class="n">${nChat}</i>`:''}<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div></div>`;
   document.body.appendChild(sc);el.classList.add('open');
-  sc.addEventListener('click',e=>{e.stopPropagation();const it=e.target.closest('.sheet-it');if(it){const v=it.dataset.v;closeSheet();setTimeout(()=>act(v==='chat'?'chat':'tab',{dataset:{v}},null,{}),60);return}if(e.target===sc)closeSheet()});
+  sc.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('[data-me]')){closeSheet();setTimeout(()=>{settingsPop(el);popEl.classList.add('as-sheet')},200);return}const it=e.target.closest('.sheet-it');if(it){const v=it.dataset.v;closeSheet();setTimeout(()=>act(v==='chat'?'chat':'tab',{dataset:{v}},null,{}),60);return}if(e.target===sc)closeSheet()});
   // glisser vers le bas pour fermer
   const sh=sc.querySelector('.sheet');let y0=null,dy=0;
   sh.addEventListener('touchstart',e=>{y0=e.touches[0].clientY;dy=0;sh.style.transition='none'},{passive:true});
@@ -2229,7 +2231,7 @@ function openPop(anchor,html,handlers){
 }
 function placePop(){if(!popAnchor)return;let r=popAnchor.getBoundingClientRect();if(!r.width&&lastRect)r=lastRect;const w=popEl.offsetWidth,h=popEl.offsetHeight;
   let x=Math.min(Math.max(8,r.left),window.innerWidth-w-8),y=r.bottom+6;if(y+h>window.innerHeight-8)y=Math.max(8,r.top-h-6);popEl.style.left=x+'px';popEl.style.top=y+'px'}
-function closePop(){if(popEl.hidden)return;popEl.hidden=true;popEl.innerHTML='';popH={};popAnchor=null;setEditing(null);if(renderPending)render()}
+function closePop(){if(popEl.hidden)return;popEl.hidden=true;popEl.classList.remove('as-sheet');popEl.innerHTML='';popH={};popAnchor=null;setEditing(null);if(renderPending)render()}
 function runPop(el){const fn=popH[el.dataset.pa];if(!fn)return;const ar=popAnchor&&popAnchor.getBoundingClientRect();lastRect=ar;const r=fn(el);if(r==='keep')return;if(r==='close'){closePop();return}commit();closePop();render()}
 let lastRect=null;
 /* Double sécurité : petite fenêtre de confirmation. anchor=null remplace la fenêtre déjà ouverte. */
@@ -3583,5 +3585,5 @@ let suppressClick=false;
 if(typeof document!=='undefined'&&document.getElementById('main'))boot();
 </script>
 
-<script src="motion-m3.js?v=4"></script>
+<script src="motion-m3.js?v=5"></script>
 </body></html>
