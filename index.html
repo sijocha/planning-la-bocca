@@ -1848,7 +1848,8 @@ function demandesHTML(){
   add('modifs','Modifications de commande',D.filter(x=>DEM_CAT[x.r.type]==='modifs').map(x=>dline(x)));
   add('chantiers','Chantiers et clients',D.filter(x=>DEM_CAT[x.r.type]==='chantiers').map(x=>dline(x)));
   add('autres','Autres demandes',D.filter(x=>!DEM_CAT[x.r.type]||DEM_CAT[x.r.type]==='autres').map(x=>dline(x)));
-  const done=S.demandes.map((r,i)=>({r,i})).filter(x=>x.r.done&&fdem(x.r)).sort((a,b)=>(b.r.le||'').localeCompare(a.r.le||'')).slice(0,30);
+  // demandes traitées : visibles 24 h après leur traitement, pour tout le monde, puis masquées (gardées dans les données)
+  const done=S.demandes.map((r,i)=>({r,i})).filter(x=>x.r.done&&x.r.doneAt&&Date.now()-x.r.doneAt<864e5&&fdem(x.r)).sort((a,b)=>(b.r.le||'').localeCompare(a.r.le||'')).slice(0,30);
   const n=cats.reduce((a,c)=>a+c.rows.length,0);
   const fb=(v,l)=>`<button class="chip ${f===v?'on':''}" data-act="dfilter" data-v="${v}">${l}</button>`;
   return `<div class="sec-h"><h2>À traiter <b class="cnt">${n}</b></h2><p>Rangé par thème, du plus urgent en haut au moins urgent en bas. Une catégorie n'apparaît que si elle a quelque chose à traiter.</p></div>
@@ -2416,7 +2417,7 @@ function act(a,el,o,e){
     case 'ap-com':{const id=o.id;return formPop(el,'Commentaire pour le commercial',[{k:'t',label:'Commentaire',val:'',ph:'Ex. plutôt 9 h, pompe indisponible'}],v=>{if(!v.t)return 'keep';byId(id).pills.push({t:v.t,on:false,by:author()})})}
     // demandes
     case 'dfilter':view.dfilter=el.dataset.v;return render(true);
-    case 'dem-done':S.demandes[i].done=!S.demandes[i].done;break;
+    case 'dem-done':{const r=S.demandes[i];r.done=!r.done;if(r.done){r.doneAt=Date.now();r.doneBy=author()}else{delete r.doneAt;delete r.doneBy}break}
     case 'dem-rep':{const r=S.demandes[i];return formPop(el,'Répondre',[{k:'t',label:'Réponse',val:'',ph:'Ex. formule créée, SAP 60012481'}],v=>{if(!v.t)return 'keep';(r.rep=r.rep||[]).push({by:author(),t:v.t,at:TODAY});chatSend(v.t,{t:String(r.t).slice(0,70),dem:i});toast('Réponse envoyée · visible dans le chat (en bas à droite)');setTimeout(chatOpen,60)})}
     case 'dem-add':return demPop(el,null);
     // en-tête du jour
