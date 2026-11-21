@@ -1373,7 +1373,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=5">
+<link rel="stylesheet" href="ameliorations-ui.css?v=6">
 
 <div class="app" id="app">
   <aside class="side" id="side" aria-label="Navigation"></aside>
@@ -2580,12 +2580,16 @@ function settingsPop(anchor){
   const lastWD=(()=>{if(isWE(d))return false;let n=addDays(d,1);while(isWE(n))n=addDays(n,1);return n.slice(0,7)!==d.slice(0,7)})();
   const moisN=MOISL[D(d).getUTCMonth()];
   openPop(anchor,`<div class="pop-h">Réglages</div>
-   <section class="ps"><div class="pop-l">Vous êtes</div><p class="ps-me"><b>${esc(u.nom||'?')}</b> · ${esc(ROLES[u.role]||'')}</p><button class="pop-b" data-pa="who">Page de connexion</button></section>
-   <section class="ps"><div class="pop-l">Compte Google</div><p class="ps-me">${esc(ME?ME.email:'')} · ${esc(ME?(ROLE_NOM[ME.role]||''):'')}</p><button class="pop-b" data-pa="logout">Se déconnecter</button></section>
+   <section class="ps ps-who"><div class="pop-l">Vous êtes${isAdmin()?' <span class="ps-adm">Admin</span>':''}</div>
+     <p class="ps-me ps-line"><span><b>${esc(u.nom||'?')}</b> · ${esc(ROLES[u.role]||'')}</span><span class="ps-mail">${esc(ME?ME.email:'')}</span></p>
+     <div class="pop-row"><button class="pop-b" data-pa="who">Page de connexion</button><button class="pop-b" data-pa="logout">Se déconnecter</button></div></section>
    ${isAdmin()?`<section class="ps"><div class="pop-l">Administration</div><button class="pop-b" data-pa="importer">Importer une sauvegarde (.json)…</button></section>`:''}
-   ${ce?`<section class="ps"><div class="pop-l">Journée du ${esc(dayShort(d).toLowerCase())}</div>${c?`<button class="pop-b" data-pa="clot">Clôturée à ${esc(hm(c.at))} · retélécharger le PDF</button>`:`<button class="pop-b strong" data-pa="clot">Clôturer la journée</button>`}
-     <button class="pop-b" data-pa="print">Imprimer / PDF (A3 · A4)…</button>
-     ${lastWD?`<p class="ps-note">Dernier jour ouvré du mois</p><button class="pop-b strong" data-pa="mois">Imprimer le mois de ${esc(moisN)} (convocations)</button>`:''}</section>
+   ${ce?`<section class="ps"><div class="pop-l">Journée du ${esc(dayShort(d).toLowerCase())}</div>
+     <button class="pop-b" data-pa="print">Imprimer / PDF (A3 · A4)…</button></section>
+   <section class="ps"><div class="pop-l">Fin de mois</div>
+     ${lastWD?`<p class="ps-note">Dernier jour ouvré du mois : pensez à la clôture</p>`:''}
+     <button class="pop-b ${lastWD?'strong':''}" data-pa="moisclot">Clôture de fin de mois : ${esc(moisN)} (PDF + .json)</button>
+     <button class="pop-b" data-pa="archive">Consulter un mois archivé (.json)…</button></section>
    <section class="ps"><div class="pop-l">Centrale</div><button class="pop-b" data-pa="cfg">Réglages : camions, agence, pompes…</button>${layoutPopHTML()}</section>`:''}
    <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button></section>
    <section class="ps"><div class="pop-l">Affichage</div><div class="pop-grid">${[['auto','Auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div></section>
@@ -2595,7 +2599,7 @@ function settingsPop(anchor){
   {journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
    'lay-reset'(){const k=meKey();const had=prefs.layouts&&prefs.layouts[k];if(had){delete prefs.layouts[k];savePrefs()}applyLayout();toast(had?'Disposition réinitialisée : '+(S.config&&S.config.layout?'celle de la centrale':'celle par défaut'):'Déjà sur la disposition de la centrale');return 'close'},
    'lay-set'(){const L=layoutGet();S.config.layout={order:L.order.slice(),pos:L.pos};const k=meKey();if(prefs.layouts&&prefs.layouts[k]){delete prefs.layouts[k];savePrefs()}toast('Disposition de la centrale enregistrée pour tous les centralistes')},
-   clot(){const a=popAnchor;setTimeout(()=>act('clot',a,null,{}));return 'close'},mois(){const a=popAnchor;setTimeout(()=>act('conv-print',a,null,{}));return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'}});
+   moisclot(){setTimeout(()=>clotureMois(view.date));return 'close'},archive(){setTimeout(consulterArchive);return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'}});
 }
 function openConfig(focus){
   if(!S.config||!S.config.camions)S.config=CONFIG0();
@@ -3414,6 +3418,50 @@ function remplacerDonnees(d,label){
   }finally{logLine=keep;IMPORTING=false}
   render(true);toast(label);
 }
+/* Clôture de fin de mois : PDF du mois (une page par jour) + .json du mois (commandes, journées, listes) */
+async function clotureMois(ref){
+  const m=String(ref||TODAY).slice(0,7);const first=m+'-01';let last=first;while(addDays(last,1).slice(0,7)===m)last=addDays(last,1);
+  const nomM=MOISL[+m.slice(5,7)-1]+' '+m.slice(0,4);
+  try{if(DB&&DB.extend)await DB.extend(first)}catch(e){}
+  const days=exportDays('plage',first,last).filter(d=>hasOrders(d));
+  const orders=S.orders.filter(o=>o.kind!=='aplacer'&&String(o.date||'').slice(0,7)===m).map(clone);
+  const dys={};Object.keys(S.days||{}).filter(k=>k.slice(0,7)===m).forEach(k=>dys[k]=clone(S.days[k]));
+  const used=new Set(orders.map(o=>o.cl)),usedCh=new Set(orders.map(o=>o.ch));
+  const donnees={orders,days:dys,clients:S.clients.filter(c=>used.has(c.id)).map(clone),chantiers:S.chantiers.filter(c=>usedCh.has(c.id)).map(clone),formules:clone(S.formules||[]),config:clone(S.config||{})};
+  saveFile(`cloture-${String(CENTRALE).toLowerCase().replace(/\s+/g,'-')}-${m}.json`,JSON.stringify({type:'cloture-mois',centrale:CENTRALE,mois:m,exporte:new Date().toISOString(),par:author(),commandes:orders.length,donnees},null,1));
+  if(days.length)await savePDF(`cloture-${String(CENTRALE).toLowerCase().replace(/\s+/g,'-')}-${m}.pdf`,()=>planningPDF(days,'A4'));
+  try{jlog(TODAY,`Clôture de fin de mois : ${nomM} (${orders.length} commandes)`);commit()}catch(e){}
+  toast(`Clôture de ${nomM} : ${orders.length} commandes, ${days.length} jours`);
+}
+/* Consulter un mois archivé : lecture seule, rien n'est envoyé au planning partagé */
+function consulterArchive(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();
+    r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(e){toast('Fichier illisible');return}
+      const d=o&&o.donnees?o.donnees:o;if(!d||!Array.isArray(d.orders)){toast('Fichier non reconnu : ce n\'est pas une sauvegarde du planning');return}
+      const mois=[...new Set(d.orders.filter(x=>x.kind!=='aplacer'&&x.date).map(x=>x.date.slice(0,7)))].sort();
+      if(!mois.length){toast('Aucune commande dans ce fichier');return}
+      archiveView(d,mois,o.mois&&mois.includes(o.mois)?o.mois:mois[mois.length-1],f.name)};
+    r.readAsText(f)};
+  inp.click();
+}
+function archiveHTML(d,m){
+  const A=Object.assign({},S,{orders:d.orders,days:d.days||{},clients:d.clients||S.clients,chantiers:d.chantiers||S.chantiers});
+  const keep=S;let html='';
+  try{S=A;const ds=[...new Set(d.orders.filter(x=>x.kind!=='aplacer'&&String(x.date||'').slice(0,7)===m).map(x=>x.date))].sort();html=printHTML(ds,'A4')}finally{S=keep}
+  return html;
+}
+function archiveView(d,mois,m,nom){
+  drawerEl.innerHTML=`<div class="scrim" data-act="dr-close-bg"><div class="drawer wide arch" role="dialog" aria-label="Mois archivé">
+    <div class="dr-h"><h2>Archive · ${esc(MOISL[+m.slice(5,7)-1])} ${esc(m.slice(0,4))}</h2><button type="button" class="ib" data-act="dr-close" aria-label="Fermer">×</button></div>
+    <div class="arch-bar"><select id="arch-m" aria-label="Mois">${mois.map(x=>`<option value="${x}" ${x===m?'selected':''}>${MOISL[+x.slice(5,7)-1]} ${x.slice(0,4)}</option>`).join('')}</select>
+      <span class="muted">${esc(nom||'')} · lecture seule</span><button type="button" class="btn sm" id="arch-print">Imprimer</button></div>
+    <iframe class="arch-frame" title="Planning archivé"></iframe></div></div>`;
+  drawerEl.hidden=false;
+  const fr=drawerEl.querySelector('.arch-frame');fr.srcdoc=archiveHTML(d,m);
+  drawerEl.querySelector('#arch-m').onchange=e=>{const v=e.target.value;fr.srcdoc=archiveHTML(d,v);drawerEl.querySelector('.dr-h h2').textContent=`Archive · ${MOISL[+v.slice(5,7)-1]} ${v.slice(0,4)}`};
+  drawerEl.querySelector('#arch-print').onclick=()=>{try{fr.contentWindow.focus();fr.contentWindow.print()}catch(e){toast('Impression impossible')}};
+}
 async function sauvegardeComplete(){
   if(!DB||!DB.everything){saveFile(`sauvegarde-planning-la-bocca-${TODAY}.json`,JSON.stringify({exporte:new Date().toISOString(),par:author(),donnees:S},null,1));return}
   toast('Préparation de la sauvegarde…');
@@ -3435,6 +3483,23 @@ function importerSauvegarde(){
   inp.click();
 }
 
+/* Le geste « retour » du téléphone (glisser depuis le bord gauche) ou le bouton Retour ne quittent plus le planning :
+   ils ferment d'abord ce qui est ouvert (feuille, menu, tiroir, chat), puis reviennent à l'onglet du jour. */
+let histOn=false;
+function histTrap(){
+  if(histOn)return;histOn=true;
+  try{history.replaceState({pl:'base'},'',location.pathname);history.pushState({pl:'app'},'',location.pathname)}catch(e){return}
+  window.addEventListener('popstate',()=>{
+    try{
+      if(document.querySelector('.sheet-scrim'))closeSheet();
+      else if(!popEl.hidden)closePop();
+      else if(!drawerEl.hidden)closeDrawer();
+      else if(typeof chatWin!=='undefined'&&chatWin&&!chatWin.hidden){chatWin.hidden=true;chatNav()}
+      else if(view.tab!=='planning')act('tab',{dataset:{v:'planning'}},null,{});
+    }catch(e){}
+    history.pushState({pl:'app'},'',location.pathname);
+  });
+}
 async function supaBoot(){
   const main=document.getElementById('main');
   if(!window.supabase||!window.supabase.createClient){main.innerHTML='<p class="empty">La connexion sécurisée n\'a pas pu se charger. Vérifiez la connexion internet puis rechargez la page.</p>';return}
@@ -3450,7 +3515,7 @@ async function supaBoot(){
   if(prefs.user&&!isAdmin())prefs.user.role=ROLE_UI[ME.role]||'commercial';
   document.body.classList.toggle('ro',ME.role==='lecture');
   if(!prefs.user||prefs.gate!==TODAY||prefs.email!==ME.email)showGate();
-  startShared(supaDb(SB));
+  startShared(supaDb(SB));setTimeout(histTrap,800);
   room=supaRoom(SB);
   if(prefs.user)room.presence({nom:prefs.user.nom,role:prefs.user.role,edit:null}).catch(()=>{});
   room.onPeers(ch=>{peers=ch.peers.slice();lockRace();if(S){if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()}});
@@ -3585,5 +3650,5 @@ let suppressClick=false;
 if(typeof document!=='undefined'&&document.getElementById('main'))boot();
 </script>
 
-<script src="motion-m3.js?v=5"></script>
+<script src="motion-m3.js?v=6"></script>
 </body></html>

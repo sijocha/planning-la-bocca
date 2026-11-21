@@ -245,6 +245,24 @@ p.empty { padding: 28px 16px !important; background-image: radial-gradient(color
 .pop.as-sheet.is-leaving { animation: ui-up-out .22s var(--m3-emph-accel) both !important; }
 .pop.as-sheet::before { content: ""; display: block; width: 36px; height: 4px; background: var(--line-strong); margin: -8px auto 8px; border-radius: 2px; }
 
+/* Réglages : en-tête compact (prénom · rôle à gauche, adresse à droite, deux boutons sur une ligne) */
+.pop .ps-who .pop-l { display: flex; align-items: center; gap: 8px; }
+.ps-adm { font: 600 9.5px var(--mono); letter-spacing: .12em; padding: 1px 6px; background: var(--ink); color: var(--paper); }
+.pop .ps-line { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; }
+.pop .ps-line .ps-mail { font: 400 12px var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.pop .pop-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pop .pop-row .pop-b { text-align: center; }
+
+/* Archive d'un mois (lecture seule) */
+.drawer.arch { width: min(1100px, 100%) !important; }
+.arch-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.arch-bar select { height: 32px; border: 1px solid var(--line-strong); background: var(--panel); padding: 0 8px; font: 500 14px var(--ui); }
+.arch-bar .muted { flex: 1; font: 400 12px var(--mono); }
+.arch-frame { flex: 1; width: 100%; min-height: 60vh; border: 0; background: #fff; }
+
+/* Téléphone : le badge du compte disparaît (il est dans « Plus ») */
+@media (max-width: 760px) { .top #me, .top .me { display: none !important; } }
+
 /* Respect du réglage système « réduire les animations » */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
