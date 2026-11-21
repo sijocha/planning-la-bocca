@@ -2164,7 +2164,7 @@ function navMore(el){
   const u=prefs.user||{};const who=u.nom||(ME&&ME.nom)||'';
   sc.innerHTML=`<div class="sheet" role="dialog" aria-label="Plus"><div class="sheet-grab" aria-hidden="true"></div>
     <button class="sheet-me" data-me="1"><i class="sheet-av">${esc(String(who||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase())}</i><span><b>${esc(who||'Mon compte')}</b><small>${esc(ROLE_NOM[(ME&&ME.role)||'']||'')} · compte et réglages</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 6l6 6-6 6"/></svg></button>
-    <div class="sheet-list">${navRest.map(([k,l])=>`<button class="sheet-it ${k===view.tab?'on':''}" data-v="${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><span>${esc(l)}</span>${k==='chat'&&nChat?`<i class="n">${nChat}</i>`:''}<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div></div>`;
+    <div class="sheet-list" ${navRest.length?'':'hidden'}>${navRest.map(([k,l])=>`<button class="sheet-it ${k===view.tab?'on':''}" data-v="${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><span>${esc(l)}</span>${k==='chat'&&nChat?`<i class="n">${nChat}</i>`:''}<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div></div>`;
   document.body.appendChild(sc);el.classList.add('open');
   sc.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('[data-me]')){closeSheet();setTimeout(()=>{settingsPop(el);popEl.classList.add('as-sheet','sheet-scroll');popEl.insertAdjacentHTML('afterbegin','<div class="sheet-grab" role="button" aria-label="Fermer"></div>');popEl.scrollTop=0;document.documentElement.classList.add('sheet-open');sheetDrag(popEl,popEl,closePop);popEl.querySelector('.sheet-grab').onclick=()=>closePop()},200);return}const it=e.target.closest('.sheet-it');if(it){const v=it.dataset.v;closeSheet();setTimeout(()=>act(v==='chat'?'chat':'tab',{dataset:{v}},null,{}),60);return}if(e.target===sc)closeSheet()});
   // glisser vers le bas pour fermer (sans déclencher l'actualisation de la page)
@@ -2198,7 +2198,7 @@ function sideHTML(){
   const it=(role()==='centraliste'?all:all.slice(0,2)).concat(prefs.aideOn?[['aide','Mode d\'emploi','Aide']]:[]).concat(isPhone()?[['chat','Chat','Chat']]:[]);
   // Téléphone : Aujourd'hui, Demandes, Chat toujours visibles ; le reste dans « Plus »
   navRest=[];
-  if(isPhone()){const keep=['planning','demandes','chat'];navRest=it.filter(x=>!keep.includes(x[0]));const main=keep.map(k=>it.find(x=>x[0]===k)).filter(Boolean);it.length=0;it.push(...main);if(navRest.length)it.push(['plus','Plus','Plus'])}
+  if(isPhone()){const keep=['planning','demandes','chat'];navRest=it.filter(x=>!keep.includes(x[0]));const main=keep.map(k=>it.find(x=>x[0]===k)).filter(Boolean);it.length=0;it.push(...main);it.push(['plus','Plus','Plus'])}
   const nChat=chatUnread();
   return `<div class="brand"><b>La Bocca</b><span>// Planning centrale</span></div>
   <div class="nav-wrap"><span class="nav-ind" aria-hidden="true"></span><span class="nav-hov" aria-hidden="true"></span>
