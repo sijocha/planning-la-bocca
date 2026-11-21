@@ -68,6 +68,7 @@
       var below = top >= a.top;
       var left = (parseFloat(el.style.left) || 0) <= a.left + 4;
       el.style.setProperty('--pop-origin', (below ? 'top ' : 'bottom ') + (left ? 'left' : 'right'));
+      el.dataset.dir = below ? 'down' : 'up';
     };
   }
 
@@ -76,7 +77,7 @@
     var _closeDrawer = window.closeDrawer;
     window.closeDrawer = function () {
       var el = document.getElementById('drawer');
-      leave(el, 250, function () { _closeDrawer(); });
+      leave(el, 220, function () { _closeDrawer(); });
     };
   }
 
@@ -87,7 +88,7 @@
       if (guard || !chat.hidden || reduce.matches) return;
       guard = true;
       chat.hidden = false;               // on le garde visible le temps de la sortie
-      leave(chat, 200, function () { chat.hidden = true; setTimeout(function () { guard = false; }, 0); });
+      leave(chat, 140, function () { chat.hidden = true; setTimeout(function () { guard = false; }, 0); });
     }).observe(chat, { attributes: true, attributeFilter: ['hidden'] });
   }
   if ('MutationObserver' in window) {

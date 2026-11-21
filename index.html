@@ -1373,7 +1373,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=3">
+<link rel="stylesheet" href="ameliorations-ui.css?v=4">
 
 <div class="app" id="app">
   <aside class="side" id="side" aria-label="Navigation"></aside>
@@ -2158,19 +2158,31 @@ const NAV_C={chat:'#2f5d55',planning:'#151515',demandes:'#FF4D00',agregats:'#FFC
 NAV_IC.plus='<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>';NAV_C.plus='#151515';
 let navRest=[];
 function navMore(el){
-  if(!popEl.hidden&&popAnchor===el){closePop();return}
+  if(document.querySelector('.sheet-scrim'))return closeSheet();
   const nChat=chatUnread();
-  const h=`<div class="nav-more">${navRest.map(([k,l])=>`<button class="pop-b ${k===view.tab?'on':''}" data-pa="go" data-v="${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg>${esc(l)}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}</div>`;
-  openPop(el,h,{go(b){const v=b.dataset.v;setTimeout(()=>act(v==='chat'?'chat':'tab',{dataset:{v}},null,{}));return 'close'}});
+  const sc=document.createElement('div');sc.className='sheet-scrim';
+  sc.innerHTML=`<div class="sheet" role="dialog" aria-label="Plus"><div class="sheet-grab" aria-hidden="true"></div>
+    <div class="sheet-list">${navRest.map(([k,l])=>`<button class="sheet-it ${k===view.tab?'on':''}" data-v="${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><span>${esc(l)}</span>${k==='chat'&&nChat?`<i class="n">${nChat}</i>`:''}<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div></div>`;
+  document.body.appendChild(sc);el.classList.add('open');
+  sc.addEventListener('click',e=>{e.stopPropagation();const it=e.target.closest('.sheet-it');if(it){const v=it.dataset.v;closeSheet();setTimeout(()=>act(v==='chat'?'chat':'tab',{dataset:{v}},null,{}),60);return}if(e.target===sc)closeSheet()});
+  // glisser vers le bas pour fermer
+  const sh=sc.querySelector('.sheet');let y0=null,dy=0;
+  sh.addEventListener('touchstart',e=>{y0=e.touches[0].clientY;dy=0;sh.style.transition='none'},{passive:true});
+  sh.addEventListener('touchmove',e=>{if(y0===null)return;dy=Math.max(0,e.touches[0].clientY-y0);sh.style.transform=`translateY(${dy}px)`},{passive:true});
+  sh.addEventListener('touchend',()=>{sh.style.transition='';if(dy>70)closeSheet();else sh.style.transform='';y0=null});
+  requestAnimationFrame(()=>sc.classList.add('in'));
 }
+function closeSheet(){const sc=document.querySelector('.sheet-scrim');if(!sc)return;document.querySelectorAll('.nav-b.open').forEach(b=>b.classList.remove('open'));sc.classList.remove('in');sc.classList.add('out');
+  const sh=sc.querySelector('.sheet');if(sh)sh.style.transform='';setTimeout(()=>sc.remove(),window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:260)}
 function sideHTML(){
   const nd=S.orders.filter(o=>o.kind==='aplacer').length+S.demandes.filter(r=>!r.done).length;
   const mine=S.demandes.filter(r=>!r.done&&r.pour===role()).length;
   const nd2=role()==='centraliste'?nd:mine;
   const all=[['planning',role()==='centraliste'?'Aujourd\'hui':(isPhone()?'Planning':'Commandes'),role()==='centraliste'?'Aujourd.':'Commandes'],['demandes','Demandes','Demandes'],['agregats','Agrégats','Agrégats'],['camions','Camions','Camions'],['adjuvants','Adjuvants','Adjuv.'],['liens','Raccourcis','Liens']];
   const it=(role()==='centraliste'?all:all.slice(0,2)).concat(prefs.aideOn?[['aide','Mode d\'emploi','Aide']]:[]).concat(isPhone()?[['chat','Chat','Chat']]:[]);
-  // Téléphone : 4 entrées au plus, le reste dans « Plus »
-  if(isPhone()&&it.length>4){navRest=it.slice(3);it.splice(3,it.length,['plus','Plus','Plus'])}else navRest=[];
+  // Téléphone : Aujourd'hui, Demandes, Chat toujours visibles ; le reste dans « Plus »
+  navRest=[];
+  if(isPhone()){const keep=['planning','demandes','chat'];navRest=it.filter(x=>!keep.includes(x[0]));const main=keep.map(k=>it.find(x=>x[0]===k)).filter(Boolean);it.length=0;it.push(...main);if(navRest.length)it.push(['plus','Plus','Plus'])}
   const nChat=chatUnread();
   return `<div class="brand"><b>La Bocca</b><span>// Planning centrale</span></div>
   <div class="nav-wrap"><span class="nav-ind" aria-hidden="true"></span><span class="nav-hov" aria-hidden="true"></span>
@@ -3571,5 +3583,5 @@ let suppressClick=false;
 if(typeof document!=='undefined'&&document.getElementById('main'))boot();
 </script>
 
-<script src="motion-m3.js?v=3"></script>
+<script src="motion-m3.js?v=4"></script>
 </body></html>

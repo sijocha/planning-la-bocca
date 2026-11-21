@@ -138,86 +138,95 @@ p.half-l.val::before { content: ""; width: 8px; height: 8px; border-radius: 50% 
 /* Pages vides : trame de points discrète */
 p.empty { padding: 28px 16px !important; background-image: radial-gradient(color-mix(in srgb, var(--ink) 10%, transparent) 1px, transparent 1.4px); background-size: 22px 22px; border: 1px dashed var(--line); color: var(--muted); }
 
-/* Téléphone : menu « Plus » */
-.nav-more { display: grid; gap: 2px; min-width: 200px; }
-.nav-more .pop-b { display: flex; align-items: center; gap: 10px; font: 500 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; padding: 10px 10px !important; }
-.nav-more .pop-b svg { width: 20px; height: 20px; flex: none; }
-.nav-more .pop-b .n { margin-left: auto; font: 600 11px var(--mono); background: var(--orange); color: #fff; padding: 0 6px; }
-
 /* ---------- 8. Voile du tiroir ---------- */
 .scrim { background: var(--scrim) !important; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
 
 /* =====================================================================
-   9. MOUVEMENT — Material 3 (easing + durées officielles)
+   9. MOUVEMENT — sobre, rapide, façon iOS / Material 3
+   Règle : on bouge peu (4 à 8 px), on fond vite, on ne déforme jamais.
    ===================================================================== */
 :root {
   --m3-standard: cubic-bezier(.2, 0, 0, 1);
-  --m3-standard-decel: cubic-bezier(0, 0, 0, 1);
-  --m3-standard-accel: cubic-bezier(.3, 0, 1, 1);
-  --m3-emph-decel: cubic-bezier(.05, .7, .1, 1);   /* ce qui entre */
-  --m3-emph-accel: cubic-bezier(.3, 0, .8, .15);   /* ce qui sort */
-  /* ressort léger façon M3 Expressive (approximation) */
-  --m3-spring: linear(0, .045 2.4%, .19 5.4%, .62 13%, .84 18.6%, .97 24.6%, 1.03 30.2%, 1.045 36%, 1.035 43%, 1.01 54%, .998 68%, 1);
-  --d-short2: 100ms; --d-short3: 150ms; --d-short4: 200ms;
-  --d-medium1: 250ms; --d-medium2: 300ms; --d-medium4: 400ms;
-  --d-long2: 500ms;
+  --m3-emph-decel: cubic-bezier(.05, .7, .1, 1);
+  --m3-emph-accel: cubic-bezier(.3, 0, .8, .15);
+  --ios-sheet: cubic-bezier(.32, .72, 0, 1);        /* courbe des feuilles iOS */
 }
 
-/* Menus et popovers : déploiement vertical depuis le bouton */
-.pop:not([hidden]) {
-  transform-origin: var(--pop-origin, top left);
-  animation: m3-menu-in var(--d-medium2) var(--m3-emph-decel) both;
-}
-.pop:not([hidden]) > * { animation: m3-fade-in var(--d-medium1) var(--m3-standard) 60ms both; }
-.pop.is-leaving { animation: m3-menu-out var(--d-short3) var(--m3-emph-accel) both !important; pointer-events: none; }
-.pop.is-leaving > * { animation: none !important; }
-@keyframes m3-menu-in  { from { opacity: 0; transform: scaleY(.6) translateY(-4px); clip-path: inset(0 0 40% 0); } to { opacity: 1; transform: none; clip-path: inset(0); } }
-@keyframes m3-menu-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: scaleY(.92); } }
-@keyframes m3-fade-in  { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+/* Menus et popovers : fondu + 4 px depuis le bouton, légère mise à l'échelle */
+.pop:not([hidden]) { transform-origin: var(--pop-origin, top left); animation: ui-pop-in .18s var(--m3-standard) both; }
+.pop[data-dir="up"]:not([hidden]) { animation-name: ui-pop-in-up; }
+.pop.is-leaving { animation: ui-fade-out .12s linear both !important; pointer-events: none; }
+@keyframes ui-pop-in    { from { opacity: 0; transform: translateY(-4px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes ui-pop-in-up { from { opacity: 0; transform: translateY(4px) scale(.97); }  to { opacity: 1; transform: none; } }
+@keyframes ui-fade-out  { from { opacity: 1; } to { opacity: 0; } }
+.qres:not([hidden]) { transform-origin: top right; animation: ui-pop-in .16s var(--m3-standard) both; }
 
-/* Résultats de recherche : même logique que les menus */
-.qres:not([hidden]) { transform-origin: top right; animation: m3-menu-in var(--d-medium1) var(--m3-emph-decel) both; }
-
-/* Tiroir (commande, réglages) : feuille latérale M3 */
-#drawer:not([hidden]) .scrim { animation: m3-scrim-in var(--d-medium2) linear both; }
-#drawer:not([hidden]) .drawer { animation: m3-sheet-in var(--d-long2) var(--m3-emph-decel) both; }
-#drawer.is-leaving .scrim { animation: m3-scrim-out var(--d-short4) linear both !important; }
-#drawer.is-leaving .drawer { animation: m3-sheet-out var(--d-medium1) var(--m3-emph-accel) both !important; }
-@keyframes m3-scrim-in  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes m3-scrim-out { from { opacity: 1; } to { opacity: 0; } }
-@keyframes m3-sheet-in  { from { transform: translateX(100%); } to { transform: none; } }
-@keyframes m3-sheet-out { from { transform: none; } to { transform: translateX(100%); } }
+/* Tiroir (commande, réglages) : feuille latérale */
+#drawer:not([hidden]) .scrim { animation: ui-fade-in .25s linear both; }
+#drawer:not([hidden]) .drawer { animation: ui-side-in .38s var(--ios-sheet) both; }
+#drawer.is-leaving .scrim { animation: ui-fade-out .2s linear both !important; }
+#drawer.is-leaving .drawer { animation: ui-side-out .22s var(--m3-emph-accel) both !important; }
+@keyframes ui-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-side-in  { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes ui-side-out { from { transform: none; } to { transform: translateX(100%); } }
 @media (max-width: 760px) {
-  #drawer:not([hidden]) .drawer { animation-name: m3-bottom-in; }
-  #drawer.is-leaving .drawer { animation-name: m3-bottom-out !important; }
-  @keyframes m3-bottom-in  { from { transform: translateY(100%); } to { transform: none; } }
-  @keyframes m3-bottom-out { from { transform: none; } to { transform: translateY(100%); } }
+  #drawer:not([hidden]) .drawer { animation-name: ui-up-in; }
+  #drawer.is-leaving .drawer { animation-name: ui-up-out !important; }
 }
-/* Les sections du formulaire arrivent en cascade */
-#drawer:not([hidden]) .drawer > * { animation: m3-fade-in var(--d-medium2) var(--m3-standard) both; }
-#drawer:not([hidden]) .drawer > *:nth-child(2) { animation-delay: 60ms; }
-#drawer:not([hidden]) .drawer > *:nth-child(3) { animation-delay: 100ms; }
-#drawer:not([hidden]) .drawer > *:nth-child(n+4) { animation-delay: 140ms; }
+@keyframes ui-up-in  { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes ui-up-out { from { transform: none; } to { transform: translateY(100%); } }
 
-/* Chat : transformation de conteneur depuis le bouton CHAT (bas droite) */
-.chatwin:not([hidden]) { transform-origin: bottom right; animation: m3-container-in var(--d-medium4) var(--m3-emph-decel) both; }
-.chatwin.is-leaving { animation: m3-container-out var(--d-short4) var(--m3-emph-accel) both !important; }
-@keyframes m3-container-in  { from { opacity: 0; transform: scale(.85); clip-path: inset(30% 0 0 30%); } to { opacity: 1; transform: none; clip-path: inset(0); } }
-@keyframes m3-container-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(.92); } }
+/* Chat : fondu + 8 px depuis le bouton */
+.chatwin:not([hidden]) { transform-origin: bottom right; animation: ui-chat-in .24s var(--m3-standard) both; }
+.chatwin.is-leaving { animation: ui-fade-out .14s linear both !important; }
+@keyframes ui-chat-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
 
 /* Encadrés du haut : dépliage au survol plus souple */
-.hb { transition: max-height var(--d-medium2) var(--m3-emph-decel) .08s, box-shadow var(--d-short4) var(--m3-standard) !important; }
+.hb { transition: max-height .25s var(--m3-standard) .08s, box-shadow .2s var(--m3-standard) !important; }
 
-/* Toast : snackbar M3 */
-.toast { animation: m3-snack-in var(--d-medium1) var(--m3-emph-decel) both; }
-@keyframes m3-snack-in { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+/* Toast */
+.toast { animation: ui-toast-in .22s var(--m3-standard) both; }
+@keyframes ui-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
-/* Boutons : retour d'appui */
-.btn, .ib, .chip, .pop-b, .nav-b { transition: background-color var(--d-short3) var(--m3-standard), color var(--d-short3) var(--m3-standard), transform var(--d-short2) var(--m3-standard); }
+/* Boutons : retour d'appui discret */
+.btn, .ib, .chip, .pop-b { transition: background-color .15s var(--m3-standard), color .15s var(--m3-standard), transform .1s var(--m3-standard); }
 .btn:active, .ib:active, .chip:active, .pop-b:active { transform: scale(.97); }
 
 /* LED qui pulse */
 @keyframes m3-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--orange) 55%, transparent); } 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* =====================================================================
+   10. TÉLÉPHONE — barre du bas et feuille « Plus »
+   ===================================================================== */
+@media (max-width: 760px) {
+  /* même hauteur et même marge pour tous les onglets, choisi ou non (le libellé était coupé) */
+  .side .nav-b, .side .nav-b.main, .side .nav-b.on, .side .nav-b.main.on, .side .nav-b.main:not(.on) {
+    padding: 0 2px !important; margin: 0 !important; transform: none !important;
+  }
+  .side .nav-b .nt { line-height: 1.2 !important; }
+  .side .nav-b.open { background: var(--sunk) !important; }
+  .side .nav-b[data-act="chat"]:not(.on) { color: var(--muted) !important; font-weight: inherit !important; }
+}
+.sheet-scrim { position: fixed; inset: 0; z-index: 80; background: rgba(0, 0, 0, 0); transition: background-color .3s linear; }
+.sheet-scrim.in { background: rgba(0, 0, 0, .32); }
+.sheet-scrim.out { background: rgba(0, 0, 0, 0); transition-duration: .22s; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--ink);
+  padding: 6px 12px calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateY(100%);
+  transition: transform .42s var(--ios-sheet); box-shadow: 0 -12px 32px rgba(0, 0, 0, .18); }
+.sheet-scrim.in .sheet { transform: none; }
+.sheet-scrim.out .sheet { transform: translateY(100%); transition: transform .22s var(--m3-emph-accel); }
+.sheet-grab { width: 36px; height: 4px; background: var(--line-strong); margin: 4px auto 10px; border-radius: 2px !important; }
+.sheet-list { display: flex; flex-direction: column; }
+.sheet-it { display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 6px; border-top: 1px solid var(--line); color: var(--ink);
+  font: 500 15px var(--ui); text-align: left; background: none; }
+.sheet-it:first-child { border-top: 0; }
+.sheet-it:active { background: var(--sunk); }
+.sheet-it > svg:first-child { width: 22px; height: 22px; flex: none; }
+.sheet-it span { flex: 1; }
+.sheet-it .chev { width: 18px; height: 18px; color: var(--faint); flex: none; }
+.sheet-it.on span { font-weight: 700; }
+.sheet-it.on > svg:first-child { color: var(--orange); }
+.sheet-it .n { font: 600 11px var(--mono); font-style: normal; background: var(--orange); color: #fff; padding: 1px 6px; }
 
 /* Respect du réglage système « réduire les animations » */
 @media (prefers-reduced-motion: reduce) {
