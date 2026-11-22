@@ -129,3 +129,15 @@
 #oform .fxw .qin{height:46px;font-size:17px}
 #oform .fxw .qrow{grid-template-columns:minmax(0,1fr) 118px}
 .fxw .fxadm,.fxadm{display:block}
+/* administration compacte */
+.fxw .cfg-b{gap:10px 22px}
+.fxw .prods.gran{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px 14px}
+.fxw .two-c{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,1fr);gap:16px;align-items:start}
+.fxw .cfg-s.in{border-top:0;padding-top:0;margin-top:0}
+.fxw .covbox{padding:8px 10px;background:color-mix(in srgb,var(--ink) 4%,transparent);border:1px solid var(--line)}
+.fxw .covl{font-size:11.5px;line-height:1.55;margin:4px 0 0}
+.fxw .lbl.sub2{margin-top:10px}
+.fxw .prods.cims .prod,.fxw .prods.cims .prod-h{grid-template-columns:minmax(110px,1fr) 96px minmax(max-content,auto) 28px}
+.fxw .prods.cims .prod>span{flex-wrap:nowrap}
+.fxw .prods.cims .cb{white-space:nowrap;padding:3px 6px 3px 5px}
+@media (max-width:800px){.fxw .two-c{grid-template-columns:minmax(0,1fr)}.fxw .prods.cims .prod,.fxw .prods.cims .prod-h{grid-template-columns:minmax(0,1fr) 90px 28px}.fxw .prods.cims .prod>span{grid-column:1/-1;order:5;flex-wrap:wrap}}
