@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="fr"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <title>Planning La Bocca</title>
 <script>window.STANDALONE=true;</script>
 <script src="vendor/supabase-2.119.0.js"></script>
@@ -1373,9 +1373,11 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=7">
-<link rel="stylesheet" href="formules.css?v=1">
+<link rel="stylesheet" href="ameliorations-ui.css?v=8">
+<link rel="stylesheet" href="formules.css?v=2">
 
+</head>
+<body>
 <div class="app" id="app">
   <aside class="side" id="side" aria-label="Navigation"></aside>
   <div class="work">
@@ -1521,8 +1523,6 @@ function sapOf(o){if(o.sap)return o.sap;const k=S.formules.find(x=>x.f.toLowerCa
 const known=f=>S.formules.some(x=>x.f.toLowerCase()===(f||'').trim().toLowerCase());
 const FLEET=()=>((S&&S.config&&S.config.flotte&&S.config.flotte.length)?S.config.flotte:PLAQUES.concat((S&&S.plaquesX)||[])).map(x=>/^n°\s*de\s*parc/i.test(x.p||'')?{c:x.c,p:''}:x);
 const EXT=()=>(S&&S.config&&S.config.ext&&S.config.ext.length)?S.config.ext:EXT0;
-const isSP=o=>/sp/i.test(o.cam||'');
-const fleet=o=>FLEET();
 const onSite=o=>[...new Set(o.tours.map(t=>t.p).filter(p=>p&&!FLEET().some(f=>f.c===p)))].map(c=>({c,p:'noté sur ce chantier'}));
 const plN=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 /* plaque tapée : retrouve un camion connu, sinon l'apprend dans « Autres camions » */
@@ -2116,8 +2116,6 @@ function navMotion(sd){
   });
   wrap.addEventListener('mouseleave',()=>hov.classList.remove('show'));
 }
-function scrambleTxt(el){if(!el||el.dataset.busy||(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches))return;const txt=el.textContent;el.dataset.busy='1';const G='▪▫/_:·#';const t0=performance.now();
-  const tick=t=>{const k=Math.min(1,(t-t0)/260);const n=Math.floor(k*txt.length);el.textContent=txt.slice(0,n)+[...txt.slice(n)].map(c=>c===' '?' ':G[Math.floor(Math.random()*G.length)]).join('');if(k<1)requestAnimationFrame(tick);else{el.textContent=txt;delete el.dataset.busy}};requestAnimationFrame(tick)}
 /* ---------- carte du chantier : petite fenêtre déplaçable ---------- */
 let mapWin=null,mapObj=null;
 const geoCache=lsGet('planning-bocca-geo-v1')||{};
@@ -2573,15 +2571,6 @@ function convPop(anchor,d,p){const x=(S.convocs[d]||{})[p]||{};
 }
 const convOf=(d,p)=>(S.convocs[d]||{})[p]||null;
 const absentOn=(d,p)=>{const x=convOf(d,p);return !!(x&&x.st==='abs')};
-function convPrintHTML(month,filled,fm){
-  const pl=FLEET();const y=+month.slice(0,4),m=+month.slice(5,7);const nd=new Date(Date.UTC(y,m,0)).getUTCDate();
-  const ds=[];for(let i=1;i<=nd;i++){const d=`${month}-${pad(i)}`;if(!isWE(d))ds.push(d)}
-  const big=fm==='A3';
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Convocations ${MOISL[m-1]} ${y}</title><style>@page{size:${fm} landscape;margin:9mm}body{font-family:Arial,sans-serif;font-size:${big?'12pt':'9.5pt'};margin:0}h1{font-size:${big?'20pt':'15pt'};margin:0 0 3mm}table{width:100%;border-collapse:collapse}th,td{border:1px solid #888;padding:${big?'2.2mm':'1.4mm'};text-align:left;vertical-align:top}th{background:#eee}th small{display:block;font-weight:normal;font-size:8pt}td.d{white-space:nowrap;font-weight:bold;width:${big?'26mm':'20mm'}}.dep{font-size:8pt;color:#333}</style></head><body>
-  <h1>Convocations 8x4 · ${MOISL[m-1]} ${y} · ${CENTRALE}</h1><table><thead><tr><th>Jour</th>${pl.map(p=>`<th>${esc(plDisp(p))}</th>`).join('')}<th>Observations</th></tr></thead><tbody>
-  ${ds.map(d=>{const cv=S.convocs[d]||{};return `<tr><td class="d">${esc(dayShort(d))}</td>${pl.map(p=>{const x=cv[p.c];return `<td>${filled&&x&&x.st==='abs'?'ABSENT':''}${filled&&x&&x.st!=='abs'&&x.h?`${esc(hm(x.h))}${x.dep&&x.dep!==CENTRALE?' '+esc(x.dep):''}${x.st==='pret'?`<div class="dep">Prêté → ${esc(x.pc)} (${esc(x.per)})</div>`:''}${x.aff?`<div class="dep">${esc(x.aff)}</div>`:''}`:''}</td>`}).join('')}<td></td></tr>`}).join('')}
-  </tbody></table></body></html>`;
-}
 function convPrintPop(anchor){
   openPop(anchor,`<div class="pop-h">Imprimer les convocations du mois</div><form data-pa="go">
     <label class="fl">Mois<input type="month" id="cp-m" value="${esc(view.date.slice(0,7))}"></label>
@@ -2690,28 +2679,29 @@ function openOrderForm(o,opt){
   const radios=(name,list,val)=>`<div class="radios">${list.map(v=>`<label><input type="radio" name="${name}" value="${esc(v)}" ${v===val?'checked':''}><span>${esc(v)}</span></label>`).join('')}</div>`;
   const p=base.pompe||{t:'',f:'',ml:0,bon:false,resa:''};
   drawerEl.innerHTML=`<div class="scrim" data-act="dr-close-bg"><form class="drawer" id="oform" role="dialog" aria-label="Commande">
-   <div class="dr-h"><h2>${opt.dup?'Dupliquer la commande':o?'Modifier la commande':'Nouvelle commande'}</h2><button type="button" class="ib" data-act="dr-close" aria-label="Fermer">×</button></div>
+   <div class="dr-h"><h2>${opt.dup?'Dupliquer la commande':o?'Modifier la commande':'Nouvelle commande'}</h2><label class="ck dr-spec"><input type="checkbox" id="f-spec" ${base.spec?'checked':''}> Commande spéciale</label><button type="button" class="ib" data-act="dr-close" aria-label="Fermer">×</button></div>
    <div class="dr-b">
     <div class="q"><div class="ql">Qui<small>Client</small></div><div class="fields">
       <label class="fl full">Client<input id="f-cl" list="dl-cl" value="${esc(c?c.n:'')}" required autocomplete="off" placeholder="Nom du client ou NOM Prénom (particulier)"></label>
       <label class="fl full">Téléphone sur place (chef de chantier)<input id="f-tel" value="${esc(base.tel||'')}" inputmode="tel" autocomplete="off" placeholder="06 12 34 56 78"></label>
       <label class="fl full">Paiement (nouveau client)<select id="f-ct"><option value="compte">En compte</option><option value="comptant">Comptant</option></select></label>
     </div></div>
-    <div class="q"><div class="ql">Pourquoi<small>Facultatif</small></div><div class="fields"><div class="full">${radios('f-ouv',OUVRAGES,base.ouv)}</div><label class="fl full">Ou en clair (il fait quoi ?)<input id="f-ouvx" value="${esc(OUVRAGES.includes(base.ouv)?'':base.ouv)}" placeholder="Ex. dalle du garage + escalier" autocomplete="off"></label></div></div>
-    <div class="q"><div class="ql">Quoi<small>Formule, m³</small></div><div class="fields">
+    <div class="q"><div class="ql">Quoi<small>Formule</small></div><div class="fields">
       <div class="fl full">Formule<div class="fxw" id="f-fx"></div><input type="hidden" id="f-f" value="${esc(base.f)}"><input type="hidden" id="f-sap" value="${esc(o?o.sap||'':'')}"></div>
+    </div></div>
+    <div class="q"><div class="ql">Combien<small>Quantité</small></div><div class="fields">
       <div class="fl">Quantité (m³)<div class="qplus"><input id="f-m3" type="text" value="${esc(m3==null?'':String(m3).replace('.',','))}" required inputmode="decimal" autocomplete="off" aria-label="Quantité en m³"><label class="plus-t" title="Le client prendra sans doute un complément : 1 tour de plus, quantité à confirmer"><input type="checkbox" id="f-plus" ${base.plus?'checked':''}><span>[+]</span></label></div><small class="plus-h">[+] = et plus : 1 tour à confirmer</small></div>
       <div class="full" id="f-hint"></div>
-    </div></div>
-    <div class="q"><div class="ql">Quand<small>Date, heure</small></div><div class="fields">
-      <label class="fl">Date<input id="f-d" type="date" value="${esc(base.date)}" required></label>
-      <label class="fl">Heure du 1er camion<input id="f-h" type="time" step="900" value="${esc(base.h)}" required></label>
-      <label class="ck full"><input type="checkbox" id="f-am" ${base.am?'checked':''}> Le chantier déborde sur l'après-midi</label>
     </div></div>
     <div class="q"><div class="ql">Où<small>Chantier</small></div><div class="fields">
       <label class="fl full">Nom du chantier<input id="f-chn" list="dl-ch" value="${esc(ch?ch.nom:'')}" autocomplete="off" placeholder="Chantier de fond : le nom suffit"></label>
       <label class="fl full">Adresse<input id="f-cha" list="dl-adr" value="${esc(ch?ch.adr:'')}" autocomplete="off" placeholder="Visible au survol si le chantier a un nom"></label>
       <label class="ck full"><input type="checkbox" id="f-ot" ${ch&&ch.ot?'checked':''}> OT : adresse unique à ce coulage (ne sera pas reproposée)</label>
+    </div></div>
+    <div class="q"><div class="ql">Quand<small>Date, heure</small></div><div class="fields">
+      <label class="fl">Date<input id="f-d" type="date" value="${esc(base.date)}" required></label>
+      <label class="fl">Heure du 1er camion<input id="f-h" type="time" step="900" value="${esc(base.h)}" required></label>
+      <label class="ck full"><input type="checkbox" id="f-am" ${base.am?'checked':''}> Le chantier déborde sur l'après-midi</label>
     </div></div>
     <div class="q"><div class="ql">Comment<small>Camion, pompe</small></div><div class="fields">
       <div class="full"><span class="fl">Type de camion</span><div class="radios" id="f-ctype">${CFG().camions.map(c=>`<label><input type="radio" name="f-ct" value="${esc(c.t)}" ${camParse(base.cam).t===c.t?'checked':''}><span>${esc(c.t)}</span></label>`).join('')}</div></div>
@@ -2731,10 +2721,11 @@ function openOrderForm(o,opt){
           <label><input type="radio" name="f-presa" value="ok" ${p.resa==='ok'||(base.pompe&&!p.resa)?'checked':''}><span class="r-ok">Réservé</span></label>
           <label><input type="radio" name="f-presa" value="todo" ${p.resa==='todo'||!base.pompe?'checked':''}><span class="r-todo">À réserver</span></label></div></div>
       </div>
-      <div class="full pe-wrap" id="f-pills"><span class="fl">Infos sur la ligne</span>${pillsEditor(base.pills,base)}</div>
-      <label class="ck full"><input type="checkbox" id="f-spec" ${base.spec?'checked':''}> Commande spéciale (mise en avant)</label>
       ${role!=='centraliste'&&isNew?`<p class="hint full" style="background:var(--info);color:var(--info-ink)">La commande part au centraliste, qui la valide sur le planning.</p><label class="fl full">Souhait<input id="f-sh" placeholder="Ex. 2 camions ensemble au démarrage"></label>`:''}
       ${role==='centraliste'&&o&&o.kind==='aplacer'&&!opt.dup?`<label class="ck full"><input type="checkbox" id="f-val" checked> Valider et placer au planning en enregistrant</label>`:''}
+    </div></div>
+    <div class="q"><div class="ql">Pourquoi<small>Ouvrage, infos</small></div><div class="fields"><label class="fl full">Ce que fait le client<input id="f-ouvx" value="${esc(base.ouv||'')}" autocomplete="off"></label>
+      <div class="full pe-wrap" id="f-pills"><span class="fl">Infos sur la ligne</span>${pillsEditor(base.pills,base)}</div>
     </div></div>
    </div>
    <p class="f-warn" id="f-closed" role="alert" hidden></p>
@@ -2800,14 +2791,13 @@ function saveOrderForm(f){
   const pills=peValues(f);
   const rv=n=>(f.querySelector(`input[name="${n}"]:checked`)||{}).value||'';
   const pompe=g('f-pp').checked?{t:rv('f-pt')||CFG().pompes[0],f:rv('f-pf')||CFG().fourn[0],ml:parseInt(g('f-pml').value)||0,bon:g('f-pb').checked,resa:rv('f-presa')||'todo',beto:g('f-beto').checked,city:g('f-city').checked}:null;
-  const ouvEl=f.querySelector('input[name="f-ouv"]:checked');
   const R=prefs.user?prefs.user.role:'centraliste';const isNewO=!formCtx.id;const ap=R!=='centraliste'&&isNewO;const val=g('f-val')&&g('f-val').checked;
   let o=formCtx.id?byId(formCtx.id):null;
   const src=formCtx.src?byId(formCtx.src):null;
   if(!o){o={id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),seq:Date.now(),by:author(),tours:[],pills:src?src.pills.filter(p=>!P_COMMENT.includes(p.t)).map(p=>({t:p.t,on:false,by:p.by})):[],kind:src&&src.kind==='pour'?'pour':'cmd',pour:src?src.pour:'',souhait:'',st:null};S.orders.push(o)}
   if(o.camNote){if(!o.pills.some(p=>p.t===o.camNote))o.pills.push({t:o.camNote,on:false,by:o.by||author()})}
   const oldCap=o.tours.length?capOf(o.cam):cap;
-  Object.assign(o,{date:g('f-d').value,h:g('f-h').value,cl:c.id,ch:ch.id,ouv:g('f-ouvx').value.trim()||(ouvEl?ouvEl.value:''),f:fv,sap,cam,camNote:'',tel:g('f-tel').value.trim(),resa:cam?((f.querySelector('input[name="f-resa"]:checked')||{}).value||'todo'):null,pompe,am:g('f-am').checked,spec:g('f-spec').checked,plus:g('f-plus').checked});
+  Object.assign(o,{date:g('f-d').value,h:g('f-h').value,cl:c.id,ch:ch.id,ouv:g('f-ouvx').value.trim(),f:fv,sap,cam,camNote:'',tel:g('f-tel').value.trim(),resa:cam?((f.querySelector('input[name="f-resa"]:checked')||{}).value||'todo'):null,pompe,am:g('f-am').checked,spec:g('f-spec').checked,plus:g('f-plus').checked});
   if(ap){o.kind='aplacer';o.souhait=(g('f-sh')||{value:''}).value.trim();o.cre=TODAY}
   if(val){o.kind='cmd';delete o.modv}
   if(R!=='centraliste'&&!isNewO&&o.kind==='cmd'){o.modv={by:author(),at:new Date().toTimeString().slice(0,5)}}
@@ -3674,6 +3664,6 @@ let suppressClick=false;
 if(typeof document!=='undefined'&&document.getElementById('main'))boot();
 </script>
 
-<script src="formules.js?v=1"></script>
+<script src="formules.js?v=2"></script>
 <script src="motion-m3.js?v=7"></script>
 </body></html>

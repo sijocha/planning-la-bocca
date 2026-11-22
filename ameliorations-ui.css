@@ -303,3 +303,31 @@ html.sheet-open, html.sheet-open body { overscroll-behavior-y: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
 }
+
+/* ---------- Cases à cocher : carré net, remplissage encre, coche qui se dessine (même famille que les adjuvants) ---------- */
+input[type="checkbox"] {
+  -webkit-appearance: none; appearance: none; flex: none; margin: 0;
+  width: 18px; height: 18px; display: inline-grid; place-content: center;
+  border: 1.5px solid var(--line-strong); background: var(--panel); border-radius: 0 !important;
+  cursor: pointer; transition: background-color .15s, border-color .15s, transform .1s;
+}
+input[type="checkbox"]::before {
+  content: ""; width: 9px; height: 5px; margin-top: -2px;
+  border-left: 2px solid var(--bg); border-bottom: 2px solid var(--bg);
+  transform: rotate(-45deg) scale(0); transition: transform .15s cubic-bezier(.05,.7,.1,1);
+}
+input[type="checkbox"]:hover { border-color: var(--ink); }
+input[type="checkbox"]:active { transform: scale(.9); }
+input[type="checkbox"]:checked { background: var(--ink); border-color: var(--ink); }
+input[type="checkbox"]:checked::before { transform: rotate(-45deg) scale(1); }
+input[type="checkbox"]:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
+.ck { cursor: pointer; }
+/* « Commande spéciale » à côté du titre du formulaire */
+.dr-h { gap: 14px; }
+.dr-h .dr-spec { margin-left: auto; margin-right: 6px; font: 600 12px var(--mono, monospace); letter-spacing: .06em; text-transform: uppercase; padding: 6px 10px; border: 1px dashed var(--line-strong); white-space: nowrap; }
+.dr-h .dr-spec:has(input:checked) { border: 1px solid var(--orange); color: var(--orange); }
+.dr-h .dr-spec input:checked { background: var(--orange); border-color: var(--orange); }
+@media (max-width: 520px) { .dr-h .dr-spec { padding: 5px 7px; font-size: 10.5px; } }
+/* Formulaire ouvert : plus de flou derrière */
+.scrim { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
