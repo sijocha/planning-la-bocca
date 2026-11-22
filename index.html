@@ -1373,7 +1373,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=8">
+<link rel="stylesheet" href="ameliorations-ui.css?v=9">
 <link rel="stylesheet" href="formules.css?v=2">
 
 </head>
@@ -1938,17 +1938,17 @@ const AIDE=[
   ['tous','Paiements comptant',`<ul><li>L'étiquette <b>€ attente</b> sur la ligne : paiement non reçu.</li><li>Clic dessus → <b>« Confirmer : paiement reçu ? »</b> → Oui. Un nouveau clic remet en attente, aussi avec confirmation.</li><li>Tant que ce n'est pas payé, l'alerte « Paiement · client » reste dans la ligne À surveiller.</li></ul>`],
   ['tous','Pompes, bon de pompe et réservations',`<ul><li>Camion SP4 / SP6 ou pompe <b>« À réserver »</b> (rouge clignotant) : le centraliste clique dessus quand c'est réservé → confirmation → <b>« Réservé »</b> en vert.</li><li><b>Bon de pompe</b> : clic sur l'étiquette quand il est fait → confirmation.</li><li>Pompe BQA sur une formule sans BQA : alerte « BQA requise ».</li><li><b>Betobag</b> et <b>Citybag</b> : cases dans la partie Pompe de la commande ; ils s'affichent sur la ligne, à côté de la pompe.</li></ul>`]]],
  ['Camions et bulles',[
-  ['centraliste','Remplir une bulle (plaque du camion)',`<ul><li><b>Clic sur une bulle vide</b> : vos camions s'affichent, plus les autres plaques déjà notées. Un clic sur la plaque → la bulle passe <b>chargée</b> (verte).</li><li>Plaque inconnue : la taper dans « Noter la plaque », puis OK. Elle ne sert que pour ce chantier. Vos camions se gèrent dans Réglages → Camions centrale.</li><li><b>[+]</b> au bout des bulles : ajouter un tour, avec le même choix de plaque.</li><li>Clic sur une bulle déjà chargée : retirer le stabilo (avec confirmation).</li><li>Charger un tour <b>avant le jour du chantier</b> demande une validation.</li></ul>`],
+  ['centraliste','Remplir une bulle (plaque du camion)',`<ul><li><b>Clic sur une bulle vide</b> : vos camions s'affichent, plus les autres plaques déjà notées. Un clic sur la plaque → la bulle passe <b>chargée</b> (verte).</li><li>Plaque inconnue : la taper dans « Noter la plaque », puis OK. Elle ne sert que pour ce chantier. Vos camions se gèrent dans Administration → Camions et pompes → Camions centrale.</li><li><b>[+]</b> au bout des bulles : ajouter un tour, avec le même choix de plaque.</li><li>Clic sur une bulle déjà chargée : retirer le stabilo (avec confirmation).</li><li>Charger un tour <b>avant le jour du chantier</b> demande une validation.</li></ul>`],
   ['centraliste','Modifier une bulle (clic long ou clic droit)',`<p>Rester appuyé sur la bulle (ou clic droit) : changer la plaque, le volume, noter « chargé par une autre centrale », replacer le camion, supprimer le tour.</p><p>Légende : vide = prévu · vert = chargé · pointillé = complément · nom de centrale = chargé ailleurs · bleu = camion replacé · <b>P</b> bleu = toupie rechargée pleine.</p>`],
   ['centraliste','Replacer un camion déjà chargé sur un autre chantier',`<ol><li>Clic long sur la bulle chargée → <b>Replacer sur un autre chantier…</b></li><li>Choisir le chantier. Laisser cochée « Prévoir un nouveau tour » si le premier chantier attend encore ce béton.</li></ol><p>La bulle d'origine devient bleue barrée (ses m³ ne comptent plus). Une fenêtre demande les <b>m³ replacés</b> et si la <b>toupie a été rechargée pleine</b>, puis Valider. Le camion prend la <b>première bulle grise libre</b> du nouveau chantier (en bleu ↪) ; s'il n'y en a pas, une bulle est créée. Pour revenir en arrière : clic long sur la bulle barrée → <b>Annuler le replacement</b>.</p>`],
-  ['centraliste','Planning camions : renforts, détachements, convocations',`<ul><li>Encadré <b>Planning camions</b> : <b>+ Renfort</b> (un camion vient à la centrale), <b>+ Détachement</b> (un camion part : nombre, camion prêté, convoqué ailleurs), <b>+ Absent</b>.</li><li>Page <b>04 Camions</b> : absents, prêtés, convoqués ailleurs (« 7 h 45 Grasse »).</li><li><b>Imprimer le mois</b> : PDF A4 ou A3 des convocations, avec horaires ou grille vide.</li><li>Ligne du bas : <b>tours chargés par camion</b> depuis le 1er du mois. <b>Imprimer par période</b> (sous le total) : d'un mois à un autre, ou un seul mois.</li><li>Onglet <b>Convocation</b> : le mois complet. Clic sur une case : <b>Convoqué</b> (heure et centrale : une autre centrale = le camion y est convoqué directement), <b>Absent</b> (période, raison) ou pas convoqué ; « Affecté au chantier » se remplit librement (badge, accès…). Colonne <b>Observations</b> : une note libre par jour.</li><li><b>Clic droit sur un camion</b> (en-tête de colonne, ou dans Réglages → Camions centrale) pour modifier son n° de parc ou sa plaque entière (optionnelle).</li></ul>`]]],
+  ['centraliste','Planning camions : renforts, détachements, convocations',`<ul><li>Encadré <b>Planning camions</b> : <b>+ Renfort</b> (un camion vient à la centrale), <b>+ Détachement</b> (un camion part : nombre, camion prêté, convoqué ailleurs), <b>+ Absent</b>.</li><li>Page <b>04 Camions</b> : absents, prêtés, convoqués ailleurs (« 7 h 45 Grasse »).</li><li><b>Imprimer le mois</b> : PDF A4 ou A3 des convocations, avec horaires ou grille vide.</li><li>Ligne du bas : <b>tours chargés par camion</b> depuis le 1er du mois. <b>Imprimer par période</b> (sous le total) : d'un mois à un autre, ou un seul mois.</li><li>Onglet <b>Convocation</b> : le mois complet. Clic sur une case : <b>Convoqué</b> (heure et centrale : une autre centrale = le camion y est convoqué directement), <b>Absent</b> (période, raison) ou pas convoqué ; « Affecté au chantier » se remplit librement (badge, accès…). Colonne <b>Observations</b> : une note libre par jour.</li><li><b>Clic droit sur un camion</b> (en-tête de colonne, ou dans Administration → Camions centrale) pour modifier son n° de parc ou sa plaque entière (optionnelle).</li></ul>`]]],
  ['Centrale',[
   ['tous','Ouvrir la centrale un week-end',`<p>Le week-end n'a pas de journée planning. En allant sur un samedi ou un dimanche, le bouton <b>Créer une journée planning ce jour</b> ouvre la centrale exceptionnellement (avec confirmation). Une commande saisie un week-end propose aussi la création : second clic sur Enregistrer.</p>`],
   ['centraliste','Journal de bord',`<ul><li>Centralistes présents et horaires, remplaçant : <b>+ Présent</b>.</li><li>Passation entre postes : <b>+ Passation</b> ; clic pour la marquer faite.</li><li>Entretien et RDV labo : <b>+ Événement</b>, <b>+ RDV labo</b>.</li><li><b>+ Changement produit</b> : ciment, adjuvant, agrégat, silo ou formule, avec l'heure ; noté aussi au journal.</li><li>Tous les boutons <b>+</b> sont sur la ligne du bas de chaque encadré.</li></ul>`],
   ['tous','Centrale fermée ou en panne',`<p><b>Fermée</b> : clic sur l'état (<b>Ouverte</b>) dans le Journal de bord → Fermée, puis <b>Quand</b> (journée, matin, après-midi ou horaires) et la cause.</p><p><b>Panne</b> : même fenêtre → Panne, avec les heures et la cause. La panne s'ajoute comme une <b>case rouge</b> sous l'état de la centrale (plusieurs pannes possibles dans la journée) :</p><ul><li><b>Terminée</b> : la centrale repart ; la case se ferme et l'heure de fin est notée.</li><li><b>×</b> : annule une panne notée par erreur.</li></ul><p>Pendant une fermeture ou une panne, les commandes du créneau passent en rouge et le centraliste peut <b>replacer les tours dans une autre centrale</b>. Le commercial voit le même rouge.</p>`],
   ['centraliste','Agrégats et ciments',`<ul><li>Une ligne par <b>semi</b> : clic sur son nom pour mettre le prénom du chauffeur, l'heure, une remarque.</li><li>Au début, seule la première semi est notée ; <b>[+]</b> après le dernier produit pour ajouter le suivant demandé au chauffeur.</li><li>Clic sur un tour = <b>reçu</b> (stabilo). Clic long = modifier le produit ou la carrière, supprimer.</li><li>Au repos, l'encadré montre la dernière semi reçue ; au survol, tout s'affiche.</li><li>Ligne <b>Ciments</b> en haut : <b>+ Ciment</b> (en bas du cadre) → nom du ciment, puis l'heure dans la liste (6 h à 22 h, toutes les 30 min).</li><li><b>+ Semi</b> au bout de la ligne de la première semi.</li><li>Page <b>03 Agrégats</b> : la semaine entière, à remplir la veille.</li></ul>`],
   ['centraliste','Adjuvants',`<p>Page <b>05 Adjuvants</b> : les commandes et livraisons des 3 dernières semaines, et le tableau de l'année.</p>`],
-  ['centraliste','Raccourcis',`<p>Page <b>06 Raccourcis</b> : sites et formulaires utiles (agrégats, pompe, SP4, bon de pompe, accidents…), rangés par thème. Ils se modifient dans les Réglages.</p>`]]],
+  ['centraliste','Raccourcis',`<p>Page <b>06 Raccourcis</b> : sites et formulaires utiles (agrégats, pompe, SP4, bon de pompe, accidents…), rangés par thème. Ils se modifient dans Administration → Raccourcis.</p>`]]],
  ['Notifications',[
   ['tous','Ligne « À surveiller »',`<p>Au-dessus des vues, en bas : bons de pompe, réservations, paiements, commandes à valider, demandes. Le nombre est à côté du titre.</p><ul><li>Clic sur une alerte → la ligne concernée.</li><li><b>Molette</b> de la souris pour faire défiler s'il y en a beaucoup.</li><li>Quand tout est réglé, la ligne disparaît.</li></ul>`],
   ['tous','Page À traiter (02 Demandes)',`<p>Tout ce qui attend une action, rangé par thème, du plus urgent en haut au moins urgent en bas. Une catégorie n'apparaît que si elle a quelque chose à traiter :</p><ol><li>Placement de chantier (commandes du commercial)</li><li>Modifications à valider</li><li>Pompes (réservation, bon de pompe, BQA)</li><li>Camions à réserver (SP4, SP6)</li><li>Paiements comptant</li><li>Formules et labo</li><li>Modifications de commande, chantiers et clients, autres demandes</li></ol><p>Chaque ligne a son bouton d'action (Réservée, Bon fait, Paiement reçu, Traité…). Les demandes traitées passent <b>en gris tout en bas</b>. Filtres : Tout, Pour moi, Envoyées.</p>`],
@@ -2593,8 +2593,8 @@ function settingsPop(anchor){
    <section class="ps"><div class="pop-l">Fin de mois</div>
      ${lastWD?`<p class="ps-note">Dernier jour ouvré du mois : pensez à la clôture</p>`:''}
      <button class="pop-b ${lastWD?'strong':''}" data-pa="moisclot">Clôture de fin de mois : ${esc(moisN)} (PDF + .json)</button>
-     <button class="pop-b" data-pa="archive">Consulter un mois archivé (.json)…</button></section>
-   <section class="ps"><div class="pop-l">Centrale</div><button class="pop-b" data-pa="cfg">Réglages : camions, agence, pompes…</button>${layoutPopHTML()}</section>`:''}
+     <button class="pop-b" data-pa="archive">Consulter un mois archivé (.json)…</button></section>`:''}
+   ${ce||role()==='commercial'||isAdmin()?`<section class="ps"><div class="pop-l">Centrale</div><button class="pop-b" data-pa="cfg">Administration · catalogue de la centrale</button>${ce?layoutPopHTML():''}</section>`:''}
    <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button></section>
    <section class="ps"><div class="pop-l">Affichage</div><div class="pop-grid">${[['auto','Auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div></section>
 
@@ -2609,19 +2609,8 @@ function openConfig(focus){
   if(!S.config||!S.config.camions)S.config=CONFIG0();
   const c=S.config;
   const list=(k,items,fmtI)=>`<div class="cfg-l">${items.map((x,i)=>`<span class="chip">${fmtI(x)}<button type="button" class="x" data-cfg="del" data-k="${k}" data-i="${i}" aria-label="Retirer">×</button></span>`).join('')}</div>`;
-  drawerEl.innerHTML=`<div class="scrim" data-act="dr-close-bg"><div class="drawer wide" role="dialog" aria-label="Réglages du planning">
-    <div class="dr-h"><h2>Réglages du planning</h2><button type="button" class="ib" data-act="dr-close" aria-label="Fermer">×</button></div>
-    <div class="dr-b">
-      <p class="muted">Propres à la centrale de ${CENTRALE} et à son agence. Ils servent à la prise de commande et au calcul des tours. Le premier type de camion est celui par défaut.</p>
-      <div class="q"><div class="ql">Agence<small>Centrales voisines</small></div><div>${list('agence',AG(),x=>esc(x))}
-        <form class="inline-f" data-cfgform="agence"><input id="cf-a" placeholder="Centrale (ex. Mandelieu)" aria-label="Centrale de l'agence"><button class="btn sm">Ajouter</button></form>
-        <p class="muted" style="font-size:12.5px;margin:6px 0 0">Elles servent aux tours chargés ailleurs, aux camions prêtés ou reçus, et aux convocations dans une autre centrale (« 7 h 45 Grasse »).</p></div></div>
-      <div class="q"><div class="ql">Agrégats<small>Produits de départ</small></div><div>${list('agg',AGGL(),x=>'<b>'+esc(x)+'</b>')}
-        <form class="inline-f" data-cfgform="agg"><input id="cf-g" placeholder="Produit (ex. 2/6)" aria-label="Produit"><button class="btn sm">Ajouter</button></form></div></div>
-      <div class="q"><div class="ql">Carrières<small>Provenances</small></div><div>${list('carr',CARRL(),x=>esc(x))}
-        <form class="inline-f" data-cfgform="carr"><input id="cf-r" placeholder="Carrière (ex. LA ROQUE)" aria-label="Carrière"><button class="btn sm">Ajouter</button></form></div></div>
-      <div class="q"><div class="ql">Ciments<small>Et fillers</small></div><div>${list('cim',CIML(),x=>esc(x))}
-        <form class="inline-f" data-cfgform="cim"><input id="cf-m" placeholder="Ciment (ex. CEM III/A)" aria-label="Ciment"><button class="btn sm">Ajouter</button></form></div></div>
+  const centraleH=()=>`
+      <h3 class="adm-g" id="adm-camions"><span>Camions et pompes</span><small>Calcul des tours, bulles de chargement, convocations</small></h3>
       <div class="q" id="cfg-flotte"><div class="ql">Camions centrale<small>Toupies 8x4</small></div><div>${list('flotte',FLEET(),x=>`<b class="plq" data-plq="${esc(x.c)}" title="Clic droit pour modifier">${esc(plDisp(x))}</b>`)}
         <form class="inline-f" data-cfgform="flotte"><input id="cf-pc" placeholder="N° de parc ou repère (ex. 7656, EF)" aria-label="N° de parc ou repère" style="max-width:220px"><input id="cf-pp" placeholder="Plaque entière (optionnel, ex. EF-507-VT)" aria-label="Plaque entière, optionnel"><button class="btn sm">Ajouter</button></form>
         <p class="muted" style="font-size:12.5px;margin:6px 0 0">Les camions attitrés à ${CENTRALE}. Ils servent aux bulles de chargement, aux convocations et à l'impression.</p></div></div>
@@ -2631,15 +2620,32 @@ function openConfig(focus){
         <form class="inline-f" data-cfgform="pompes"><input id="cf-p" placeholder="Taille (ex. 38 ou BQA)" aria-label="Taille de pompe"><button class="btn sm">Ajouter</button></form></div></div>
       <div class="q"><div class="ql">Fournisseurs<small>Pompes</small></div><div>${list('fourn',c.fourn,x=>esc(x))}
         <form class="inline-f" data-cfgform="fourn"><input id="cf-f" placeholder="Fournisseur (4 lettres)" aria-label="Fournisseur"><button class="btn sm">Ajouter</button></form></div></div>
-      <div class="q" id="cfg-formules"><div class="ql">Formules<small>Catalogue de la centrale</small></div><div><details class="fx-det"><summary>Ouvrir le catalogue : expositions, gravillons, liants, options, produits spéciaux</summary><div class="fxw fxadm" id="fx-adm"></div></details>
-        <p class="muted" style="font-size:12.5px;margin:6px 0 0">Ce que la saisie des formules propose à ${CENTRALE}, avec les contrôles de la NF EN 206+A2/CN (tableau NA.F.1). Les changements valent pour tous les postes.</p></div></div>
+      <h3 class="adm-g" id="adm-agence"><span>Agence</span><small>Centrales voisines et provenances</small></h3>
+      <div class="q"><div class="ql">Agence<small>Centrales voisines</small></div><div>${list('agence',AG(),x=>esc(x))}
+        <form class="inline-f" data-cfgform="agence"><input id="cf-a" placeholder="Centrale (ex. Mandelieu)" aria-label="Centrale de l'agence"><button class="btn sm">Ajouter</button></form>
+        <p class="muted" style="font-size:12.5px;margin:6px 0 0">Elles servent aux tours chargés ailleurs, aux camions prêtés ou reçus, et aux convocations dans une autre centrale (« 7 h 45 Grasse »).</p></div></div>
+      <div class="q"><div class="ql">Carrières<small>Provenances</small></div><div>${list('carr',CARRL(),x=>esc(x))}
+        <form class="inline-f" data-cfgform="carr"><input id="cf-r" placeholder="Carrière (ex. LA ROQUE)" aria-label="Carrière"><button class="btn sm">Ajouter</button></form></div></div>
+      <h3 class="adm-g" id="adm-liens"><span>Raccourcis</span><small>Liens utiles, par thème</small></h3>
       <div class="q" id="cfg-liens"><div class="ql">Raccourcis<small>Par thème</small></div><div>
         ${[...new Set((S.liens||[]).map(l=>l.cat))].map(cat=>`<div class="cfg-th"><span class="lbl">// ${esc(cat)}</span><div class="cfg-l">${(S.liens||[]).map((l,i)=>l.cat!==cat?'':`<span class="chip ${l.u?'':'warn'}" title="${esc(l.u||'Lien à renseigner')}"><button type="button" class="lk-ed" data-cfg="lien" data-i="${i}">${esc(l.n)}</button><button type="button" class="x" data-cfg="del" data-k="liens" data-i="${i}" aria-label="Retirer">×</button></span>`).join('')}</div></div>`).join('')}
         <form class="cfg-lf" data-cfgform="liens"><input id="cf-ln" placeholder="Nom (ex. Bon de pompe)" aria-label="Nom du raccourci"><input id="cf-lu" placeholder="https://…" aria-label="Adresse"><input id="cf-lc" list="cf-cats" placeholder="Thème (ex. Formulaires)" aria-label="Thème"><datalist id="cf-cats">${[...new Set(['Commandes','Formulaires','Sécurité','Contacts'].concat((S.liens||[]).map(l=>l.cat)))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist><button class="btn sm">Ajouter</button></form>
         <p class="muted" style="font-size:12.5px;margin:6px 0 0">Cliquez sur un raccourci pour le modifier. Un nouveau thème se crée en tapant son nom.</p></div></div>
+`;
+  const ce=role()==='centraliste'||isAdmin();
+  const navH=[['adm-formules','Formules'],...(ce?[['adm-camions','Camions et pompes'],['adm-agence','Agence'],['adm-liens','Raccourcis']]:[])].map(([h,t])=>`<a href="#${h}" data-adm="${h}">${t}</a>`).join('');
+  drawerEl.innerHTML=`<div class="scrim" data-act="dr-close-bg"><div class="drawer wide" role="dialog" aria-label="Administration · catalogue de la centrale">
+    <div class="dr-h"><h2>Administration <span class="adm-h">· catalogue de la centrale</span></h2><button type="button" class="ib" data-act="dr-close" aria-label="Fermer">×</button></div>
+    <div class="dr-b">
+      <p class="muted adm-intro">Réglages propres à la centrale de ${CENTRALE}. Ils servent à la prise de commande, à la saisie des formules et au calcul des tours.</p>
+      <nav class="adm-nav" aria-label="Sections">${navH}</nav>
+      <h3 class="adm-g" id="adm-formules"><span>Formules</span><small>Commun au centraliste et au commercial</small></h3>
+      <div class="q" id="cfg-formules"><div class="ql">Catalogue<small>Formules béton</small></div><div><p class="muted" style="font-size:12.5px;margin:0 0 8px">Ce que la saisie des formules propose à ${CENTRALE} (expositions, gravillons, liants, options, produits spéciaux), avec les contrôles de la NF EN 206+A2/CN. Les changements valent pour tous les postes.</p><div class="fxw fxadm" id="fx-adm"></div></div></div>
+      ${ce?centraleH():'<p class="muted adm-note">Camions, pompes, agence et raccourcis : réglés par le centraliste.</p>'}
     </div></div></div>`;
   drawerEl.hidden=false;
-  {const el=drawerEl.querySelector('#fx-adm');if(el&&window.FX){FX.setCfg(S.config&&S.config.formCat);FX.admin(el,{onSave:cf=>{if(!S.config)S.config=CONFIG0();S.config.formCat=cf;commit()}})}}
+  {const el=drawerEl.querySelector('#fx-adm');if(el&&window.FX){FX.setCfg(fxCat());FX.admin(el,{onSave:cf=>{S.formcat=cf;commit()}})}}
+  drawerEl.querySelectorAll('[data-adm]').forEach(a=>a.onclick=e=>{e.preventDefault();const t=drawerEl.querySelector('#'+a.dataset.adm);if(t)t.scrollIntoView({block:'start',behavior:'smooth'})});
   if(focus){const t=drawerEl.querySelector('#'+focus);if(t)t.scrollIntoView({block:'start'})}
 }
 function cfgAction(el){
@@ -2751,7 +2757,7 @@ function openOrderForm(o,opt){
   hint();
   // saisie de la formule : module formules.js (saisie rapide + cases), réglé par le catalogue de la centrale
   let fxc=null;
-  if(window.FX){FX.setCfg(S.config&&S.config.formCat);const sync=()=>{const q=document.getElementById('fx-q');if(!q)return;f.querySelector('#f-f').value=FX.line(q.value);f.querySelector('#f-sap').value=(document.getElementById('fx-sap')||{}).value||'';hint()};
+  if(window.FX){FX.setCfg(fxCat());const sync=()=>{const q=document.getElementById('fx-q');if(!q)return;f.querySelector('#f-f').value=FX.line(q.value);f.querySelector('#f-sap').value=(document.getElementById('fx-sap')||{}).value||'';hint()};
     fxc=FX.mount(f.querySelector('#f-fx'),{value:base.f||'',sap:o?o.sap||'':'',last:lastFormules(c?c.n:''),onChange:sync});f.querySelector('#f-f').value=base.f||'';}
   f.dataset.init=JSON.stringify(serF(f));
   setTimeout(()=>{const first=f.querySelector(o?'#f-m3':'#f-cl');if(first)first.focus()},30);
@@ -2937,8 +2943,10 @@ const LS_MIRROR='planning-bocca-mirror-v1',LS_PEND='planning-bocca-pending-v1';
 let DB=null;const synced={};const inflight={};const ready={o:false,d:false,r:false};
 let pending=lsGet(LS_PEND)||{};             // chemin -> {body,j}  (body null = suppression)
 const sync={online:true,last:null,cache:false,err:''};
-const REF_KEYS=['clients','chantiers','formules','demandes','convocs','plaquesX','adjuvants','liens','config'];
-function docsOf(){const m={};S.orders.forEach(o=>m['orders/'+o.id]=o);(S.chat||[]).forEach(c=>m['chat/'+c.id]=c);Object.keys(S.days).forEach(k=>m['days/'+k]=S.days[k]);REF_KEYS.forEach(k=>m['ref/'+k]={v:S[k]});return m}
+const REF_KEYS=['clients','chantiers','formules','demandes','convocs','plaquesX','adjuvants','liens','config','formcat'];
+// catalogue des formules : document à part (le commercial peut le modifier) ; repris de config.formCat s'il n'existe pas encore
+const fxCat=()=>S.formcat||(S.config&&S.config.formCat)||null;
+function docsOf(){const m={};S.orders.forEach(o=>m['orders/'+o.id]=o);(S.chat||[]).forEach(c=>m['chat/'+c.id]=c);Object.keys(S.days).forEach(k=>m['days/'+k]=S.days[k]);REF_KEYS.forEach(k=>{if(k==='formcat'&&S[k]==null)return;m['ref/'+k]={v:S[k]}});return m}
 const known_=p=>pending[p]?pending[p].j:synced[p];
 let mirrorT=null;
 function saveMirror(){clearTimeout(mirrorT);mirrorT=setTimeout(()=>lsSet(LS_MIRROR,S),400)}
