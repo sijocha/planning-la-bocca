@@ -1374,6 +1374,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
 <link rel="stylesheet" href="ameliorations-ui.css?v=7">
+<link rel="stylesheet" href="formules.css?v=1">
 
 <div class="app" id="app">
   <aside class="side" id="side" aria-label="Navigation"></aside>
@@ -1489,7 +1490,7 @@ const total=o=>TR(o).reduce((a,t)=>a+t.v,0);
 const livre=o=>TR(o).reduce((a,t)=>a+(t.s?t.v:0),0);
 function statut(o){if(o.st)return o.st;const n=TR(o).length,c=TR(o).filter(t=>t.s).length;if(n&&c===n)return 'terminee';if(c)return 'encours';return 'attente'}
 function family(f){const s=(f||'').toLowerCase();if(/chape|cemexa/.test(s))return 'chape';if(/d[ée]sactiv/.test(s))return 'desac';if(/sable stab/.test(s))return 'sable';return 'beton'}
-function attente(f){const m=/attente formule\s*(labo|client|commercial)?/i.exec(f||'');return m?('Attente formule'+(m[1]?' '+m[1].toLowerCase():'')):''}
+function attente(f){if(/^ATT\b/.test(f||''))return 'Produit en attente';const m=/attente formule\s*(labo|client|commercial)?/i.exec(f||'');return m?('Attente formule'+(m[1]?' '+m[1].toLowerCase():'')):''}
 
 /* ---------- état ---------- */
 let S=null;              // données
@@ -2642,12 +2643,15 @@ function openConfig(focus){
         <form class="inline-f" data-cfgform="pompes"><input id="cf-p" placeholder="Taille (ex. 38 ou BQA)" aria-label="Taille de pompe"><button class="btn sm">Ajouter</button></form></div></div>
       <div class="q"><div class="ql">Fournisseurs<small>Pompes</small></div><div>${list('fourn',c.fourn,x=>esc(x))}
         <form class="inline-f" data-cfgform="fourn"><input id="cf-f" placeholder="Fournisseur (4 lettres)" aria-label="Fournisseur"><button class="btn sm">Ajouter</button></form></div></div>
+      <div class="q" id="cfg-formules"><div class="ql">Formules<small>Catalogue de la centrale</small></div><div><details class="fx-det"><summary>Ouvrir le catalogue : expositions, gravillons, liants, options, produits spéciaux</summary><div class="fxw fxadm" id="fx-adm"></div></details>
+        <p class="muted" style="font-size:12.5px;margin:6px 0 0">Ce que la saisie des formules propose à ${CENTRALE}, avec les contrôles de la NF EN 206+A2/CN (tableau NA.F.1). Les changements valent pour tous les postes.</p></div></div>
       <div class="q" id="cfg-liens"><div class="ql">Raccourcis<small>Par thème</small></div><div>
         ${[...new Set((S.liens||[]).map(l=>l.cat))].map(cat=>`<div class="cfg-th"><span class="lbl">// ${esc(cat)}</span><div class="cfg-l">${(S.liens||[]).map((l,i)=>l.cat!==cat?'':`<span class="chip ${l.u?'':'warn'}" title="${esc(l.u||'Lien à renseigner')}"><button type="button" class="lk-ed" data-cfg="lien" data-i="${i}">${esc(l.n)}</button><button type="button" class="x" data-cfg="del" data-k="liens" data-i="${i}" aria-label="Retirer">×</button></span>`).join('')}</div></div>`).join('')}
         <form class="cfg-lf" data-cfgform="liens"><input id="cf-ln" placeholder="Nom (ex. Bon de pompe)" aria-label="Nom du raccourci"><input id="cf-lu" placeholder="https://…" aria-label="Adresse"><input id="cf-lc" list="cf-cats" placeholder="Thème (ex. Formulaires)" aria-label="Thème"><datalist id="cf-cats">${[...new Set(['Commandes','Formulaires','Sécurité','Contacts'].concat((S.liens||[]).map(l=>l.cat)))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist><button class="btn sm">Ajouter</button></form>
         <p class="muted" style="font-size:12.5px;margin:6px 0 0">Cliquez sur un raccourci pour le modifier. Un nouveau thème se crée en tapant son nom.</p></div></div>
     </div></div></div>`;
   drawerEl.hidden=false;
+  {const el=drawerEl.querySelector('#fx-adm');if(el&&window.FX){FX.setCfg(S.config&&S.config.formCat);FX.admin(el,{onSave:cf=>{if(!S.config)S.config=CONFIG0();S.config.formCat=cf;commit()}})}}
   if(focus){const t=drawerEl.querySelector('#'+focus);if(t)t.scrollIntoView({block:'start'})}
 }
 function cfgAction(el){
@@ -2695,9 +2699,8 @@ function openOrderForm(o,opt){
     </div></div>
     <div class="q"><div class="ql">Pourquoi<small>Facultatif</small></div><div class="fields"><div class="full">${radios('f-ouv',OUVRAGES,base.ouv)}</div><label class="fl full">Ou en clair (il fait quoi ?)<input id="f-ouvx" value="${esc(OUVRAGES.includes(base.ouv)?'':base.ouv)}" placeholder="Ex. dalle du garage + escalier" autocomplete="off"></label></div></div>
     <div class="q"><div class="ql">Quoi<small>Formule, m³</small></div><div class="fields">
-      <label class="fl full">Formule (telle qu'on l'écrit)<input id="f-f" list="dl-f" value="${esc(base.f)}" required autocomplete="off" placeholder="C25/30 D20 S3 XC1 · ou attente formule labo"></label>
+      <div class="fl full">Formule<div class="fxw" id="f-fx"></div><input type="hidden" id="f-f" value="${esc(base.f)}"><input type="hidden" id="f-sap" value="${esc(o?o.sap||'':'')}"></div>
       <div class="fl">Quantité (m³)<div class="qplus"><input id="f-m3" type="text" value="${esc(m3==null?'':String(m3).replace('.',','))}" required inputmode="decimal" autocomplete="off" aria-label="Quantité en m³"><label class="plus-t" title="Le client prendra sans doute un complément : 1 tour de plus, quantité à confirmer"><input type="checkbox" id="f-plus" ${base.plus?'checked':''}><span>[+]</span></label></div><small class="plus-h">[+] = et plus : 1 tour à confirmer</small></div>
-      <label class="fl">N° SAP (facultatif)<input id="f-sap" value="${esc(o?o.sap||'':'')}" inputmode="numeric" placeholder="8 chiffres"></label>
       <div class="full" id="f-hint"></div>
     </div></div>
     <div class="q"><div class="ql">Quand<small>Date, heure</small></div><div class="fields">
@@ -2747,7 +2750,6 @@ function openOrderForm(o,opt){
   const rv=n=>(f.querySelector(`input[name="${n}"]:checked`)||{}).value||'';
   const hint=()=>{const fv=f.querySelector('#f-f').value,pp=f.querySelector('#f-pp').checked,pt=rv('f-pt');const h=[];
     if(pp&&pt==='BQA'&&!/bqa/i.test(fv))h.push('Pompe à tuyaux : la formule doit être une BQA.');
-    if(fv&&!known(fv)&&!attente(fv))h.push('Formule non répertoriée : elle sera signalée sur la ligne. Ajoutez « attente formule labo » si besoin.');
     const m=num(f.querySelector('#f-m3').value),cap=capOf(f.querySelector('#f-cam').value);if(m>0){const n=Math.floor(m/cap+1e-9),r=Math.round((m-n*cap)*10)/10;h.push(n?`${n} tour${n>1?'s':''} de ${fmt(cap)} m³${r>0.05?' + complément de '+fmt(r)+' m³':''}.`:`1 tour de ${fmt(r)} m³.`)}
     f.querySelector('#f-hint').innerHTML=h.map(x=>`<div class="hint">${esc(x)}</div>`).join('')};
   const syncCam=()=>{const d0=CFG().camions[0].t;const t=(f.querySelector('input[name="f-ct"]:checked')||{}).value||d0;const n=parseInt(f.querySelector('#f-nb').value)||'';
@@ -2756,12 +2758,19 @@ function openOrderForm(o,opt){
     if(e.target.id==='f-pp')f.querySelector('#f-pump').hidden=!e.target.checked;
     if(e.target.id==='f-chn'){const k=S.chantiers.find(c=>c.nom&&!c.ot&&c.nom.toLowerCase()===e.target.value.trim().toLowerCase());if(k){f.querySelector('#f-cha').value=k.adr;if(!f.querySelector('#f-cl').value)f.querySelector('#f-cl').value=cl(k.cl).n}}
     if(e.target.id==='f-cha'){const k=S.chantiers.find(c=>c.adr&&!c.ot&&c.adr===e.target.value);if(k&&!f.querySelector('#f-chn').value)f.querySelector('#f-chn').value=k.nom}
-    if(e.target.name==='f-pt'&&e.target.value==='BQA'&&!/bqa/i.test(f.querySelector('#f-f').value)){const b=S.formules.find(x=>/^bqa/i.test(x.f));if(b)f.querySelector('#f-f').value=b.f}
+    if(e.target.name==='f-pt'&&e.target.value==='BQA'&&!/bqa/i.test(f.querySelector('#f-f').value)){const b=S.formules.find(x=>/^bqa/i.test(x.f));if(b&&fxc)fxc.set(b.f)}
+    if(e.target.id==='f-cl'&&window.FX)FX.setLast(lastFormules(e.target.value));
     hint()});
   hint();
+  // saisie de la formule : module formules.js (saisie rapide + cases), réglé par le catalogue de la centrale
+  let fxc=null;
+  if(window.FX){FX.setCfg(S.config&&S.config.formCat);const sync=()=>{const q=document.getElementById('fx-q');if(!q)return;f.querySelector('#f-f').value=FX.line(q.value);f.querySelector('#f-sap').value=(document.getElementById('fx-sap')||{}).value||'';hint()};
+    fxc=FX.mount(f.querySelector('#f-fx'),{value:base.f||'',sap:o?o.sap||'':'',last:lastFormules(c?c.n:''),onChange:sync});f.querySelector('#f-f').value=base.f||'';}
   f.dataset.init=JSON.stringify(serF(f));
   setTimeout(()=>{const first=f.querySelector(o?'#f-m3':'#f-cl');if(first)first.focus()},30);
 }
+// dernières formules commandées par un client (les plus récentes d'abord)
+function lastFormules(nom){const c=S.clients.find(x=>x.n.toLowerCase()===String(nom||'').trim().toLowerCase());if(!c)return [];return [...new Set(S.orders.filter(o=>o.cl===c.id&&o.f).sort((a,b)=>(b.date+b.h).localeCompare(a.date+a.h)).map(o=>o.f))].slice(0,6)}
 function serF(f){return [...f.querySelectorAll('input,select,textarea')].map(x=>x.type==='checkbox'||x.type==='radio'?(x.checked?1:0):x.value)}
 function changedF(f){const a=JSON.parse(f.dataset.init||'[]'),b=serF(f),els=[...f.querySelectorAll('input,select,textarea')];const out=[];
   els.forEach((x,i)=>{if(a[i]===b[i])return;const l=x.closest('label');let t=(l?l.textContent:x.name||x.id||'').replace(/\s+/g,' ').trim();if(x.type==='radio'){const g=x.closest('.full,.fields');const s=g&&g.querySelector('.fl');t=s?s.textContent.trim():t}t=t.slice(0,32);if(t&&!out.includes(t))out.push(t)});return out}
@@ -3665,5 +3674,6 @@ let suppressClick=false;
 if(typeof document!=='undefined'&&document.getElementById('main'))boot();
 </script>
 
+<script src="formules.js?v=1"></script>
 <script src="motion-m3.js?v=7"></script>
 </body></html>
