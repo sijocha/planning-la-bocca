@@ -1717,7 +1717,7 @@ function resaBadge(o){if(!o.cam||!o.resa)return '';
   return o.resa==='ok'?'<span class="resa ok" title="Petits camions réservés">RÉSERVÉ</span>':`<button class="resa todo" data-act="resa" title="${peutValider()?'Clic : valider la réservation':'En attente de réservation'}">À RÉSERVER</button>`}
 function detLine(o,c,ch,sap){
   const d=[];
-  if(o.tel)d.push(`<span><i>Téléphone</i><b class="mono">${esc(o.tel)}</b></span>`);
+  if(o.tel)d.push(`<span><i>Contact</i><b class="mono">${esc(o.tel)}</b></span>`);
   if(ch&&ch.nom&&ch.adr)d.push(`<span><i>Adresse</i>${esc(ch.adr)}</span>`);
   if(o.ouv)d.push(`<span><i>Ouvrage</i>${esc(o.ouv)}</span>`);
   if(sap)d.push(`<span><i>SAP</i><b class="mono">${esc(sap)}</b></span>`);
@@ -2686,7 +2686,7 @@ function openOrderForm(o,opt){
    <div class="dr-b">
     <div class="q"><div class="ql">Qui<small>Client</small></div><div class="fields">
       <label class="fl full">Client<input id="f-cl" list="dl-cl" value="${esc(c?c.n:'')}" required autocomplete="off" placeholder="Nom du client ou NOM Prénom (particulier)"></label>
-      <label class="fl full">Téléphone sur place (chef de chantier)<input id="f-tel" value="${esc(base.tel||'')}" inputmode="tel" autocomplete="off" placeholder="06 12 34 56 78"></label>
+      <label class="fl full">Contact sur place (nom, téléphone)<input id="f-tel" value="${esc(base.tel||'')}" type="text" inputmode="text" autocomplete="off" autocapitalize="words" placeholder="Paul · 06 12 34 56 78"></label>
       <label class="fl full">Paiement (nouveau client)<select id="f-ct"><option value="compte">En compte</option><option value="comptant">Comptant</option></select></label>
     </div></div>
     <div class="q"><div class="ql">Quoi<small>Formule</small></div><div class="fields">
