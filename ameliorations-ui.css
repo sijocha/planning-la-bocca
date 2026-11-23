@@ -345,3 +345,7 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 #cfg-formules { display: block !important; }
 #cfg-formules > .ql { display: none; }
 #cfg-formules > div { min-width: 0; }
+
+/* [+] orange : complément à confirmer en un clic */
+.t-add.t-cpl { border-color: var(--orange) !important; color: var(--orange) !important; background-color: color-mix(in srgb, var(--orange) 10%, transparent) !important; font-weight: 700; }
+.t-add.t-cpl:hover { background-color: var(--orange) !important; color: #fff !important; }
