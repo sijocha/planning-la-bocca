@@ -570,6 +570,7 @@ const AIDE=[
   ['tous','Imprimer, PDF et journal',`<ul><li><b>Imprimer</b> : badge du compte → Journée → <b>Imprimer / PDF</b> : jour ou plusieurs jours, A4 ou A3.</li><li><b>Journal</b> : toutes les modifications du jour, avec l'heure et l'auteur.</li><li>Dans Claude, le téléchargement demande d'être connecté à un compte Claude ; la version en ligne télécharge directement.</li></ul>`],
   ['tous','Ouverture exceptionnelle et nuit',`<ul><li><b>Samedi ou dimanche</b> : aller sur le jour → <b>Créer une journée planning ce jour</b>. Le jour s'ajoute au planning, à la navigation et à l'onglet <b>Agrégats</b>.</li><li><b>Nuit</b> : saisir le chantier sur le jour où il <b>commence</b> (ex. mercredi 22 h 00). À partir de 19 h, il s'affiche dans une section <b>☾ Nuit</b>.</li><li>Le lendemain, le planning reprend ces chantiers tout en haut, dans <b>☾ Nuit précédente</b> (fond bleuté) : celui qui prend le poste le matin voit les tours chargés et ceux qui restent, et peut continuer à remplir les bulles.</li><li>Vendredi soir (ou veille d'un jour fermé) : le <b>samedi s'affiche tout seul</b> avec la fin de la nuit, sans ouvrir de journée ; bouton <b>Créer une journée planning ce jour</b> si on travaille aussi le samedi.</li></ul>`],
   ['tous','Une commande ouverte par quelqu\'un d\'autre (verrou)',`<ul><li>Quand quelqu'un ouvre une commande pour la modifier, sa ligne s'affiche <b>grisée</b> avec « <b>Verrouillée · nom modifie</b> » chez tous les autres.</li><li>Tant qu'elle est verrouillée, on ne peut ni l'ouvrir ni cliquer sur ses boutons (tours, pompe, paiement, formule…) : un message dit qui la modifie.</li><li>Le verrou se libère dès que la personne <b>valide ou ferme</b> la commande, ou après <b>5 minutes sans action</b> (rien n'est enregistré dans ce cas).</li><li>Le verrou est <b>tenu par la base</b> : même si l'affichage en direct d'un téléphone est en retard, la base refuse l'enregistrement d'une commande ouverte par quelqu'un d'autre (message « … modifie cette commande : votre changement n'a pas été enregistré »).</li><li>Si deux personnes ouvrent la même commande au même instant, la première garde la main ; l'autre voit un message et sa fenêtre se ferme.</li><li>Téléphone mis en veille avec une commande ouverte : au-delà de 5 minutes, la commande est libérée. Si quelqu'un d'autre l'a ouverte entre-temps, c'est lui qui garde la main.</li></ul>`],
+  ['tous','Notifications sur le téléphone',`<p>Une fois l'application installée, le planning peut prévenir sur l'<b>écran de verrouillage</b>, même fermé.</p><ul><li>Badge du compte → Aide → <b>Notifications sur cet appareil…</b> → <b>Activer les notifications</b>, puis accepter.</li><li><b>Centraliste</b> : commande du commercial à valider, modification à valider, demandes, chat.</li><li><b>Commercial</b> : ses commandes validées, modifiées ou annulées par la centrale, réponses à ses demandes.</li><li>Touchez une ligne pour couper ou remettre un type de notification. <b>Envoyer une notification de test</b> pour vérifier.</li><li>Toucher une notification ouvre le planning sur la commande concernée.</li><li>iPhone : seulement dans l'application installée (Safari → Partager → Sur l'écran d'accueil), iOS 16.4 ou plus récent.</li></ul>`],
   ['tous','Installer l\'application sur le téléphone',`<p>Le planning s'installe comme une application, sans magasin d'applications : une icône « <b>La Bocca</b> » sur l'écran d'accueil, en plein écran, mise à jour automatiquement.</p><ul><li><b>Android</b> : ouvrir le planning dans <b>Chrome</b> → menu <b>⋮</b> → <b>Installer l'application</b> (ou Ajouter à l'écran d'accueil).</li><li><b>iPhone</b> : ouvrir le planning dans <b>Safari</b> → bouton <b>Partager</b> → <b>Sur l'écran d'accueil</b> → Ajouter. Se connecter une fois avec Google dans l'application.</li><li>Raccourci : badge du compte → Aide → <b>Installer l'application sur cet appareil</b>.</li></ul>`],
   ['tous','Synchronisation et hors connexion',`<ul><li>Badge du compte <b>vert</b> = tout est synchronisé ; <b>rouge</b> = pas encore.</li><li>Sans réseau, on continue de travailler : les changements partent au retour du réseau.</li><li>Badge → <b>Forcer la synchronisation</b> en cas de doute.</li></ul>`],
   ['tous','Carte du chantier',`<p>Clic sur le nom du chantier : une petite fenêtre <b>Google Maps</b> s'ouvre (version en ligne), à déplacer par sa barre noire. <b>×</b> orange pour fermer, <b>Itinéraire ↗</b> pour ouvrir Google Maps.</p><ol><li><b>Placer le point exact</b> (en bas de la fenêtre).</li><li>Cliquer à l'endroit du chantier (zoom à la molette).</li><li><b>Valider ce point</b>. Il est gardé pour ce chantier, y compris quand on duplique la commande.</li></ol><p>Dans Claude, Google Maps s'ouvre dans un onglet.</p>`]]]
@@ -1275,6 +1276,46 @@ async function installApp(anchor){
 }
 if('serviceWorker' in navigator&&location.protocol==='https:')window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 
+/* ---------- notifications sur le téléphone (supabase/10_notifications.sql + fonction notifs) ---------- */
+const NOTIF_CATS=[['valider','Commande du commercial à valider',['centraliste']],['modv','Modification d\'une commande à valider',['centraliste']],
+  ['mes','Mes commandes : validée, modifiée ou annulée par la centrale',['commercial','labo','centraliste']],['demandes','Demandes et réponses',['centraliste','commercial','labo']],['chat','Messages du chat',['centraliste','commercial','labo']]];
+const NOTIF_DEF={centraliste:{valider:1,modv:1,demandes:1,chat:1,mes:1},commercial:{demandes:1,mes:1},labo:{demandes:1,mes:1}};
+const b64uBytes=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const r=atob(s);return Uint8Array.from(r,c=>c.charCodeAt(0))};
+async function notifSub(){if(!('serviceWorker' in navigator)||!('PushManager' in window))return null;const reg=await navigator.serviceWorker.getRegistration();return reg?await reg.pushManager.getSubscription():null}
+async function notifSave(sub,extra){const j=sub.toJSON();const row=Object.assign({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,role:(prefs.user&&prefs.user.role)||null,nom:author(),appareil:(navigator.userAgent.match(/iPhone|iPad|Android|Windows|Macintosh|Linux/)||['?'])[0]},extra||{});
+  const {error}=await SB.from('push_abonnements').upsert(row,{onConflict:'endpoint'});if(error)throw error}
+// à chaque ouverture : l'abonnement garde le bon nom (celui qui reçoit « mes commandes »)
+async function notifRefresh(){try{if(!SB||!('Notification' in window)||Notification.permission!=='granted')return;const sub=await notifSub();if(sub)await notifSave(sub)}catch(e){}}
+async function notifPop(anchor){
+  const R=(prefs.user&&prefs.user.role)||'centraliste';
+  const box=(t,b)=>openPop(anchor,`<div class="pop-h">Notifications sur cet appareil</div>${t}`,b||{});
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){
+    if(isIOS()&&!isInstalled())return box(`<p class="muted" style="margin:0">Sur iPhone, les notifications ne marchent que dans l'application installée : Safari → <b>Partager</b> → <b>Sur l'écran d'accueil</b>, puis ouvrez « La Bocca » depuis l'icône et revenez ici.</p>`);
+    return box(`<p class="muted" style="margin:0">Ce navigateur ne permet pas les notifications. Utilisez Chrome (Android, ordinateur) ou l'application installée sur iPhone.</p>`)}
+  if(isIOS()&&!isInstalled())return box(`<p class="muted" style="margin:0">Sur iPhone, installez d'abord l'application : Safari → <b>Partager</b> → <b>Sur l'écran d'accueil</b>. Ouvrez « La Bocca » depuis l'icône, puis revenez ici.</p>`);
+  if(Notification.permission==='denied')return box(`<p class="muted" style="margin:0">Les notifications sont bloquées pour le planning. Autorisez-les dans les réglages du téléphone (Notifications → La Bocca) ou du navigateur (cadenas à gauche de l'adresse), puis revenez ici.</p>`);
+  box('<p class="muted" style="margin:0">Chargement…</p>');
+  let sub=null,row=null;try{sub=await notifSub();if(sub){const {data}=await SB.from('push_abonnements').select('prefs').eq('endpoint',sub.endpoint);row=data&&data[0]}}catch(e){}
+  if(!sub||!row)return box(`<p class="muted" style="margin:0 0 8px">Recevez sur l'écran de verrouillage ce qui vous concerne : ${R==='centraliste'?'commandes et modifications à valider, demandes, chat':'vos commandes validées ou modifiées par la centrale, les réponses à vos demandes'}.</p><button class="pop-b on" data-pa="on">Activer les notifications</button>`,
+    {async on(){try{const perm=await Notification.requestPermission();if(perm!=='granted'){toast('Notifications non autorisées');return 'close'}
+      const reg=await navigator.serviceWorker.ready;const r=await fetch(SUPA_URL+'/functions/v1/notifs',{headers:{apikey:SUPA_KEY}});const {publicKey}=await r.json();if(!publicKey)throw new Error('clé');
+      const s=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uBytes(publicKey)});await notifSave(s,{prefs:{}});toast('Notifications activées sur cet appareil');setTimeout(()=>notifPop(anchor))}
+      catch(e){toast('Activation impossible : '+(e&&e.message||e))}return 'keep'}});
+  const pr=Object.assign({},NOTIF_DEF[R]||{},row.prefs||{});
+  box(`<p class="muted" style="margin:0 0 6px">Activées. Touchez une ligne pour la couper ou la remettre.</p>${NOTIF_CATS.filter(c=>c[2].includes(R)).map(([k,l])=>`<button class="pop-b ${pr[k]?'on':''}" data-pa="tg" data-k="${k}">${pr[k]?'✓':'—'}  ${esc(l)}</button>`).join('')}
+    <div class="pop-row" style="margin-top:8px"><button class="pop-b" data-pa="test">Envoyer une notification de test</button><button class="pop-b" data-pa="off">Désactiver</button></div>`,
+    {async tg(el){const k=el.dataset.k;const np=Object.assign({},row.prefs||{},{[k]:!pr[k]});const {error}=await SB.from('push_abonnements').update({prefs:np}).eq('endpoint',sub.endpoint);if(error)toast('Réglage non enregistré');setTimeout(()=>notifPop(anchor));return 'keep'},
+     async test(){const {error}=await SB.rpc('push_test');toast(error?'Test impossible : '+error.message:'Notification de test envoyée : elle arrive dans quelques secondes');return 'keep'},
+     async off(){try{await SB.from('push_abonnements').delete().eq('endpoint',sub.endpoint);await sub.unsubscribe()}catch(e){}toast('Notifications désactivées sur cet appareil');return 'close'}});
+}
+// ouvrir le planning au bon endroit (clic sur une notification)
+function navFromUrl(search){const q=new URLSearchParams(search||'');if(![...q.keys()].length)return;
+  const go=()=>{if(!S||!ready.o){setTimeout(go,300);return}
+    if(q.get('d')){view.tab='planning';view.mode='jour';view.date=q.get('d')}if(q.get('o'))view.focus=q.get('o');
+    if(q.get('tab'))view.tab=q.get('tab');render(true);if(q.get('chat')&&typeof chatOpen==='function')chatOpen();
+    try{history.replaceState(history.state,'',location.pathname)}catch(e){}};go()}
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.nav)try{navFromUrl(new URL(e.data.nav).search)}catch(_){}});
+
 function settingsPop(anchor){
   const u=prefs.user||{};const ce=role()==='centraliste';const d=view.date;const c=dayRO(d).cloture;
   const lastWD=(()=>{if(isWE(d))return false;let n=addDays(d,1);while(isWE(n))n=addDays(n,1);return n.slice(0,7)!==d.slice(0,7)})();
@@ -1291,12 +1332,12 @@ function settingsPop(anchor){
      <button class="pop-b ${lastWD?'strong':''}" data-pa="moisclot">Clôture de fin de mois : ${esc(moisN)} (PDF + .json)</button>
      <button class="pop-b" data-pa="archive">Consulter un mois archivé (.json)…</button></section>`:''}
    ${ce||role()==='commercial'||isAdmin()?`<section class="ps"><div class="pop-l">Centrale</div><button class="pop-b" data-pa="cfg">Administration · catalogue de la centrale</button>${ce?layoutPopHTML():''}</section>`:''}
-   <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button>${isInstalled()?'':'<button class="pop-b" data-pa="install">Installer l\'application sur cet appareil</button>'}</section>
+   <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button>${isInstalled()?'':'<button class="pop-b" data-pa="install">Installer l\'application sur cet appareil</button>'}${MODE==='shared'?'<button class="pop-b" data-pa="notifs">Notifications sur cet appareil…</button>':''}</section>
    <section class="ps"><div class="pop-l">Affichage</div><div class="pop-grid">${[['auto','Auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div></section>
 
    <section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}</button></section>
    <section class="ps ps-sync"><div class="pop-l">Synchronisation et état</div><div class="sync-box">${syncDetail()}</div><button class="pop-b" data-pa="force">Forcer la synchronisation</button></section>`,
-  {install(){const a=popAnchor;setTimeout(()=>installApp(a));return 'close'},journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
+  {install(){const a=popAnchor;setTimeout(()=>installApp(a));return 'close'},notifs(){const a=popAnchor;setTimeout(()=>notifPop(a));return 'close'},journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
    'lay-reset'(){const k=meKey();const had=prefs.layouts&&prefs.layouts[k];if(had){delete prefs.layouts[k];savePrefs()}applyLayout();toast(had?'Disposition réinitialisée : '+(S.config&&S.config.layout?'celle de la centrale':'celle par défaut'):'Déjà sur la disposition de la centrale');return 'close'},
    'lay-set'(){const L=layoutGet();S.config.layout={order:L.order.slice(),pos:L.pos};const k=meKey();if(prefs.layouts&&prefs.layouts[k]){delete prefs.layouts[k];savePrefs()}toast('Disposition de la centrale enregistrée pour tous les centralistes')},
    moisclot(){setTimeout(()=>clotureMois(view.date));return 'close'},archive(){setTimeout(consulterArchive);return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'}});
@@ -2258,7 +2299,7 @@ async function supaBoot(){
   document.body.classList.toggle('ro',ME.role==='lecture');
   if(!prefs.user||prefs.gate!==TODAY||prefs.email!==ME.email)showGate();
   startShared(supaDb(SB));setTimeout(histTrap,800);
-  room=supaRoom(SB);verrousInit();
+  room=supaRoom(SB);verrousInit();setTimeout(notifRefresh,3000);if(location.search)navFromUrl(location.search);
   if(prefs.user)room.presence({nom:prefs.user.nom,role:prefs.user.role,edit:null}).catch(()=>{});
   room.onPeers(ch=>{peers=ch.peers.slice();lockRace();if(S){if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()}});
   setTimeout(()=>loadPdf().catch(()=>{}),2500);

@@ -17,6 +17,13 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
   - iPhone : Safari → Partager → Sur l'écran d'accueil.
   - Raccourci : badge du compte → Aide → Installer l'application sur cet appareil.
 
+### Notifications sur le téléphone *(nécessite `supabase/10_notifications.sql` et la fonction `notifs`)*
+- Les notifications s'affichent sur l'**écran de verrouillage**, même planning fermé (Android, iPhone avec l'application installée, ordinateur).
+- **Centraliste** : commande du commercial à valider, modification à valider, demandes, chat.
+- **Commercial** : ses commandes validées, modifiées ou annulées par la centrale, réponses à ses demandes.
+- Réglages → Aide → **Notifications sur cet appareil…** : activer, couper un type de notification, envoyer un test, désactiver.
+- Toucher une notification ouvre le planning sur la commande concernée.
+
 ### Compléments
 - **Une seule méthode, toujours le même ordre** : les tours, puis la **bulle orange** (complément prévu), puis le **[+] gris** (complément non prévu).
 - Après **chaque complément chargé**, le planning demande « Encore un complément prévu ? ».
