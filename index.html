@@ -2064,6 +2064,8 @@ function whoHTML(){
 
 /* ---------- rendu global ---------- */
 let renderPending=false,lastAnim='';
+const typingInMain=()=>{const a=document.activeElement;return !!(a&&a.matches&&a.matches('input:not([type=checkbox]):not([type=radio]),textarea,select,[contenteditable="true"]')&&!a.closest('#pop,#drawer,#gate'))};
+document.addEventListener('focusout',()=>setTimeout(()=>{if(renderPending&&!typingInMain()&&popEl.hidden&&drawerEl.hidden)render()},0));
 const migDone=new WeakSet();
 function render(force){if(typeof gateDay==='function'&&!document.getElementById('gate').hidden)gateDay();
   plRefresh();
@@ -2071,6 +2073,8 @@ function render(force){if(typeof gateDay==='function'&&!document.getElementById(
   if(histNeed())return;
   if(!migDone.has(S)){migDone.add(S);let ch=false;(S.orders||[]).forEach(o=>o.tours.forEach(t=>{if(t.p==='S1'){t.p='FK218';ch=true}else if(t.p==='S2'){t.p='HD470';ch=true}}));if(ch)setTimeout(commit)}
   if(!force&&(!popEl.hidden||!drawerEl.hidden)){renderPending=true;renderChrome();return}
+  // mise à jour venue d'un autre poste pendant une saisie (adjuvants, agrégats…) : on attend la fin de la saisie
+  if(!force&&typingInMain()){renderPending=true;renderChrome();return}
   renderPending=false;
   renderChrome();
   const m=document.getElementById('main'),hd=document.getElementById('head');
@@ -3343,10 +3347,10 @@ function supaDb(sb){
   let live=false,retryT=null,tries=0;
   // jeton à jour pour le direct (après une mise en veille, le jeton a pu expirer)
   async function freshAuth(){try{const {data}=await sb.auth.getSession();if(data&&data.session&&sb.realtime&&sb.realtime.setAuth)sb.realtime.setAuth(data.session.access_token)}catch(e){}}
-  function retry(){if(retryT)return;live=false;const ms=Math.min(30000,1500*Math.pow(2,tries++));retryT=setTimeout(async()=>{retryT=null;try{if(chan)await sb.removeChannel(chan)}catch(e){}chan=null;await freshAuth();ensureChan()},ms)}
+  function retry(){if(retryT)return;live=false;const ms=Math.min(30000,1500*Math.pow(2,tries++));retryT=setTimeout(async()=>{retryT=null;const old=chan;chan=null;try{if(old)await sb.removeChannel(old)}catch(e){}await freshAuth();ensureChan()},ms)}
   function ensureChan(){
     if(chan)return;
-    chan=sb.channel('documents-direct-'+Math.random().toString(36).slice(2,8))
+    const me=chan=sb.channel('documents-direct-'+Math.random().toString(36).slice(2,8))
       .on('postgres_changes',{event:'*',schema:'public',table:'documents'},p=>{
         const r=p.eventType==='DELETE'?p.old:p.new;const name=r&&r.collection;if(!name||!subs[name])return;
         const m=cache[name]||(cache[name]=new Map());
@@ -3356,6 +3360,7 @@ function supaDb(sb){
         emit(name);
       })
       .subscribe(st=>{
+        if(chan!==me)return;   // ancien canal en cours de fermeture : on l'ignore (sinon boucle de reconnexion toutes les 2-3 s)
         if(st==='SUBSCRIBED'){live=true;tries=0;if(Date.now()-lastLoad>4000)reloadAll()}
         else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED')retry();
         if(typeof renderSync==='function')renderSync()});
@@ -3398,11 +3403,11 @@ function supaRoom(sb){
   let state={},joined=false,ch=null,retryT=null,tries=0;const cbs=[];
   const peersNow=()=>{const out=[];if(!ch)return out;Object.entries(ch.presenceState()).forEach(([k,arr])=>arr.forEach(pr=>{const {presence_ref,...p}=pr;out.push({kind:'viewer',presence:p,isMe:k===key,sameTab:k===key})}));return out};
   const tell=()=>{const ps=peersNow();cbs.forEach(cb=>{try{cb({peers:ps})}catch(e){}})};
-  function retry(){joined=false;if(retryT)return;const ms=Math.min(30000,1500*Math.pow(2,tries++));retryT=setTimeout(async()=>{retryT=null;try{if(ch)await sb.removeChannel(ch)}catch(e){}ch=null;try{const {data}=await sb.auth.getSession();if(data&&data.session&&sb.realtime&&sb.realtime.setAuth)sb.realtime.setAuth(data.session.access_token)}catch(e){}join()},ms)}
+  function retry(){joined=false;if(retryT)return;const ms=Math.min(30000,1500*Math.pow(2,tries++));retryT=setTimeout(async()=>{retryT=null;const old=ch;ch=null;try{if(old)await sb.removeChannel(old)}catch(e){}try{const {data}=await sb.auth.getSession();if(data&&data.session&&sb.realtime&&sb.realtime.setAuth)sb.realtime.setAuth(data.session.access_token)}catch(e){}join()},ms)}
   function join(){
-    ch=sb.channel('presence-planning',{config:{presence:{key}}});
+    const me=ch=sb.channel('presence-planning',{config:{presence:{key}}});
     ch.on('presence',{event:'sync'},tell)
-      .subscribe(st=>{if(st==='SUBSCRIBED'){joined=true;tries=0;ch.track(state).catch(()=>{});tell()}
+      .subscribe(st=>{if(ch!==me)return;if(st==='SUBSCRIBED'){joined=true;tries=0;ch.track(state).catch(()=>{});tell()}
         else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED')retry();
         if(typeof renderSync==='function')renderSync()});
   }
