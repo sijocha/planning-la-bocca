@@ -371,3 +371,11 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
   z-index: 6; width: max-content; min-width: 100%; max-width: min(760px, calc(100vw - 230px));
   box-shadow: var(--shadow); background: var(--panel);
 }
+
+/* Nuit : section du soir et reprise en haut du lendemain */
+.half-l.nuit, .half-l.nuit-v, .wk-half.nuit { color: #3b4cc0; }
+:root[data-theme="dark"] .half-l.nuit, :root[data-theme="dark"] .half-l.nuit-v { color: #9aa8ff; }
+.half-l.nuit-v::before { content: "☾ "; }
+.half-l.nuit::before { content: "☾ "; }
+.row.veille { background-color: color-mix(in srgb, #3b4cc0 6%, var(--panel)) !important; }
+.row.veille { box-shadow: inset 3px 0 0 #3b4cc0; }

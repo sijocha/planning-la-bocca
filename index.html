@@ -1374,7 +1374,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=13">
+<link rel="stylesheet" href="ameliorations-ui.css?v=14">
 <link rel="stylesheet" href="formules.css?v=3">
 
 </head>
@@ -1780,7 +1780,8 @@ function dayHTML(iso){
   if(isWE(iso)&&!weOpen(iso)&&!hasOrders(iso))return `<div class="we-panel"><p class="lbl">// Week-end</p><h2>${esc(dayLong(iso))}</h2><p>La centrale n'a pas de journée planning ce jour.</p>${role()==='centraliste'?`<button class="btn primary" data-act="we-open" data-d="${iso}">Créer une journée planning ce jour</button><p class="muted">Ouverture exceptionnelle : le jour s'ajoute au planning et à la navigation.</p>`:'<p class="muted">Une commande passée ce jour proposera de créer l\'ouverture.</p>'}</div>`;
   const os=ordersOn(iso).filter(o=>prefs.vue==='detail'||statut(o)!=='annulee');const editors=editingMap();
   const pend=pendingOn(iso);
-  const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720);
+  const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720&&mins(o.h)<NUIT),nu=os.filter(o=>mins(o.h)>=NUIT);
+  const prevD=addDays(iso,-1),veille=ordersOn(prevD).filter(o=>mins(o.h)>=NUIT&&statut(o)!=='annulee');
   const sub=list=>{const l=list.filter(o=>statut(o)!=='annulee');const m=l.reduce((a,o)=>a+total(o),0),n=l.reduce((a,o)=>a+TR(o).length,0);return `${fmt(m)} m³ · ${n} tour${n>1?'s':''}`};
   const nowM=iso===TODAY?(new Date().getHours()*60+new Date().getMinutes()):-1;
   const cw=closedWin(iso);
@@ -1792,9 +1793,11 @@ function dayHTML(iso){
   const CP=prefs.vue==='simple'&&!isPhone();
   const LH=`<div class="lh">${CP?'<span>Heure</span><span>Client</span><span class="r">m³</span><span>Chantier</span><span>Formule</span><span>Tours · pompe · infos</span><span></span>':'<span>Heure</span><span>Client</span><span class="r">m³</span><span>Chantier · adresse</span><span>Formule</span><span>Camion</span><span>Pompe</span><span>Commentaires</span><span></span>'}</div>`;
   return `  ${pend.length?`<p class="half-l val">À valider · ${pend.length} commande${pend.length>1?'s':''} du commercial</p>${pend.map(pendRow).join('')}`:''}
-  ${(()=>{const t=totals(iso);return `<div class="day-stats"><span class="ft">camions <b>${t.k}</b></span><span class="ft">chantiers <b>${t.c}</b></span>${role()==='centraliste'?'<span class="legend"><span><i></i>prévu</span><span><i class="on"></i>chargé</span><span><i class="cp"></i>complément</span></span>':''}</div>`})()}${LH}${band}<p class="half-l ${cw&&cw.de<=0&&cw.a>=720?'closed':''}">Matin · ${sub(am)}</p>${am.length?rows(am,0,720):'<p class="empty">Aucune commande le matin.</p>'}
-  <p class="half-l pm ${cw&&cw.de<=720&&cw.a>=1440?'closed':''}">Après-midi · ${sub(pm)}</p>${conts}${pm.length?rows(pm,720,1440):(conts?'':'<p class="empty">Aucune commande l\'après-midi.</p>')}`;
+  ${(()=>{const t=totals(iso);return `<div class="day-stats"><span class="ft">camions <b>${t.k}</b></span><span class="ft">chantiers <b>${t.c}</b></span>${role()==='centraliste'?'<span class="legend"><span><i></i>prévu</span><span><i class="on"></i>chargé</span><span><i class="cp"></i>complément</span></span>':''}</div>`})()}${LH}${band}${veille.length?`<p class="half-l nuit-v">Nuit précédente · depuis ${esc(dayShort(prevD).toLowerCase())} soir · ${sub(veille)}</p>${veille.map(o=>rowHTML(o,editors).replace('class="row ','class="row veille ')).join('')}`:''}<p class="half-l ${cw&&cw.de<=0&&cw.a>=720?'closed':''}">Matin · ${sub(am)}</p>${am.length?rows(am,0,720):'<p class="empty">Aucune commande le matin.</p>'}
+  <p class="half-l pm ${cw&&cw.de<=720&&cw.a>=1440?'closed':''}">Après-midi · ${sub(pm)}</p>${conts}${pm.length?rows(pm,720,NUIT):(conts?'':'<p class="empty">Aucune commande l\'après-midi.</p>')}
+  ${nu.length?`<p class="half-l nuit">Nuit · à partir de ${NUIT/60} h, se poursuit le ${esc(dayShort(addDays(iso,1)).toLowerCase())} matin · ${sub(nu)}</p>${rows(nu,NUIT,1440)}`:''}`;
 }
+const NUIT=19*60;   // chantiers de nuit : à partir de 19 h, repris en haut du planning du lendemain
 function nowLine(){const n=new Date();return `<div class="now" aria-label="Heure actuelle"><span>${pad(n.getHours())}:${pad(n.getMinutes())}</span></div>`}
 
 function cardHTML(o){const st=statut(o),c=cl(o.cl),fam=family(o.f);
@@ -1815,8 +1818,8 @@ function weekHTML(){
   series.forEach((s,k)=>{const a=idx[s.dset[0]],b=idx[s.dset[s.dset.length-1]];const m=s.l.reduce((x,o)=>x+total(o),0);
     h+=`<button class="wk-bar" style="grid-column:${a+1}/${b+2};grid-row:${k+2}" data-act="goto" data-d="${s.dset[0]}" title="Chantier sur ${s.dset.length} jours"><b>${esc(siteName(s.l[0]))}</b> ${esc(cl(s.l[0].cl).n)} · ${s.dset.length} jours · ${fmt(m)} m³</button>`});
   const r=series.length+2;
-  ds.forEach((d,i)=>{const os=ordersOn(d).filter(o=>statut(o)!=='annulee');const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720);
-    const cw=closedWin(d);h+=`<div class="wk-col ${cw?'closed':''}" style="grid-column:${i+1};grid-row:${r}">${cw?`<span class="wk-closed">${esc(winTxt(cw))}</span>`:''}${os.length?`${am.length?'<span class="wk-half">Matin</span>'+am.map(cardHTML).join(''):''}${pm.length?'<span class="wk-half">Après-midi</span>'+pm.map(cardHTML).join(''):''}`:'<p class="empty">Rien de prévu</p>'}</div>`});
+  ds.forEach((d,i)=>{const os=ordersOn(d).filter(o=>statut(o)!=='annulee');const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720&&mins(o.h)<NUIT),nu=os.filter(o=>mins(o.h)>=NUIT);
+    const cw=closedWin(d);h+=`<div class="wk-col ${cw?'closed':''}" style="grid-column:${i+1};grid-row:${r}">${cw?`<span class="wk-closed">${esc(winTxt(cw))}</span>`:''}${os.length?`${am.length?'<span class="wk-half">Matin</span>'+am.map(cardHTML).join(''):''}${pm.length?'<span class="wk-half">Après-midi</span>'+pm.map(cardHTML).join(''):''}${nu.length?'<span class="wk-half nuit">Nuit</span>'+nu.map(cardHTML).join(''):''}`:'<p class="empty">Rien de prévu</p>'}</div>`});
   return h+'</div></div>';
 }
 
@@ -1867,7 +1870,7 @@ function demandesHTML(){
 }
 
 function aggTabHTML(){
-  const mon=mondayOf(view.date);const ds=[0,1,2,3,4].map(i=>addDays(mon,i));
+  const mon=mondayOf(view.date);const ds=[0,1,2,3,4,5,6].map(i=>addDays(mon,i)).filter(d=>!isWE(d)||weOpen(d)||hasOrders(d));
   return `<div class="sec-h"><h2>Agrégats et ciments · semaine ${isoWeek(view.date)}</h2><p>Clic sur un produit : reçu (stabiloté). Clic long : modifier ou supprimer. Tout reste modifiable à tout moment.</p></div>
   <div class="grid3">${ds.map(d=>`<div class="panel agg-p ${d===view.date?'cur':''}" data-day="${d}"><h3>${esc(dayLong(d))}</h3>${aggInner(d)}<div class="chips agg-btns"><button class="chip add" data-act="semi-add">+ Semi</button><button class="chip add" data-act="cim-add">+ Liant</button></div></div>`).join('')}</div>`;
 }
@@ -1973,6 +1976,7 @@ const AIDE=[
  ['Fin de journée, sauvegarde',[
   ['centraliste','Clôturer la journée',`<p>Badge du compte → <b>Clôturer la journée</b> → confirmation. Le PDF de clôture se télécharge et la clôture est notée au journal. Ensuite, le même bouton permet de retélécharger le PDF.</p><p>Le <b>dernier jour ouvré du mois</b> (hors week-end), le badge propose aussi <b>Imprimer le mois</b> (convocations).</p>`],
   ['tous','Imprimer, PDF et journal',`<ul><li><b>Imprimer</b> : badge du compte → Journée → <b>Imprimer / PDF</b> : jour ou plusieurs jours, A4 ou A3.</li><li><b>Journal</b> : toutes les modifications du jour, avec l'heure et l'auteur.</li><li>Dans Claude, le téléchargement demande d'être connecté à un compte Claude ; la version en ligne télécharge directement.</li></ul>`],
+  ['tous','Ouverture exceptionnelle et nuit',`<ul><li><b>Samedi ou dimanche</b> : aller sur le jour → <b>Créer une journée planning ce jour</b>. Le jour s'ajoute au planning, à la navigation et à l'onglet <b>Agrégats</b>.</li><li><b>Nuit</b> : saisir le chantier sur le jour où il <b>commence</b> (ex. mercredi 22 h 00). À partir de 19 h, il s'affiche dans une section <b>☾ Nuit</b>.</li><li>Le lendemain, le planning reprend ces chantiers tout en haut, dans <b>☾ Nuit précédente</b> (fond bleuté) : celui qui prend le poste le matin voit les tours chargés et ceux qui restent, et peut continuer à remplir les bulles.</li></ul>`],
   ['tous','Une commande ouverte par quelqu\'un d\'autre (verrou)',`<ul><li>Quand quelqu'un ouvre une commande pour la modifier, sa ligne s'affiche <b>grisée</b> avec « <b>Verrouillée · nom modifie</b> » chez tous les autres.</li><li>Tant qu'elle est verrouillée, on ne peut ni l'ouvrir ni cliquer sur ses boutons (tours, pompe, paiement, formule…) : un message dit qui la modifie.</li><li>Le verrou se libère dès que la personne <b>valide ou ferme</b> la commande, ou après <b>5 minutes sans action</b> (rien n'est enregistré dans ce cas).</li><li>Si deux personnes ouvrent la même commande au même instant, la première garde la main ; l'autre voit un message et sa fenêtre se ferme.</li><li>Téléphone mis en veille avec une commande ouverte : au-delà de 5 minutes, la commande est libérée. Si quelqu'un d'autre l'a ouverte entre-temps, c'est lui qui garde la main.</li></ul>`],
   ['tous','Installer l\'application sur le téléphone',`<p>Le planning s'installe comme une application, sans magasin d'applications : une icône « <b>La Bocca</b> » sur l'écran d'accueil, en plein écran, mise à jour automatiquement.</p><ul><li><b>Android</b> : ouvrir le planning dans <b>Chrome</b> → menu <b>⋮</b> → <b>Installer l'application</b> (ou Ajouter à l'écran d'accueil).</li><li><b>iPhone</b> : ouvrir le planning dans <b>Safari</b> → bouton <b>Partager</b> → <b>Sur l'écran d'accueil</b> → Ajouter. Se connecter une fois avec Google dans l'application.</li><li>Raccourci : badge du compte → Aide → <b>Installer l'application sur cet appareil</b>.</li></ul>`],
   ['tous','Synchronisation et hors connexion',`<ul><li>Badge du compte <b>vert</b> = tout est synchronisé ; <b>rouge</b> = pas encore.</li><li>Sans réseau, on continue de travailler : les changements partent au retour du réseau.</li><li>Badge → <b>Forcer la synchronisation</b> en cas de doute.</li></ul>`],
@@ -2540,6 +2544,8 @@ function act(a,el,o,e){
 document.addEventListener('mouseover',e=>{const p=e.target.closest&&e.target.closest('.grid3>.panel.agg-p');if(!p||p.dataset.sh)return;p.dataset.sh='1';
   requestAnimationFrame(()=>{const over=p.getBoundingClientRect().right-(innerWidth-12);if(over>0)p.style.transform=`translateX(${-over}px)`})});
 document.addEventListener('mouseout',e=>{const p=e.target.closest&&e.target.closest('.grid3>.panel.agg-p');if(!p||(e.relatedTarget&&p.contains(e.relatedTarget)))return;delete p.dataset.sh;p.style.transform=''});
+// clic commencé dans une fenêtre (ex. sélection de texte glissée jusqu'à l'extérieur) : ne ferme pas la fenêtre
+let downInPop=false;document.addEventListener('pointerdown',e=>{downInPop=!popEl.hidden&&popEl.contains(e.target)},true);
 function dayOf(el){const p=el.closest('[data-day]');return p?p.dataset.day:view.date}
 function learnFormule(f,sap){if(!f||attente(f))return;const k=S.formules.find(x=>x.f.toLowerCase()===f.toLowerCase());if(k){if(sap)k.sap=sap}else if(sap)S.formules.push({f,sap})}
 
@@ -3700,7 +3706,7 @@ function boot(){
      if(rw&&popEl.hidden&&!e.target.closest('button,a,input,select,textarea,label,[data-act]:not(.r-time)')){const id=rw.dataset.id;if(phOpen.has(id))phOpen.delete(id);else phOpen.add(id);render(true);return}}
     const pa=e.target.closest('[data-pa]');
     if(pa&&popEl.contains(pa)&&pa.tagName!=='FORM'){e.preventDefault();runPop(pa);return}
-    if(!popEl.hidden&&!popEl.contains(e.target))closePop();
+    if(!popEl.hidden&&!popEl.contains(e.target)){if(downInPop){downInPop=false;return}closePop()}
     if(popEl.contains(e.target))return;
     const qres=document.getElementById('qres');if(!qres.hidden&&!e.target.closest('.search'))qres.hidden=true;
     const cf=e.target.closest('[data-cfg]');if(cf){cfgAction(cf);return}
