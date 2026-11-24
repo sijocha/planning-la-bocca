@@ -3374,7 +3374,7 @@ function supaDb(sb){
   function retry(){if(retryT)return;live=false;const ms=Math.min(30000,1500*Math.pow(2,tries++));retryT=setTimeout(async()=>{retryT=null;const old=chan;chan=null;try{if(old)await sb.removeChannel(old)}catch(e){}await freshAuth();ensureChan()},ms)}
   function ensureChan(){
     if(chan)return;
-    const me=chan=sb.channel('documents-direct-'+Math.random().toString(36).slice(2,8))
+    const me=chan=sb.channel('documents-direct-'+Math.random().toString(36).slice(2,8),{config:{private:true}})
       .on('postgres_changes',{event:'*',schema:'public',table:'documents'},p=>{
         const r=p.eventType==='DELETE'?p.old:p.new;const name=r&&r.collection;if(!name||!subs[name])return;
         const m=cache[name]||(cache[name]=new Map());
@@ -3429,7 +3429,7 @@ function supaRoom(sb){
   const tell=()=>{const ps=peersNow();cbs.forEach(cb=>{try{cb({peers:ps})}catch(e){}})};
   function retry(){joined=false;if(retryT)return;const ms=Math.min(30000,1500*Math.pow(2,tries++));retryT=setTimeout(async()=>{retryT=null;const old=ch;ch=null;try{if(old)await sb.removeChannel(old)}catch(e){}try{const {data}=await sb.auth.getSession();if(data&&data.session&&sb.realtime&&sb.realtime.setAuth)sb.realtime.setAuth(data.session.access_token)}catch(e){}join()},ms)}
   function join(){
-    const me=ch=sb.channel('presence-planning',{config:{presence:{key}}});
+    const me=ch=sb.channel('presence-planning',{config:{private:true,presence:{key}}});
     ch.on('presence',{event:'sync'},tell)
       .subscribe(st=>{if(ch!==me)return;if(st==='SUBSCRIBED'){joined=true;tries=0;ch.track(state).catch(()=>{});tell()}
         else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED')retry();
