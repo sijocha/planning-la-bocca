@@ -3523,14 +3523,27 @@ async function sauvegardeComplete(){
   catch(e){toast('Sauvegarde impossible sans connexion')}
 }
 function importerSauvegarde(){
-  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
-  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();
-    r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(e){toast('Fichier illisible');return}
-      const d=o&&o.donnees?o.donnees:o;
-      if(!confirm('Remplacer TOUT le planning partagé par cette sauvegarde ?\n'+(d&&d.orders?d.orders.length:0)+' commandes. Les autres utilisateurs verront le changement tout de suite.'))return;
-      remplacerDonnees(d,'Sauvegarde importée')};
-    r.readAsText(f)};
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';inp.multiple=true;
+  inp.onchange=async()=>{const fs=[...(inp.files||[])];if(!fs.length)return;
+    const lus=[];for(const f of fs){try{lus.push(JSON.parse(await f.text()))}catch(e){toast('Fichier illisible : '+f.name);return}}
+    const d=fusionSauvegardes(lus);
+    if(!d||!Array.isArray(d.orders)){toast('Fichier non reconnu : ce n\'est pas une sauvegarde du planning');return}
+    const mois=[...new Set(d.orders.map(o=>String(o.date||'').slice(0,7)).filter(Boolean))].sort();
+    if(!confirm('Remplacer TOUT le planning partagé par cette sauvegarde ?\n'+d.orders.length+' commandes'+(mois.length?' ('+mois[0]+(mois.length>1?' → '+mois[mois.length-1]:'')+')':'')+', '+fs.length+' fichier'+(fs.length>1?'s':'')+'.\nLes autres utilisateurs verront le changement tout de suite.'))return;
+    remplacerDonnees(d,'Sauvegarde importée')};
   inp.click();
+}
+// Sauvegardes mensuelles : plusieurs fichiers (un par mois + listes.json) réunis en un seul planning
+function fusionSauvegardes(lus){
+  const ds=lus.map(o=>o&&o.donnees?o.donnees:o).filter(d=>d&&Array.isArray(d.orders));
+  if(!ds.length)return null;if(ds.length===1)return ds[0];
+  const listes=lus.find(o=>o&&o.type==='sauvegarde-listes');const base=listes?clone(listes.donnees):{};
+  const byId=new Map(),days={};
+  ds.forEach(d=>{d.orders.forEach(o=>{if(o&&o.id)byId.set(o.id,o)});Object.assign(days,d.days||{})});
+  const out=Object.assign({},base,{orders:[...byId.values()],days});
+  ['clients','chantiers'].forEach(k=>{if(Array.isArray(base[k])&&base[k].length)return;const m=new Map();ds.forEach(d=>(d[k]||[]).forEach(x=>{if(x&&x.id)m.set(x.id,x)}));out[k]=[...m.values()]});
+  ['formules','config'].forEach(k=>{if(out[k]==null){const d=ds.find(d=>d[k]!=null);if(d)out[k]=d[k]}});
+  return out;
 }
 
 /* Le geste « retour » du téléphone (glisser depuis le bord gauche) ou le bouton Retour ne quittent plus le planning :
