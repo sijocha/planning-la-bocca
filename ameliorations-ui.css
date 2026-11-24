@@ -379,3 +379,4 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 .half-l.nuit::before { content: "☾ "; }
 .row.veille { background-color: color-mix(in srgb, #3b4cc0 6%, var(--panel)) !important; }
 .row.veille { box-shadow: inset 3px 0 0 #3b4cc0; }
+.we-panel.we-nuit { margin-top: 14px; padding: 14px 16px; min-height: 0; }

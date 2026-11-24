@@ -1374,7 +1374,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=14">
+<link rel="stylesheet" href="ameliorations-ui.css?v=15">
 <link rel="stylesheet" href="formules.css?v=3">
 
 </head>
@@ -1516,7 +1516,9 @@ function ordersOn(iso){return S.orders.filter(o=>o.date===iso&&o.kind!=='aplacer
 function pendingOn(iso){return S.orders.filter(o=>o.date===iso&&o.kind==='aplacer').sort((a,b)=>mins(a.h)-mins(b.h)||a.seq-b.seq)}
 const hasOrders=iso=>S.orders.some(o=>o.date===iso&&o.kind!=='aplacer');
 const weOpen=d=>!!(dayRO(d)||{}).ouvert;
-function step(iso,dir){let d=iso;for(let i=0;i<10;i++){d=addDays(d,dir);if(!isWE(d)||hasOrders(d)||weOpen(d))return d}return d}
+// nuit de la veille encore à afficher (ex. vendredi 22 h → samedi matin, même si le samedi n'est pas ouvert)
+const nuitVeille=iso=>ordersOn(addDays(iso,-1)).filter(o=>mins(o.h)>=NUIT&&statut(o)!=='annulee');
+function step(iso,dir){let d=iso;for(let i=0;i<10;i++){d=addDays(d,dir);if(!isWE(d)||hasOrders(d)||weOpen(d)||nuitVeille(d).length)return d}return d}
 function totals(iso){const os=ordersOn(iso).filter(o=>statut(o)!=='annulee');const pl=new Set();os.forEach(o=>o.tours.forEach(t=>{if(t.p)pl.add(t.p)}));return{k:pl.size,m3:os.reduce((a,o)=>a+total(o),0),liv:os.reduce((a,o)=>a+livre(o),0),n:os.reduce((a,o)=>a+o.tours.length,0),p:os.reduce((a,o)=>a+o.tours.filter(t=>t.s).length,0),c:os.length}}
 function siteName(o){const c=chan(o.ch);return c?(c.nom||c.adr):''}
 function sapOf(o){if(o.sap)return o.sap;const k=S.formules.find(x=>x.f.toLowerCase()===(o.f||'').trim().toLowerCase());return k?k.sap:''}
@@ -1777,7 +1779,10 @@ function closedWin(iso){const L=[];const e=etatWin(iso);if(e)L.push(e);
 const inWin=(h,w)=>!!w&&(w.list?w.list.some(x=>mins(h)>=x.de&&mins(h)<x.a):mins(h)>=w.de&&mins(h)<w.a);
 const winTxt=w=>w.list?`Centrale ${w.list.map(x=>(x.k==='panne'?'en panne ':'fermée ')+x.lbl+(x.t?' · '+x.t:'')).join(' ; ')}`:`Centrale ${w.k==='panne'?'en panne':'fermée'} ${w.lbl}${w.t?' · '+w.t:''}`;
 function dayHTML(iso){
-  if(isWE(iso)&&!weOpen(iso)&&!hasOrders(iso))return `<div class="we-panel"><p class="lbl">// Week-end</p><h2>${esc(dayLong(iso))}</h2><p>La centrale n'a pas de journée planning ce jour.</p>${role()==='centraliste'?`<button class="btn primary" data-act="we-open" data-d="${iso}">Créer une journée planning ce jour</button><p class="muted">Ouverture exceptionnelle : le jour s'ajoute au planning et à la navigation.</p>`:'<p class="muted">Une commande passée ce jour proposera de créer l\'ouverture.</p>'}</div>`;
+  if(isWE(iso)&&!weOpen(iso)&&!hasOrders(iso)&&!nuitVeille(iso).length)return `<div class="we-panel"><p class="lbl">// Week-end</p><h2>${esc(dayLong(iso))}</h2><p>La centrale n'a pas de journée planning ce jour.</p>${role()==='centraliste'?`<button class="btn primary" data-act="we-open" data-d="${iso}">Créer une journée planning ce jour</button><p class="muted">Ouverture exceptionnelle : le jour s'ajoute au planning et à la navigation.</p>`:'<p class="muted">Une commande passée ce jour proposera de créer l\'ouverture.</p>'}</div>`;
+  if(isWE(iso)&&!weOpen(iso)&&!hasOrders(iso)){const v=nuitVeille(iso),ed=editingMap(),pv=addDays(iso,-1);const m=v.reduce((a,o)=>a+total(o),0),n=v.reduce((a,o)=>a+TR(o).length,0);
+    return `<p class="half-l nuit-v">Nuit précédente · depuis ${esc(dayShort(pv).toLowerCase())} soir · ${fmt(m)} m³ · ${n} tour${n>1?'s':''}</p>${v.map(o=>rowHTML(o,ed).replace('class="row ','class="row veille ')).join('')}
+    <div class="we-panel we-nuit"><p class="lbl">// Week-end</p><p>${esc(dayLong(iso))} : seule la fin de la nuit est affichée, pas de journée planning ce jour.</p>${role()==='centraliste'?`<button class="btn" data-act="we-open" data-d="${iso}">Créer une journée planning ce jour</button>`:''}</div>`}
   const os=ordersOn(iso).filter(o=>prefs.vue==='detail'||statut(o)!=='annulee');const editors=editingMap();
   const pend=pendingOn(iso);
   const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720&&mins(o.h)<NUIT),nu=os.filter(o=>mins(o.h)>=NUIT);
@@ -1976,7 +1981,7 @@ const AIDE=[
  ['Fin de journée, sauvegarde',[
   ['centraliste','Clôturer la journée',`<p>Badge du compte → <b>Clôturer la journée</b> → confirmation. Le PDF de clôture se télécharge et la clôture est notée au journal. Ensuite, le même bouton permet de retélécharger le PDF.</p><p>Le <b>dernier jour ouvré du mois</b> (hors week-end), le badge propose aussi <b>Imprimer le mois</b> (convocations).</p>`],
   ['tous','Imprimer, PDF et journal',`<ul><li><b>Imprimer</b> : badge du compte → Journée → <b>Imprimer / PDF</b> : jour ou plusieurs jours, A4 ou A3.</li><li><b>Journal</b> : toutes les modifications du jour, avec l'heure et l'auteur.</li><li>Dans Claude, le téléchargement demande d'être connecté à un compte Claude ; la version en ligne télécharge directement.</li></ul>`],
-  ['tous','Ouverture exceptionnelle et nuit',`<ul><li><b>Samedi ou dimanche</b> : aller sur le jour → <b>Créer une journée planning ce jour</b>. Le jour s'ajoute au planning, à la navigation et à l'onglet <b>Agrégats</b>.</li><li><b>Nuit</b> : saisir le chantier sur le jour où il <b>commence</b> (ex. mercredi 22 h 00). À partir de 19 h, il s'affiche dans une section <b>☾ Nuit</b>.</li><li>Le lendemain, le planning reprend ces chantiers tout en haut, dans <b>☾ Nuit précédente</b> (fond bleuté) : celui qui prend le poste le matin voit les tours chargés et ceux qui restent, et peut continuer à remplir les bulles.</li></ul>`],
+  ['tous','Ouverture exceptionnelle et nuit',`<ul><li><b>Samedi ou dimanche</b> : aller sur le jour → <b>Créer une journée planning ce jour</b>. Le jour s'ajoute au planning, à la navigation et à l'onglet <b>Agrégats</b>.</li><li><b>Nuit</b> : saisir le chantier sur le jour où il <b>commence</b> (ex. mercredi 22 h 00). À partir de 19 h, il s'affiche dans une section <b>☾ Nuit</b>.</li><li>Le lendemain, le planning reprend ces chantiers tout en haut, dans <b>☾ Nuit précédente</b> (fond bleuté) : celui qui prend le poste le matin voit les tours chargés et ceux qui restent, et peut continuer à remplir les bulles.</li><li>Vendredi soir (ou veille d'un jour fermé) : le <b>samedi s'affiche tout seul</b> avec la fin de la nuit, sans ouvrir de journée ; bouton <b>Créer une journée planning ce jour</b> si on travaille aussi le samedi.</li></ul>`],
   ['tous','Une commande ouverte par quelqu\'un d\'autre (verrou)',`<ul><li>Quand quelqu'un ouvre une commande pour la modifier, sa ligne s'affiche <b>grisée</b> avec « <b>Verrouillée · nom modifie</b> » chez tous les autres.</li><li>Tant qu'elle est verrouillée, on ne peut ni l'ouvrir ni cliquer sur ses boutons (tours, pompe, paiement, formule…) : un message dit qui la modifie.</li><li>Le verrou se libère dès que la personne <b>valide ou ferme</b> la commande, ou après <b>5 minutes sans action</b> (rien n'est enregistré dans ce cas).</li><li>Si deux personnes ouvrent la même commande au même instant, la première garde la main ; l'autre voit un message et sa fenêtre se ferme.</li><li>Téléphone mis en veille avec une commande ouverte : au-delà de 5 minutes, la commande est libérée. Si quelqu'un d'autre l'a ouverte entre-temps, c'est lui qui garde la main.</li></ul>`],
   ['tous','Installer l\'application sur le téléphone',`<p>Le planning s'installe comme une application, sans magasin d'applications : une icône « <b>La Bocca</b> » sur l'écran d'accueil, en plein écran, mise à jour automatiquement.</p><ul><li><b>Android</b> : ouvrir le planning dans <b>Chrome</b> → menu <b>⋮</b> → <b>Installer l'application</b> (ou Ajouter à l'écran d'accueil).</li><li><b>iPhone</b> : ouvrir le planning dans <b>Safari</b> → bouton <b>Partager</b> → <b>Sur l'écran d'accueil</b> → Ajouter. Se connecter une fois avec Google dans l'application.</li><li>Raccourci : badge du compte → Aide → <b>Installer l'application sur cet appareil</b>.</li></ul>`],
   ['tous','Synchronisation et hors connexion',`<ul><li>Badge du compte <b>vert</b> = tout est synchronisé ; <b>rouge</b> = pas encore.</li><li>Sans réseau, on continue de travailler : les changements partent au retour du réseau.</li><li>Badge → <b>Forcer la synchronisation</b> en cas de doute.</li></ul>`],
@@ -2408,7 +2413,7 @@ function act(a,el,o,e){
   switch(a){
     case 'prev':return go(view.mode==='semaine'&&view.tab==='planning'?addDays(mondayOf(view.date),-7):step(view.date,-1));
     case 'next':return go(view.mode==='semaine'&&view.tab==='planning'?addDays(mondayOf(view.date),7):step(view.date,1));
-    case 'today':{TODAY=realToday();view.tab='planning';view.mode='jour';if(isPhone()&&chatOn())chatWin.hidden=true;let d=TODAY;while(isWE(d)&&!hasOrders(d))d=addDays(d,1);return go(d)}
+    case 'today':{TODAY=realToday();view.tab='planning';view.mode='jour';if(isPhone()&&chatOn())chatWin.hidden=true;let d=TODAY;while(isWE(d)&&!hasOrders(d)&&!weOpen(d)&&!nuitVeille(d).length)d=addDays(d,1);return go(d)}
     case 'mode':view.mode=el.dataset.v;view.tab='planning';return render(true);
     case 'tab':if(isPhone()&&chatOn())chatWin.hidden=true;if(el.dataset.v==='planning'&&role()==='centraliste'){TODAY=realToday();view.mode='jour';if(view.tab==='planning'||view.date!==TODAY){view.tab='planning';return go(TODAY)}}view.tab=el.dataset.v;return render(true);
     case 'goto':view.date=el.dataset.d;view.mode='jour';view.tab='planning';document.getElementById('qres').hidden=true;return render(true);
