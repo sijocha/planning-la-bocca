@@ -3227,14 +3227,15 @@ function printHTML(days,fmtP){
   .foot{margin-top:1.5mm;font-size:6.5pt;color:#777}`;
   const bulles=o=>{const cap=capOf(o.cam);return `<div class="tl">${o.tours.map(u=>{const cp=u.v<cap-.01;const cls=u.s?(u.mv||u.rf?'mv':u.c?'ext':'on'):'';return `<span class="bu ${cls} ${cp&&!u.s?'cp':''}"><b>${fmt(u.v)}</b><i>${esc(u.c||u.p||'—')}</i></span>`}).join('')}${o.plus?'<span class="bu plus"><b>?</b><i>+1T</i></span>':''}</div>`};
   const pg=d=>{const t=totals(d),dt=D(d);const os=ordersOn(d).filter(o=>statut(o)!=='annulee');
-    const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720);
+    const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720&&mins(o.h)<NUIT),nu=os.filter(o=>mins(o.h)>=NUIT),vv=nuitVeille(d);
     const sub=l=>`${fmt(l.reduce((a,o)=>a+total(o),0))} m³ · ${l.reduce((a,o)=>a+TR(o).length,0)} tours`;
     const rows=l=>l.map(o=>{const L=printLine(o,cl(o.cl),chan(o.ch));return `<tbody><tr><td class="h" rowspan="2">${esc(String(o.h||'').slice(0,5))}</td><td class="b">${esc(L.client).replace(/\n/g,'<br>')}</td><td class="b">${esc(L.m3)}</td><td>${esc(L.adr)}</td><td>${esc(L.formule)}</td><td>${esc(L.cam)}</td><td>${esc(L.pompe)}</td><td class="inf">${esc(L.infos)}</td></tr><tr><td colspan="7">${bulles(o)}</td></tr></tbody>`}).join('');
     return `<section class="pg"><div class="hd"><b>${esc(`${JOURS[dt.getUTCDay()]} ${dt.getUTCDate()} ${MOIS[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`)}</b><span>SEMAINE ${isoWeek(d)}  ·  ${esc(CENTRALE.toUpperCase())}  ·  ${fmt(t.m3)} m³  ·  ${t.n} TOURS${t.k?'  ·  '+t.k+' CAMIONS':''}</span></div>
     <table><colgroup><col style="width:4.8%"><col style="width:13%"><col style="width:7%"><col style="width:19%"><col style="width:12.5%"><col style="width:7.5%"><col style="width:12%"><col></colgroup>
     <thead><tr><th>Heure</th><th>Client</th><th>m³</th><th>Adresse</th><th>Formule</th><th>Camion</th><th>Pompe / réservé</th><th>Infos</th></tr></thead>
+    ${vv.length?`<tbody><tr class="half"><td colspan="8">NUIT PRÉCÉDENTE (DEPUIS LA VEILLE AU SOIR) · ${sub(vv)}</td></tr></tbody>${rows(vv)}`:''}
     <tbody><tr class="half"><td colspan="8">MATIN · ${sub(am)}</td></tr></tbody>${rows(am)||'<tbody><tr><td colspan="8">Aucune commande le matin</td></tr></tbody>'}
-    <tbody><tr class="half"><td colspan="8">APRÈS-MIDI · ${sub(pm)}</td></tr></tbody>${rows(pm)||'<tbody><tr><td colspan="8">Aucune commande l\'après-midi</td></tr></tbody>'}</table>
+    <tbody><tr class="half"><td colspan="8">APRÈS-MIDI · ${sub(pm)}</td></tr></tbody>${rows(pm)||'<tbody><tr><td colspan="8">Aucune commande l\'après-midi</td></tr></tbody>'}${nu.length?`<tbody><tr class="half"><td colspan="8">NUIT · SE POURSUIT LE LENDEMAIN MATIN · ${sub(nu)}</td></tr></tbody>${rows(nu)}`:''}</table>
     <p class="foot">Bulle : cubage en haut, plaque en bas · vert = chargé · contour = prévu (pointillé = complément) · gris-vert = autre centrale · orange = 1 tour à confirmer · imprimé le ${esc(dayLong(TODAY))}</p></section>`};
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Planning ${CENTRALE} ${days[0]||''}</title><style>${css}</style></head><body>${days.map(pg).join('')}</body></html>`;
 }
@@ -3298,9 +3299,11 @@ function dayPage(doc,d,k,part,big,nParts){
       pdfT(L.client),pdfT(L.m3),pdfT(L.adr),pdfT(L.formule),pdfT(L.cam),pdfT(L.pompe),{content:pdfT(L.infos),styles:{fontSize:fs*.86}}]);meta.push({o,ty:'main'});
     body.push([{content:'',colSpan:7,styles:{cellPadding:{top:.5*k,bottom:.5*k,left:1,right:1}}}]);meta.push({o,ty:'tours'})};
   const sub=l=>`${fmt(l.reduce((a,o)=>a+total(o),0))} m³ · ${l.reduce((a,o)=>a+TR(o).length,0)} tours`;
-  const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720);
+  const am=os.filter(o=>mins(o.h)<720),pm=os.filter(o=>mins(o.h)>=720&&mins(o.h)<NUIT),nu=os.filter(o=>mins(o.h)>=NUIT),vv=nuitVeille(d);
+  if(part!=='pm'&&vv.length){sec('NUIT PRÉCÉDENTE (DEPUIS LA VEILLE AU SOIR)  ·  '+sub(vv));vv.forEach(row)}
   if(part!=='pm'){sec('MATIN  ·  '+sub(am));am.forEach(row);if(!am.length){body.push([{content:pdfT('Aucune commande le matin'),colSpan:8,styles:{textColor:MUTE}}]);meta.push(null)}}
-  if(part!=='am'){sec('APRÈS-MIDI  ·  '+sub(pm));pm.forEach(row);if(!pm.length){body.push([{content:pdfT("Aucune commande l'après-midi"),colSpan:8,styles:{textColor:MUTE}}]);meta.push(null)}}
+  if(part!=='am'){sec('APRÈS-MIDI  ·  '+sub(pm));pm.forEach(row);if(!pm.length){body.push([{content:pdfT("Aucune commande l'après-midi"),colSpan:8,styles:{textColor:MUTE}}]);meta.push(null)}
+    if(nu.length){sec('NUIT  ·  SE POURSUIT LE LENDEMAIN MATIN  ·  '+sub(nu));nu.forEach(row)}}
   const tw=W-2*M;const BW=(big?9.4:7.2)*k,BH=(big?8.4:6.4)*k,G=(big?1.1:.8)*k;
   const colW=[.048,.13,.07,.19,.125,.075,.12,.242].map(x=>x*tw);
   const per=w=>Math.max(1,Math.floor((w-2)/(BW+G)));
