@@ -3528,7 +3528,17 @@ function importerSauvegarde(){
     const lus=[];for(const f of fs){try{lus.push(JSON.parse(await f.text()))}catch(e){toast('Fichier illisible : '+f.name);return}}
     const d=fusionSauvegardes(lus);
     if(!d||!Array.isArray(d.orders)){toast('Fichier non reconnu : ce n\'est pas une sauvegarde du planning');return}
-    const mois=[...new Set(d.orders.map(o=>String(o.date||'').slice(0,7)).filter(Boolean))].sort();
+    const mois=[...new Set(d.orders.map(o=>String(o.date||'').slice(0,7)).concat(Object.keys(d.days||{}).map(k=>k.slice(0,7))).filter(Boolean))].sort();
+    // fichiers de mois sans listes.json : on ne remet QUE ces mois, le reste du planning ne bouge pas
+    const complet=lus.some(o=>o&&(o.type==='sauvegarde-listes'||(!o.type&&!o.mois)));
+    if(!complet&&mois.length){
+      const noms=mois.map(m=>MOISL[+m.slice(5,7)-1]+' '+m.slice(0,4)).join(', ');
+      if(!confirm('Remettre '+noms+' tel que dans la sauvegarde ?\n'+d.orders.length+' commandes.\nLes autres mois, les clients et les réglages ne changent pas.\nLes changements faits dans '+(mois.length>1?'ces mois':'ce mois')+' depuis la sauvegarde seront perdus.'))return;
+      try{if(DB&&DB.extend)await DB.extend(mois[0]+'-01')}catch(e){}
+      const M=new Set(mois);
+      S.orders=S.orders.filter(o=>!M.has(String(o.date||'').slice(0,7))).concat(d.orders.map(clone));
+      Object.keys(S.days||{}).forEach(k=>{if(M.has(k.slice(0,7)))delete S.days[k]});Object.assign(S.days,clone(d.days||{}));
+      commit();render(true);toast('Restauré : '+noms);return}
     if(!confirm('Remplacer TOUT le planning partagé par cette sauvegarde ?\n'+d.orders.length+' commandes'+(mois.length?' ('+mois[0]+(mois.length>1?' → '+mois[mois.length-1]:'')+')':'')+', '+fs.length+' fichier'+(fs.length>1?'s':'')+'.\nLes autres utilisateurs verront le changement tout de suite.'))return;
     remplacerDonnees(d,'Sauvegarde importée')};
   inp.click();
