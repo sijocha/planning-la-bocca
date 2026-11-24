@@ -1374,7 +1374,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=11">
+<link rel="stylesheet" href="ameliorations-ui.css?v=12">
 <link rel="stylesheet" href="formules.css?v=3">
 
 </head>
@@ -2414,7 +2414,13 @@ function act(a,el,o,e){
     case 'pills-all':return plShow(el);
     case 'pills-edit':{const id=o.id;return setTimeout(()=>pillsPop(plAnchor&&document.body.contains(plAnchor)?plAnchor:document.querySelector(`#row-${id} .r-menu`)||el,id))}
     case 'addpill':{const id=o.id;setEditing(id);return listPop(el,'Ajouter une info sur la ligne',pPre(o),v=>{byId(id).pills.push({t:v,on:false,by:author()})},'Ou texte libre (retard, consigne…)')}
-    case 'formule':{const id=o.id;setEditing(id);return formPop(el,'Formule',[{k:'f',label:'Formule (comme sur le papier)',val:o.f,list:S.formules.map(x=>x.f)},{k:'sap',label:'N° SAP (8 chiffres, facultatif)',val:sapOf(o),ph:'60012481'}],v=>{if(v.sap&&!/^\d{8}$/.test(v.sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}const x=byId(id);x.f=v.f;x.sap=v.sap;learnFormule(v.f,v.sap)})}
+    case 'formule':{const id=o.id;setEditing(id);if(window.FX){const nomC=cl(o.cl).n;
+      openPop(el,`<div class="pop-h">Formule · ${esc(nomC)}</div><form data-pa="save" class="pf-fx"><div class="fxw" id="pf-fx"></div><button class="btn primary" type="submit">Enregistrer</button></form>`,
+        {save(){const q=document.getElementById('fx-q'),sp=document.getElementById('fx-sap');const f=FX.line(q?q.value:'').trim(),sap=(sp?sp.value:'').trim();
+          if(!f){toast('Formule vide');return 'keep'}if(sap&&!/^\d{8}$/.test(sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}
+          const x=byId(id);x.f=f;x.sap=sap;learnFormule(f,sap)}});
+      FX.setCfg(fxCat());FX.mount(popEl.querySelector('#pf-fx'),{value:o.f||'',sap:sapOf(o)||'',last:lastFormules(nomC)});placePop();return}
+      return formPop(el,'Formule',[{k:'f',label:'Formule (comme sur le papier)',val:o.f,list:S.formules.map(x=>x.f)},{k:'sap',label:'N° SAP (8 chiffres, facultatif)',val:sapOf(o),ph:'60012481'}],v=>{if(v.sap&&!/^\d{8}$/.test(v.sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}const x=byId(id);x.f=v.f;x.sap=v.sap;learnFormule(v.f,v.sap)})}
     case 'pompe':{const id=o.id,b=o.pompe.bon;setEditing(id);return confirmPop(el,b?'Remettre le bon de pompe à faire ?':'Confirmer : bon de pompe fait ?',ordLbl(o),b?'Oui, pas encore fait':'Oui, le bon est fait',()=>{byId(id).pompe.bon=!b;toast(b?'Bon de pompe à faire':'Bon de pompe fait')},b)}
     case 'pay':{const id=o.id,p=o.pay.paye;setEditing(id);return confirmPop(el,p?'Remettre le paiement en attente ?':'Confirmer : paiement reçu ?',ordLbl(o),p?'Oui, pas encore payé':'Oui, le client a payé',()=>{byId(id).pay.paye=!p;toast(p?'Paiement en attente':'Paiement validé')},p)}
     case 'modv':{if(!peutValider()){toast('Le centraliste valide la modification');return}const id=o.id;setEditing(id);return confirmPop(el,'Valider la modification ?',ordLbl(o),'Oui, valider',()=>{delete byId(id).modv;toast('Modification validée')})}
@@ -3717,7 +3723,8 @@ function boot(){
   mainEl.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;tx=null;if(view.tab==='planning'&&Math.abs(dx)>80&&Math.abs(dy)<40)act(dx<0?'next':'prev',mainEl,null,e)});
   window.addEventListener('resize',placePop);
   let wasPhone=isPhone();window.addEventListener('resize',()=>{const p=isPhone();if(p!==wasPhone){wasPhone=p;render()}});
-  setInterval(()=>{if(view.date===TODAY&&view.tab==='planning'&&view.mode==='jour')render()},60000);
+  setInterval(()=>{if(document.visibilityState!=='visible')return;if(view.date===TODAY&&view.tab==='planning'&&view.mode==='jour')render()},60000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S&&popEl.hidden&&drawerEl.hidden&&view.date===TODAY&&view.tab==='planning')render()});
 }
 let suppressClick=false;
 if(typeof document!=='undefined'&&document.getElementById('main'))boot();

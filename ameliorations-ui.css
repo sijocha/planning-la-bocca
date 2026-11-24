@@ -65,7 +65,7 @@ body { transition: background-color .22s, color .22s; }
 
 /* ---------- 3. Grille du jour : la formule en entier ---------- */
 .cols, .cols.simple {
-  --c: 58px minmax(110px, 1fr) 72px minmax(120px, .95fr) minmax(190px, 1.1fr) minmax(104px, .7fr) minmax(124px, .8fr) minmax(170px, 1.25fr) 32px !important;
+  --c: 78px minmax(110px, 1fr) 72px minmax(120px, .95fr) minmax(190px, 1.1fr) minmax(104px, .7fr) minmax(124px, .8fr) minmax(170px, 1.25fr) 32px !important;
 }
 .row > .r-fo { overflow: visible; }
 .row .r-fo .mo, .row .r-fo span { text-overflow: clip; white-space: nowrap; }
@@ -353,3 +353,10 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 /* Installer l'application : marche à suivre */
 .inst-ol { margin: 4px 0 0; padding-left: 20px; font-size: 13.5px; line-height: 1.5; }
 .inst-ol li { margin: 3px 0; }
+
+/* Formule de la ligne : saisie rapide dans la petite fenêtre */
+#pop:has(.pf-fx) { width: min(640px, 94vw) !important; max-width: min(640px, 94vw) !important; }
+#pop .pf-fx { display: grid; gap: 10px; min-width: 0; }
+#pop .pf-fx .fxw .qrow { grid-template-columns: minmax(0, 1fr) 112px; }
+#pop .pf-fx .fxw .qin.qsap { padding: 0 6px; letter-spacing: 0; }
+@media (max-width: 640px) { #pop .pf-fx .fxw .qin { font-size: 16px; height: 46px; } }
