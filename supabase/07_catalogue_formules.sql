@@ -9,7 +9,7 @@ begin
   if r is null or r = 'lecture' then return false; end if;
   if r in ('admin','centraliste') then return true; end if;
   -- commercial et labo
-  if p_collection in ('orders','days','chat') then return true; end if;
+  if p_collection in ('orders','days','chat','journal') then return true; end if;   -- 'journal' : ajouté par 05, à garder
   if p_collection = 'ref' then return p_id in ('clients','chantiers','formules','demandes')
     or (p_id = 'formcat' and r = 'commercial'); end if;
   return false;
