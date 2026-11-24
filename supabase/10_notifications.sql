@@ -2,6 +2,8 @@
 -- Planning Centraliste – Notifications sur le téléphone (écran de verrouillage)
 -- À exécuter une fois dans Supabase → SQL Editor, puis déployer la fonction « notifs »
 -- (supabase/functions/notifs/index.ts).
+-- La porte d'entrée des fonctions Supabase exige une clé : la base envoie la clé publique du planning
+-- (déjà visible dans le code du site) ; la fonction vérifie en plus le secret partagé.
 -- =========================================================
 
 create extension if not exists pg_net;
@@ -88,7 +90,8 @@ begin
       body := jsonb_build_object('collection', new.collection, 'id', new.id,
                                  'old', case when tg_op = 'UPDATE' then old.data end,
                                  'new', new.data, 'auteur', new.modifie_par),
-      headers := jsonb_build_object('Content-Type', 'application/json', 'x-secret', sec),
+      headers := jsonb_build_object('Content-Type', 'application/json', 'x-secret', sec,
+                                    'apikey', 'sb_publishable_M5zlEKqHdyao-lh1lt0rDg_DbimP0TS'),
       timeout_milliseconds := 8000);
   exception when others then
     null;
@@ -110,7 +113,8 @@ begin
   perform net.http_post(
     url := 'https://apedxvyezcitbphlzlfr.supabase.co/functions/v1/notifs',
     body := jsonb_build_object('test', auth.uid()),
-    headers := jsonb_build_object('Content-Type', 'application/json', 'x-secret', sec),
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-secret', sec,
+                                    'apikey', 'sb_publishable_M5zlEKqHdyao-lh1lt0rDg_DbimP0TS'),
     timeout_milliseconds := 8000);
 end $$;
 revoke execute on function public.push_test() from public, anon;
