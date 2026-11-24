@@ -1374,7 +1374,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=12">
+<link rel="stylesheet" href="ameliorations-ui.css?v=13">
 <link rel="stylesheet" href="formules.css?v=3">
 
 </head>
@@ -1490,7 +1490,7 @@ function genTours(m3,cap){const n=Math.floor(m3/cap+1e-9);const t=[];for(let i=0
 const TR=o=>o.tours.filter(t=>!t.mv);
 const total=o=>TR(o).reduce((a,t)=>a+t.v,0);
 const livre=o=>TR(o).reduce((a,t)=>a+(t.s?t.v:0),0);
-function statut(o){if(o.st)return o.st;const n=TR(o).length,c=TR(o).filter(t=>t.s).length;if(n&&c===n)return 'terminee';if(c)return 'encours';return 'attente'}
+function statut(o){if(o.st)return o.st;const n=TR(o).length,c=TR(o).filter(t=>t.s).length;if(n&&c===n)return o.plus?'encours':'terminee';if(c)return 'encours';return 'attente'}
 function family(f){const s=(f||'').toLowerCase();if(/chape|cemexa/.test(s))return 'chape';if(/d[ée]sactiv/.test(s))return 'desac';if(/sable stab/.test(s))return 'sable';return 'beton'}
 function attente(f){if(/^ATT\b/.test(f||''))return 'Produit en attente';const m=/attente formule\s*(labo|client|commercial)?/i.exec(f||'');return m?('Attente formule'+(m[1]?' '+m[1].toLowerCase():'')):''}
 
@@ -1531,7 +1531,7 @@ function plateOf(txt,o){const n=plN(txt);if(!n)return '';const k=FLEET().find(p=
 /* choix rapide de la plaque d'une bulle (i=null : nouvelle bulle) */
 /* charger un tour avant le jour du chantier demande une validation */
 function early(o,anchor,fn){const x=byId(o.id)||o;if(!(x.date>TODAY))return fn();return confirmPop(anchor,'Charger avant le jour J ?',`Ce chantier est prévu le ${dayShort(x.date).toLowerCase()}, nous sommes le ${dayShort(TODAY).toLowerCase()}.`,'Oui, charger quand même',fn)}
-function platePick(o,i,anchor){const id=o.id;setEditing(id);const t=i==null?null:o.tours[i];const cap=capOf(o.cam);
+function platePick(o,i,anchor,opt){opt=opt||{};const id=o.id;setEditing(id);const t=i==null?null:o.tours[i];const cap=capOf(o.cam);
   const btn=p=>{const ab=absentOn(o.date,p.c);return `<button class="pop-c ${t&&t.p===p.c?'on':''} ${ab?'off':''}" data-pa="pk" data-v="${esc(p.c)}" title="${esc(p.p||'')}${ab?' · absent ce jour':''}">${esc(p.c)}</button>`};
   const mine=FLEET(),oth=onSite(o);
   openPop(anchor,`<div class="pop-h">${t?`Tour ${i+1}`:'Nouveau tour'}</div>
@@ -1539,13 +1539,20 @@ function platePick(o,i,anchor){const id=o.id;setEditing(id);const t=i==null?null
     <div class="pop-l">Mes camions</div><div class="pop-grid">${mine.map(btn).join('')}</div>
     ${oth.length?`<div class="pop-l">Sur ce chantier</div><div class="pop-grid">${oth.map(btn).join('')}</div>`:''}
     <form data-pa="typed" class="pk-f"><input id="pk-t" placeholder="Noter la plaque (ex. EF507VT)" aria-label="Plaque" autocomplete="off"><button class="btn primary" type="submit">OK</button></form>
-    <button class="pop-b" data-pa="none">${t?'Chargé sans plaque':'Ajouter sans plaque'}</button>`,
-  {pk(el){const v=vol();if(!v)return 'keep';const c=el.dataset.v;return early(o,null,()=>put(c,v))},typed(f){const v=vol();if(!v)return 'keep';const t=f.querySelector('#pk-t').value;if(!plN(t))return 'keep';const c=plateOf(t,byId(id));return early(o,null,()=>put(c,v))},none(){const v=vol();if(!v)return 'keep';return i==null?put('',v):early(o,null,()=>put('',v))}});
+    ${t?'<button class="pop-b" data-pa="none">Chargé sans plaque</button>':`<button class="pop-b" data-pa="nonec">Chargé sans plaque</button>${opt.cpl&&!o.plus?'<button class="pop-b cpl-prevu" data-pa="prevu">Pas encore chargé : complément prévu (orange)</button>':''}`}`,
+  {pk(el){const v=vol();if(!v)return 'keep';const c=el.dataset.v;return early(o,null,()=>put(c,v))},typed(f){const v=vol();if(!v)return 'keep';const t=f.querySelector('#pk-t').value;if(!plN(t))return 'keep';const c=plateOf(t,byId(id));return early(o,null,()=>put(c,v))},none(){const v=vol();if(!v)return 'keep';return early(o,null,()=>put('',v))},nonec(){const v=vol();if(!v)return 'keep';return early(o,null,()=>put('',v,true))},prevu(){const x=byId(id);x.plus=true;jlog(x.date,`Complément prévu : ${siteName(x)}`);toast('Complément prévu ajouté (bulle orange)')}});
   function vol(){const e=popEl.querySelector('#pk-v');const v=e?num(e.value):cap;if(!(v>0)||v>cap+.01){toast(`Cubage entre 0,5 et ${fmt(cap)} m³`);e&&e.focus();return 0}return v}
   // le cubage est lu AVANT une éventuelle confirmation (qui remplace le contenu de la fenêtre)
-  function put(c,v){const x=byId(id);v=v||cap;if(i==null){x.tours.push(c?{v,s:1,x:1,p:c}:{v,s:0,x:1});toast(c?`Bulle ${c} ajoutée (chargée)`:'Bulle ajoutée')}else{const u=x.tours[i];u.p=c;u.s=1;u.v=v;toast(c?`Tour ${i+1} chargé · ${c} · ${fmt(v)} m³`:`Tour ${i+1} chargé · ${fmt(v)} m³`)}}
+  function put(c,v,sans){const x=byId(id);v=v||cap;if(i==null){x.tours.push({v,s:1,x:1,p:c||''});if(opt.fromPlus)x.plus=false;toast(c?`Complément ${c} chargé · ${fmt(v)} m³`:`Complément chargé · ${fmt(v)} m³`);
+      if(opt.cpl||opt.fromPlus)setTimeout(()=>askMoreCpl(id),60)}else{const u=x.tours[i];u.p=c;u.s=1;u.v=v;toast(c?`Tour ${i+1} chargé · ${c} · ${fmt(v)} m³`:`Tour ${i+1} chargé · ${fmt(v)} m³`)}}
   setTimeout(()=>{const n=popEl.querySelector('#pk-t');if(n&&window.matchMedia('(pointer:fine)').matches)n.focus()},20);
 }
+// après chaque complément chargé : en attend-on encore un ? (évite de laisser un chantier « terminé » à tort)
+function askMoreCpl(id){const x=byId(id);if(!x)return;setEditing(id);
+  const a=document.querySelector(`#row-${id} .t-add`)||document.querySelector(`#row-${id}`);if(!a)return;
+  openPop(a,`<div class="pop-h">Encore un complément prévu ?</div><p class="muted" style="margin:0;font-size:13px">${esc(cl(x.cl).n)} · ${fmt(livre(x))} m³ chargés</p><button class="pop-b on" data-pa="oui">Oui, le client en reprendra : complément prévu (orange)</button><button class="pop-b" data-pa="non">Non, c'est le dernier</button>`,
+    {oui(){const y=byId(id);y.plus=true;jlog(y.date,`Complément prévu : ${siteName(y)}`);toast('Complément prévu : bulle orange')},
+     non(){const y=byId(id);y.plus=false;toast(statut(y)==='terminee'?'Chantier terminé':'Pas d\'autre complément')}})}
 function author(){const u=prefs.user;if(!u)return 'Anonyme';return u.role==='centraliste'?u.nom:`${u.nom} (${u.role==='labo'?'labo':'commercial'})`}
 
 /* =====================================================================
@@ -1559,10 +1566,9 @@ const shortC=c=>String(c||'').toUpperCase();
 function aggInner(iso){
   const dd=dayRO(iso);
   const semis=(dd.semis||[]).map((s,i)=>{const last=s.tours.reduce((a,t,k)=>t.s?k:a,-1);const nOld=Math.max(0,last);return `<div class="sl"><button class="s-name" data-act="semi-ed" data-i="${i}" title="Renommer (prénom du chauffeur), heure, remarque">${esc(s.nom)}${s.ch?`<small>${esc(s.ch)}</small>`:''}</button><span class="s-h">${esc(hm(s.h))}</span><span class="s-ts">${nOld?`<span class="s-more" title="${nOld} tour${nOld>1?'s':''} reçu${nOld>1?'s':''} avant · survoler pour tout voir">+${nOld}</span>`:''}${s.tours.map((t,k)=>`<button class="s-t ${t.s?'on':''} ${k<last?'old':''}" data-act="semi-t" data-i="${i}" data-k="${k}" data-long="1" title="Tour ${k+1} · ${t.s?'reçu':'attendu'}${t.carr?' · '+esc(t.carr):''} · clic : reçu · clic long : modifier">${esc(t.prod)}${t.carr?`<small>${esc(shortC(t.carr))}</small>`:''}</button>`).join('')}${s.tours.length<SEMI_MAX?`<button class="s-add" data-act="semi-tadd" data-i="${i}" aria-label="Ajouter un tour à ${esc(s.nom)}" title="Tour suivant">+</button>`:''}${s.note?`<span class="s-note">${esc(s.note)}</span>`:''}</span></div>`}).join('');
-  const cim=(dd.ciments||[]).map((c,i)=>`<span class="s-cg"><b>${esc(c.prod)}</b>${c.rec.map((r,k)=>`<button class="s-t ${r.s?'on':''}" data-act="cim-t" data-i="${i}" data-k="${k}" data-long="1" title="${esc(c.prod)} · ${r.s?'reçu':'attendu'} · clic long : supprimer">${esc(hm(r.h))}</button>`).join('')}<button class="s-add" data-act="cim-tadd" data-i="${i}" aria-label="Ajouter une livraison de ${esc(c.prod)}">+</button></span>`).join('');
-  const semiAdd='<button class="chip add semi-plus" data-act="semi-add">+ Semi</button>';
-  const sm=semis?semis.replace('</div>',semiAdd+'</div>'):'<div class="sl"><button class="s-name" data-act="semi-add">Semi 1</button><span class="s-h">—</span><span class="s-ts"><button class="s-add" data-act="semi-add" aria-label="Noter la semi 1">+</button></span>'+semiAdd+'</div>';
-  return `<div class="sl cim"><span class="s-name">Ciments</span><span class="s-ts">${cim||'<span class="muted">—</span>'}</span></div>
+  const cim=(dd.ciments||[]).map((c,i)=>`<span class="s-cg"><button class="s-cn" data-act="cim-ed" data-i="${i}" title="Modifier ou supprimer ce liant">${esc(c.prod)}</button>${c.rec.map((r,k)=>`<button class="s-t ${r.s?'on':''}" data-act="cim-t" data-i="${i}" data-k="${k}" data-long="1" title="${esc(c.prod)} · ${r.s?'reçu':'attendu'} · clic long : supprimer">${esc(hm(r.h))}</button>`).join('')}<button class="s-add" data-act="cim-tadd" data-i="${i}" aria-label="Ajouter une livraison de ${esc(c.prod)}">+</button></span>`).join('');
+  const sm=semis||'<div class="sl"><button class="s-name" data-act="semi-add">Semi 1</button><span class="s-h">—</span><span class="s-ts"><button class="s-add" data-act="semi-add" aria-label="Noter la semi 1">+</button></span></div>';
+  return `<div class="sl cim"><span class="s-name">Liants</span><span class="s-ts">${cim||'<span class="muted">—</span>'}</span></div>
   ${sm}`;
 }
 
@@ -1648,7 +1654,7 @@ function headHTML(iso){
     <div class="hb-w agg" data-box="agg"><div class="hb" data-act="hb" data-day="${iso}">
       <div class="hb-h"><span class="lbl" title="Rester appuyé sur le bord ou le titre pour déplacer">// Agrégats · ciments</span></div>
       <div class="hb-body">${aggInner(iso)}</div>
-      <div class="hb-add"><button class="chip add" data-act="cim-add">+ Ciment</button></div>
+      <div class="hb-add"><button class="chip add" data-act="semi-add">+ Semi</button><button class="chip add" data-act="cim-add">+ Liant</button></div>
     </div></div>`;
 }
 
@@ -1709,7 +1715,7 @@ function rowHTML(o,editors){
     <div class="r-pom">${pom}</div>
     <div class="r-pills" ${o.pills.length>1?'data-more="1"':''}>${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${o.pompe&&o.pompe.city?'<span class="mo bag" title="Citybag à prévoir (chantier avec pompe)">Citybag</span>':''}${pillsRow(o)}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande" title="Statut, modifier, dupliquer…">⋯</button>
-    ${PH?phT:SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" data-long="1" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Ajouter un tour non prévu" aria-label="Ajouter un tour">+</button>${o.plus||o.etat==='annulee'?'':'<button class="t-add t-cpl" data-act="cpl-add" title="Ajouter un complément à confirmer (1 tour de plus, quantité inconnue)" aria-label="Ajouter un complément à confirmer">+</button>'}</div>`}
+    ${PH?phT:SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" data-long="1" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Complément non prévu : charger un tour de plus, ou noter un complément prévu" aria-label="Ajouter un complément">+</button></div>`}
     ${prefs.vue==='detail'||OPEN?detLine(o,c,ch,sap):''}
   </article>`;
 }
@@ -1862,8 +1868,8 @@ function demandesHTML(){
 
 function aggTabHTML(){
   const mon=mondayOf(view.date);const ds=[0,1,2,3,4].map(i=>addDays(mon,i));
-  return `<div class="sec-h"><h2>Agrégats et ciments · semaine ${isoWeek(view.date)}</h2><p>Notés la veille sur le planning du lendemain. Une ligne par semi. Stabiloté = reçu.</p></div>
-  <div class="grid3">${ds.map(d=>`<div class="panel ${d===view.date?'cur':''}" data-day="${d}"><h3>${esc(dayLong(d))}</h3>${aggInner(d)}<div class="chips"><button class="chip add" data-act="semi-add">+ Semi</button></div></div>`).join('')}</div>`;
+  return `<div class="sec-h"><h2>Agrégats et ciments · semaine ${isoWeek(view.date)}</h2><p>Clic sur un produit : reçu (stabiloté). Clic long : modifier ou supprimer. Tout reste modifiable à tout moment.</p></div>
+  <div class="grid3">${ds.map(d=>`<div class="panel agg-p ${d===view.date?'cur':''}" data-day="${d}"><h3>${esc(dayLong(d))}</h3>${aggInner(d)}<div class="chips agg-btns"><button class="chip add" data-act="semi-add">+ Semi</button><button class="chip add" data-act="cim-add">+ Liant</button></div></div>`).join('')}</div>`;
 }
 
 function truckEdit(code,anchor){if(role()!=='centraliste')return;const L=FLEET();const p=L.find(x=>x.c===code);if(!p)return;
@@ -1941,7 +1947,7 @@ const AIDE=[
   ['tous','Paiements comptant',`<ul><li>L'étiquette <b>€ attente</b> sur la ligne : paiement non reçu.</li><li>Clic dessus → <b>« Confirmer : paiement reçu ? »</b> → Oui. Un nouveau clic remet en attente, aussi avec confirmation.</li><li>Tant que ce n'est pas payé, l'alerte « Paiement · client » reste dans la ligne À surveiller.</li></ul>`],
   ['tous','Pompes, bon de pompe et réservations',`<ul><li>Camion SP4 / SP6 ou pompe <b>« À réserver »</b> (rouge clignotant) : le centraliste clique dessus quand c'est réservé → confirmation → <b>« Réservé »</b> en vert.</li><li><b>Bon de pompe</b> : clic sur l'étiquette quand il est fait → confirmation.</li><li>Pompe BQA sur une formule sans BQA : alerte « BQA requise ».</li><li><b>Betobag</b> et <b>Citybag</b> : cases dans la partie Pompe de la commande ; ils s'affichent sur la ligne, à côté de la pompe.</li></ul>`]]],
  ['Camions et bulles',[
-  ['centraliste','Remplir une bulle (plaque du camion)',`<ul><li><b>Clic sur une bulle vide</b> : vos camions s'affichent, plus les autres plaques déjà notées. Un clic sur la plaque → la bulle passe <b>chargée</b> (verte).</li><li>Plaque inconnue : la taper dans « Noter la plaque », puis OK. Elle ne sert que pour ce chantier. Vos camions se gèrent dans Administration → Camions et pompes → Camions centrale.</li><li><b>[+]</b> au bout des bulles : ajouter un tour, avec le même choix de plaque.</li><li><b>[+] orange</b> juste après : ajoute d'un clic un <b>complément à confirmer</b> (bulle orange « ? / +1T »), sans autre étape. Pratique quand un complément vient d'être chargé et qu'il en reste un derrière.</li><li>Clic (ou clic droit) sur la bulle orange : <b>Complément confirmé</b> ouvre directement « Nouveau tour » (cubage, camion, plaque) ; <b>Pas de complément</b> la retire.</li><li>Clic sur une bulle déjà chargée : retirer le stabilo (avec confirmation).</li><li>Charger un tour <b>avant le jour du chantier</b> demande une validation.</li></ul>`],
+  ['centraliste','Remplir une bulle (plaque du camion)',`<ul><li><b>Clic sur une bulle vide</b> : vos camions s'affichent, plus les autres plaques déjà notées. Un clic sur la plaque → la bulle passe <b>chargée</b> (verte).</li><li>Plaque inconnue : la taper dans « Noter la plaque », puis OK. Elle ne sert que pour ce chantier. Vos camions se gèrent dans Administration → Camions et pompes → Camions centrale.</li><li>Ordre des bulles, toujours le même : les tours, puis la bulle <b>orange « ? »</b> si un complément est <b>prévu</b>, puis le <b>[+] gris</b> pour un complément <b>non prévu</b>.</li><li><b>[+] gris</b> : choisir la plaque → le complément est chargé. Ou, s'il n'est pas encore chargé : <b>Complément prévu</b> → bulle orange.</li><li><b>Bulle orange</b> : « Le client le prend » → choix de la plaque, le complément est chargé ; ou « Pas de complément » → elle disparaît.</li><li>Après <b>chaque complément chargé</b>, le planning demande : <b>Encore un complément prévu ?</b> Oui → nouvelle bulle orange (gros chantiers à la pompe : on enchaîne autant que nécessaire) ; Non → c'était le dernier.</li><li>Tant qu'une bulle orange reste, le chantier n'est <b>pas terminé</b>.</li><li>Clic (ou clic droit) sur la bulle orange : <b>Complément confirmé</b> ouvre directement « Nouveau tour » (cubage, camion, plaque) ; <b>Pas de complément</b> la retire.</li><li>Clic sur une bulle déjà chargée : retirer le stabilo (avec confirmation).</li><li>Charger un tour <b>avant le jour du chantier</b> demande une validation.</li></ul>`],
   ['centraliste','Modifier une bulle (clic long ou clic droit)',`<p>Rester appuyé sur la bulle (ou clic droit) : changer la plaque, le volume, noter « chargé par une autre centrale », replacer le camion, supprimer le tour.</p><p>Légende : vide = prévu · vert = chargé · pointillé = complément · nom de centrale = chargé ailleurs · bleu = camion replacé · <b>P</b> bleu = toupie rechargée pleine.</p>`],
   ['centraliste','Replacer un camion déjà chargé sur un autre chantier',`<ol><li>Clic long sur la bulle chargée → <b>Replacer sur un autre chantier…</b></li><li>Choisir le chantier. Laisser cochée « Prévoir un nouveau tour » si le premier chantier attend encore ce béton.</li></ol><p>La bulle d'origine devient bleue barrée (ses m³ ne comptent plus). Une fenêtre demande les <b>m³ replacés</b> et si la <b>toupie a été rechargée pleine</b>, puis Valider. Le camion prend la <b>première bulle grise libre</b> du nouveau chantier (en bleu ↪) ; s'il n'y en a pas, une bulle est créée. Pour revenir en arrière : clic long sur la bulle barrée → <b>Annuler le replacement</b>.</p>`],
   ['centraliste','Planning camions : renforts, détachements, convocations',`<ul><li>Encadré <b>Planning camions</b> : <b>+ Renfort</b> (un camion vient à la centrale), <b>+ Détachement</b> (un camion part : nombre, camion prêté, convoqué ailleurs), <b>+ Absent</b>.</li><li>Page <b>04 Camions</b> : absents, prêtés, convoqués ailleurs (« 7 h 45 Grasse »).</li><li><b>Imprimer le mois</b> : PDF A4 ou A3 des convocations, avec horaires ou grille vide.</li><li>Ligne du bas : <b>tours chargés par camion</b> depuis le 1er du mois. <b>Imprimer par période</b> (sous le total) : d'un mois à un autre, ou un seul mois.</li><li>Onglet <b>Convocation</b> : le mois complet. Clic sur une case : <b>Convoqué</b> (heure et centrale : une autre centrale = le camion y est convoqué directement), <b>Absent</b> (période, raison) ou pas convoqué ; « Affecté au chantier » se remplit librement (badge, accès…). Colonne <b>Observations</b> : une note libre par jour.</li><li><b>Clic droit sur un camion</b> (en-tête de colonne, ou dans Administration → Camions centrale) pour modifier son n° de parc ou sa plaque entière (optionnelle).</li></ul>`]]],
@@ -1956,7 +1962,7 @@ const AIDE=[
   ['tous','Ligne « À surveiller »',`<p>Au-dessus des vues, en bas : bons de pompe, réservations, paiements, commandes à valider, demandes. Le nombre est à côté du titre.</p><ul><li>Clic sur une alerte → la ligne concernée.</li><li><b>Molette</b> de la souris pour faire défiler s'il y en a beaucoup.</li><li>Quand tout est réglé, la ligne disparaît.</li></ul>`],
   ['tous','Page À traiter (02 Demandes)',`<p>Tout ce qui attend une action, rangé par thème, du plus urgent en haut au moins urgent en bas. Une catégorie n'apparaît que si elle a quelque chose à traiter :</p><ol><li>Placement de chantier (commandes du commercial)</li><li>Modifications à valider</li><li>Pompes (réservation, bon de pompe, BQA)</li><li>Camions à réserver (SP4, SP6)</li><li>Paiements comptant</li><li>Formules et labo</li><li>Modifications de commande, chantiers et clients, autres demandes</li></ol><p>Chaque ligne a son bouton d'action (Réservée, Bon fait, Paiement reçu, Traité…). Les demandes traitées passent <b>en gris tout en bas</b>, restent visibles <b>24 h</b> après leur traitement puis disparaissent (elles restent dans les données). Filtres : Tout, Pour moi, Envoyées.</p>`],
   ['tous','Chat de la centrale',`<p>Bouton <b>Chat</b> en bas à droite : une fenêtre s'ouvre. Toutes les personnes connectées au planning y écrivent (Entrée pour envoyer, Maj + Entrée pour aller à la ligne). Un chiffre orange signale les nouveaux messages.</p><ul><li>Une <b>réponse à une demande</b> est aussi envoyée dans le chat.</li><li>Les messages sont gardés <b>7 jours</b> puis s'effacent ; les réponses restent attachées à leur demande.</li></ul>`],
-  ['tous','Lire une bulle de tour',`<p>En vue <b>Détaillé</b> et à l'impression, chaque bulle montre le <b>cubage chargé en haut</b> et la <b>plaque en bas</b>.</p><ul><li><b>Vert plein</b> : chargé · <b>contour</b> : prévu · <b>pointillé</b> : complément (moins qu'un camion plein).</li><li><b>Gris-vert</b> : chargé par une autre centrale (son nom en bas) · <b>bleu</b> : camion replacé.</li><li><b>Orange « ? / +1T »</b> : le client prendra sans doute 1 tour de plus (case cochée à la saisie, ou <b>[+] orange</b> au bout des bulles).</li><li><b>+</b> au bout des bulles : ajouter un tour. Le cubage est prérempli à un camion plein (7,5 m³ ou le maximum du camion) ; corrigez-le pour un complément.</li></ul>`],
+  ['tous','Lire une bulle de tour',`<p>En vue <b>Détaillé</b> et à l'impression, chaque bulle montre le <b>cubage chargé en haut</b> et la <b>plaque en bas</b>.</p><ul><li><b>Vert plein</b> : chargé · <b>contour</b> : prévu · <b>pointillé</b> : complément (moins qu'un camion plein).</li><li><b>Gris-vert</b> : chargé par une autre centrale (son nom en bas) · <b>bleu</b> : camion replacé.</li><li><b>Orange « ? / +1T »</b> : complément <b>prévu</b>, à confirmer (case [+] cochée à la saisie, ou noté depuis le [+] gris). Le chantier reste en cours tant qu'elle est là.</li><li><b>+</b> au bout des bulles : ajouter un tour. Le cubage est prérempli à un camion plein (7,5 m³ ou le maximum du camion) ; corrigez-le pour un complément.</li></ul>`],
   ['tous','Commentaires (pastilles)',`<ul><li><b>+ Info</b> sur la ligne : pastilles toutes prêtes ou texte libre. « Citybag 1er camion » et « Bétobag 1er camion » ne sont proposés que sur les chantiers avec pompe.</li><li>Clic sur une pastille pour la modifier ; <b>×</b> pour la supprimer (avec confirmation).</li></ul>`]]],
  ['Disposition de l\'écran',[
   ['centraliste','Déplacer les trois encadrés du haut',`<ol><li><b>Rester appuyé</b> un instant sur le bord ou le titre d'un encadré (Planning camions, Journal de bord, Agrégats). Le contour devient orange.</li><li>Sans relâcher, glisser à gauche ou à droite des autres encadrés.</li><li>Glisser vers le bas de l'écran : <b>les trois encadrés passent ensemble en bas</b> de la page ; vers le haut, ils remontent.</li><li>Relâcher. La disposition est gardée pour vous. <b>Échap</b> pendant le geste annule.</li></ol><p>Les lignes du planning ne bougent jamais.</p>`],
@@ -2133,6 +2139,12 @@ function navMotion(sd){
 let mapWin=null,mapObj=null;
 const geoCache=lsGet('planning-bocca-geo-v1')||{};
 const BOCCA=[43.5506,6.9497];
+// Leaflet (carte pour poser le point exact) : chargé seulement quand on en a besoin
+let leafletP=null;
+function loadLeaflet(){if(window.L)return Promise.resolve();if(leafletP)return leafletP;
+  leafletP=new Promise((ok,ko)=>{const l=document.createElement('link');l.rel='stylesheet';l.href='vendor/leaflet/leaflet.css';document.head.appendChild(l);
+    const sc=document.createElement('script');sc.src='vendor/leaflet/leaflet.js';sc.onload=()=>ok();sc.onerror=()=>{leafletP=null;ko()};document.head.appendChild(sc)});
+  return leafletP}
 function openMap(o){
   const ch=chan(o.ch);if(!ch)return;
   if(!mapWin){mapWin=document.createElement('div');mapWin.className='mapwin';mapWin.innerHTML=`<div class="mw-h"><span class="mw-t"></span><a class="mw-g" target="_blank" rel="noopener">Itinéraire ↗</a><button class="mw-x" aria-label="Fermer la carte" title="Fermer">×</button></div><div class="mw-body"><iframe class="mw-gm" title="Google Maps" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="mw-m" hidden></div></div><div class="mw-f"><span class="mw-s"></span><span class="mw-b"></span></div>`;document.body.appendChild(mapWin);
@@ -2151,7 +2163,8 @@ function openMap(o){
     mapWin.querySelector('.mw-g').href='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(k);
     st.textContent=msg||(chan(id).geo?'Point du chantier enregistré.':'Position d\'après l\'adresse.');bt.innerHTML='<button class="btn sm" data-mw="place">Placer le point exact</button>';
     bt.querySelector('[data-mw=place]').onclick=place};
-  const place=()=>{gm.hidden=true;mm.hidden=false;let tmp=null;
+  const place=()=>{if(!window.L){st.textContent='Chargement de la carte…';loadLeaflet().then(place,()=>google('Carte indisponible : vérifiez la connexion.'));return}
+    gm.hidden=true;mm.hidden=false;let tmp=null;
     if(!mapObj){mapObj=L.map(mm,{zoomControl:true,scrollWheelZoom:true}).setView(BOCCA,12);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(mapObj)}
     setTimeout(()=>mapObj.invalidateSize(),30);if(mapObj._pin){mapObj.removeLayer(mapObj._pin);mapObj._pin=null}
     const c=chan(id),start=c.geo||geoCache[q.toLowerCase()];mapObj.setView(start||BOCCA,start?17:12);
@@ -2253,12 +2266,13 @@ function renderChrome(){
 const popEl=document.getElementById('pop'),drawerEl=document.getElementById('drawer');
 let popH={},popAnchor=null;
 function openPop(anchor,html,handlers){
+  document.querySelectorAll('.hb.pop-hold').forEach(h=>h.classList.remove('open','pop-hold'));{const hb=anchor&&anchor.closest&&anchor.closest('.hb');if(hb)hb.classList.add('open','pop-hold')}
   popH=handlers||{};popAnchor=anchor;popEl.innerHTML=html;popEl.hidden=false;placePop();
   const f=popEl.querySelector('input:not([type=checkbox]),select,textarea');if(f&&window.matchMedia('(pointer:fine)').matches)f.focus();
 }
 function placePop(){if(!popAnchor)return;let r=popAnchor.getBoundingClientRect();if(!r.width&&lastRect)r=lastRect;const w=popEl.offsetWidth,h=popEl.offsetHeight;
   let x=Math.min(Math.max(8,r.left),window.innerWidth-w-8),y=r.bottom+6;if(y+h>window.innerHeight-8)y=Math.max(8,r.top-h-6);popEl.style.left=x+'px';popEl.style.top=y+'px'}
-function closePop(){if(popEl.hidden)return;popEl.hidden=true;if(popEl.classList.contains('as-sheet')){popEl.classList.remove('as-sheet','sheet-scroll');popEl.style.transform='';document.documentElement.classList.remove('sheet-open')}popEl.innerHTML='';popH={};popAnchor=null;setEditing(null);if(renderPending)render()}
+function closePop(){if(popEl.hidden)return;popEl.hidden=true;document.querySelectorAll('.hb.pop-hold').forEach(h=>h.classList.remove('open','pop-hold'));if(popEl.classList.contains('as-sheet')){popEl.classList.remove('as-sheet','sheet-scroll');popEl.style.transform='';document.documentElement.classList.remove('sheet-open')}popEl.innerHTML='';popH={};popAnchor=null;setEditing(null);if(renderPending)render()}
 function runPop(el){const fn=popH[el.dataset.pa];if(!fn)return;const ar=popAnchor&&popAnchor.getBoundingClientRect();lastRect=ar;const r=fn(el);if(r==='keep')return;if(r==='close'){closePop();return}commit();closePop();render()}
 let lastRect=null;
 /* Double sécurité : petite fenêtre de confirmation. anchor=null remplace la fenêtre déjà ouverte. */
@@ -2405,9 +2419,10 @@ function act(a,el,o,e){
     case 'edit':return openOrderForm(o);
     case 'menu':return orderMenu(o,el);
     case 'tour':{const t=o.tours[i];if(t.mv)return tourPop(o,i,el);if(!t.s&&!t.p&&!t.c)return platePick(o,i,el);if(!t.s){if(o.date>TODAY){const id=o.id;setEditing(id);return early(o,el,()=>{byId(id).tours[i].s=1})}t.s=1;break}const id=o.id;setEditing(id);return confirmPop(el,'Retirer le stabilo ?',`Tour ${i+1}${t.p?' · '+t.p:''} · ${fmt(t.v)} m³ est noté chargé.`,'Oui, pas chargé',()=>{byId(id).tours[i].s=0},true)}
-    case 'plus':{const id=o.id;setEditing(id);return openPop(el,`<div class="pop-h">Complément à confirmer</div><p class="muted" style="margin:0;font-size:13px">${esc(cl(o.cl).n)} · ${fmt(total(o))} m³ <b>et plus</b> : le client prendra sans doute 1 tour de plus, quantité à confirmer.</p><button class="pop-b on" data-pa="add">Complément confirmé : ajouter le tour…</button><button class="pop-b" data-pa="no">Pas de complément : retirer le [+]</button>`,
-      {add(){const a=popAnchor;byId(id).plus=false;commit();jlog(byId(id).date,`Complément confirmé : ${siteName(byId(id))}`);render(true);platePick(byId(id),null,document.querySelector(`#row-${id} .t-add`)||a);return 'keep'},no(){byId(id).plus=false;toast('Complément retiré')}})}
-    case 'addtour':return platePick(o,null,el);
+    case 'plus':{const id=o.id;setEditing(id);return openPop(el,`<div class="pop-h">Complément prévu</div><p class="muted" style="margin:0;font-size:13px">${esc(cl(o.cl).n)} · ${fmt(total(o))} m³ <b>et plus</b> : le client doit confirmer un tour de plus.</p><button class="pop-b on" data-pa="add">Le client le prend : charger le complément…</button><button class="pop-b" data-pa="no">Pas de complément : retirer</button>`,
+      {add(){const a=popAnchor;platePick(byId(id),null,a,{fromPlus:true});return 'keep'},
+       no(){const x=byId(id);x.plus=false;jlog(x.date,`Pas de complément : ${siteName(x)}`);toast(statut(x)==='terminee'?'Pas de complément : chantier terminé':'Complément retiré')}})}
+    case 'addtour':return platePick(o,null,el,{cpl:true});
     case 'cpl-add':o.plus=true;jlog(o.date,`Complément à confirmer : ${siteName(o)}`);toast('Complément à confirmer ajouté');break;
     case 'pill':o.pills[i].on=!o.pills[i].on;break;
     case 'pill-x':{e.stopPropagation();const id=o.id;setEditing(id);return confirmPop(el,'Supprimer ce commentaire ?',o.pills[i].t,'Oui, supprimer',()=>{byId(id).pills.splice(i,1)},true)}
@@ -2418,7 +2433,8 @@ function act(a,el,o,e){
       openPop(el,`<div class="pop-h">Formule · ${esc(nomC)}</div><form data-pa="save" class="pf-fx"><div class="fxw" id="pf-fx"></div><button class="btn primary" type="submit">Enregistrer</button></form>`,
         {save(){const q=document.getElementById('fx-q'),sp=document.getElementById('fx-sap');const f=FX.line(q?q.value:'').trim(),sap=(sp?sp.value:'').trim();
           if(!f){toast('Formule vide');return 'keep'}if(sap&&!/^\d{8}$/.test(sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}
-          const x=byId(id);x.f=f;x.sap=sap;learnFormule(f,sap)}});
+          const x=byId(id);if(f===(x.f||'')&&sap===(sapOf(x)||''))return;
+          return confirmPop(null,'Changer la formule ?',`${x.f||'—'}${sapOf(x)?' · SAP '+sapOf(x):''}  →  ${f}${sap?' · SAP '+sap:''}`,'Oui, changer la formule',()=>{const y=byId(id);y.f=f;y.sap=sap;learnFormule(f,sap);jlog(y.date,`Formule changée : ${siteName(y)} · ${f}`)})}});
       FX.setCfg(fxCat());FX.mount(popEl.querySelector('#pf-fx'),{value:o.f||'',sap:sapOf(o)||'',last:lastFormules(nomC)});placePop();return}
       return formPop(el,'Formule',[{k:'f',label:'Formule (comme sur le papier)',val:o.f,list:S.formules.map(x=>x.f)},{k:'sap',label:'N° SAP (8 chiffres, facultatif)',val:sapOf(o),ph:'60012481'}],v=>{if(v.sap&&!/^\d{8}$/.test(v.sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}const x=byId(id);x.f=v.f;x.sap=v.sap;learnFormule(v.f,v.sap)})}
     case 'pompe':{const id=o.id,b=o.pompe.bon;setEditing(id);return confirmPop(el,b?'Remettre le bon de pompe à faire ?':'Confirmer : bon de pompe fait ?',ordLbl(o),b?'Oui, pas encore fait':'Oui, le bon est fait',()=>{byId(id).pompe.bon=!b;toast(b?'Bon de pompe à faire':'Bon de pompe fait')},b)}
@@ -2477,8 +2493,13 @@ function act(a,el,o,e){
     case 'semi-tadd':{const d=dayOf(el);return semiTourPop(el,d,i,null)}
     case 'semi-ed':{const d=dayOf(el);const x=day(d).semis[i];return formPop(el,'Semi',[{k:'nom',label:'Nom affiché (Semi 1 ou prénom du chauffeur)',val:x.nom},{k:'ch',label:'Prénom du chauffeur',val:x.ch||''},{k:'h',label:'Heure de départ',type:'time',val:x.h,step:900},{k:'note',label:'Remarque (provenance particulière…)',val:x.note||''},{k:'rep',label:'Reporter au lendemain',type:'check',val:false},{k:'del',label:'Supprimer cette semi',type:'check',val:false}],
       v=>{const L=day(d).semis;if(v.del)return confirmPop(null,'Supprimer '+x.nom+' ?','La semi et ses tours du jour.','Oui, supprimer',()=>{day(d).semis.splice(day(d).semis.indexOf(x),1)},true);Object.assign(x,{nom:v.nom||x.nom,ch:v.ch,h:v.h||x.h,note:v.note});if(v.rep){L.splice(i,1);const nd=step(d,1);x.tours.forEach(t=>t.s=0);x.note=(x.note?x.note+' · ':'')+'reporté du '+dayShort(d).toLowerCase();day(nd).semis.push(x);toast('Semi reportée au '+dayShort(nd))}})}
-    case 'cim-add':{const d=dayOf(el);return formPop(el,'Livraison de ciment',[{k:'prod',label:'Ciment',val:'',ph:'Ex. '+CIML().slice(0,3).join(', ')},{k:'hs',label:'Heure prévue',type:'select',opts:H30(),val:'07:00'}],
+    case 'cim-add':{const d=dayOf(el);return formPop(el,'Livraison de liant',[{k:'prod',label:'Liant (ciment)',val:'',ph:'Ex. '+CIML().slice(0,3).join(', ')},{k:'hs',label:'Heure prévue',type:'select',opts:H30(),val:'07:00'}],
       v=>{if(!v.prod){toast('Indiquez le ciment');return 'keep'}learnList('cim',v.prod,CIMENTS);const hs=[v.hs];const L=day(d).ciments;const ex=L.find(c=>c.prod.toLowerCase()===v.prod.toLowerCase());if(ex)hs.forEach(h=>ex.rec.push({h,s:0}));else L.push({prod:v.prod,rec:hs.map(h=>({h,s:0}))});sortCim(ex||L[L.length-1])})}
+    case 'cim-ed':{const d=dayOf(el);const c=day(d).ciments[i];if(!c)return;
+      return openPop(el,`<div class="pop-h">Liant · ${esc(c.prod)}</div><form data-pa="ren"><label class="fl">Nom du liant (ciment)<input id="pf-cn" value="${esc(c.prod)}" autocomplete="off"></label><button class="btn primary" type="submit">Enregistrer</button></form><button class="pop-b" data-pa="addl">+ Une livraison de ${esc(c.prod)}</button><button class="pop-b danger" data-pa="del">Supprimer ce liant et ses ${c.rec.length} livraison${c.rec.length>1?'s':''}</button>`,
+        {ren(f){const v=f.querySelector('#pf-cn').value.trim();if(!v){toast('Indiquez le liant');return 'keep'}const x=day(d).ciments[i];x.prod=v;learnList('cim',v,CIMENTS)},
+         addl(){const x=day(d).ciments[i];return formPop(popAnchor,'Livraison '+x.prod,[{k:'h',label:'Heure',type:'time',val:'12:00',step:900}],v=>{if(!v.h)return 'keep';x.rec.push({h:v.h,s:0});sortCim(x)})},
+         del(){return confirmPop(null,'Supprimer ce liant ?',c.prod+' · '+c.rec.length+' livraison'+(c.rec.length>1?'s':''),'Oui, supprimer',()=>{day(d).ciments.splice(i,1)},true)}})}
     case 'cim-t':{const x=day(dayOf(el)).ciments[i].rec[+el.dataset.k];x.s=x.s?0:1;break}
     case 'cim-tadd':{const d=dayOf(el);const c=day(d).ciments[i];return formPop(el,'Livraison '+c.prod,[{k:'h',label:'Heure',type:'time',val:'12:00',step:900}],v=>{if(!v.h)return 'keep';c.rec.push({h:v.h,s:0});sortCim(c)})}
     case 'journal':{const d=view.date;const h=`<div class="pop-h">Journal · ${esc(dayShort(d))}</div>`;openPop(el,h+'<p class="muted" style="margin:0">Chargement…</p>',{});
@@ -2501,7 +2522,7 @@ function act(a,el,o,e){
     case 'aide-close':return closeAide();
     case 'aide-all':document.querySelectorAll('.aide-d:not([hidden])').forEach(d=>d.open=el.dataset.v==='1');return;
     case 'clo-rep':{const d=view.date;return listPop(el,'Replacer les tours non chargés vers…',AG(),c=>{const w=closedWin(d);let n=0,m=0;ordersOn(d).filter(o=>statut(o)!=='annulee'&&inWin(o.h,w)).forEach(o=>TR(o).forEach(t=>{if(!t.s&&!t.c){t.c=c;t.s=1;n++;m+=t.v}}));if(n)jlog(d,`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c} (${fmt(m)} m³) · centrale fermée`);toast(n?`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c}`:'Aucun tour à replacer')})}
-    case 'map':{if(!(window.L&&window.STANDALONE))return;e.preventDefault();return openMap(o)}
+    case 'map':{if(e.ctrlKey||e.metaKey||e.shiftKey)return;e.preventDefault();return openMap(o)}
     case 'liens-cfg':return openConfig('cfg-liens');
     case 'clot':{const d=dayOf(el);const dd=day(d);const pdf=()=>savePDF(`cloture-la-bocca-${d}.pdf`,()=>planningPDF([d],'A4'));if(dd.cloture){pdf();return}
       return confirmPop(el,'Clôturer la journée ?',dayShort(d)+' · le PDF de clôture sera téléchargé.','Oui, clôturer',()=>{const x=day(d);const n=new Date();x.cloture={by:author(),at:`${pad(n.getHours())}:${pad(n.getMinutes())}`};jlog(d,'Journée clôturée');pdf()})}
@@ -2515,6 +2536,10 @@ function act(a,el,o,e){
   }
   commit();render(true);
 }
+// encadré de la semaine (Agrégats) élargi au survol : ne dépasse pas à droite de l'écran
+document.addEventListener('mouseover',e=>{const p=e.target.closest&&e.target.closest('.grid3>.panel.agg-p');if(!p||p.dataset.sh)return;p.dataset.sh='1';
+  requestAnimationFrame(()=>{const over=p.getBoundingClientRect().right-(innerWidth-12);if(over>0)p.style.transform=`translateX(${-over}px)`})});
+document.addEventListener('mouseout',e=>{const p=e.target.closest&&e.target.closest('.grid3>.panel.agg-p');if(!p||(e.relatedTarget&&p.contains(e.relatedTarget)))return;delete p.dataset.sh;p.style.transform=''});
 function dayOf(el){const p=el.closest('[data-day]');return p?p.dataset.day:view.date}
 function learnFormule(f,sap){if(!f||attente(f))return;const k=S.formules.find(x=>x.f.toLowerCase()===f.toLowerCase());if(k){if(sap)k.sap=sap}else if(sap)S.formules.push({f,sap})}
 

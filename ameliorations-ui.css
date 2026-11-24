@@ -65,7 +65,7 @@ body { transition: background-color .22s, color .22s; }
 
 /* ---------- 3. Grille du jour : la formule en entier ---------- */
 .cols, .cols.simple {
-  --c: 78px minmax(110px, 1fr) 72px minmax(120px, .95fr) minmax(190px, 1.1fr) minmax(104px, .7fr) minmax(124px, .8fr) minmax(170px, 1.25fr) 32px !important;
+  --c: 78px minmax(110px, 1fr) 92px minmax(120px, .95fr) minmax(190px, 1.1fr) minmax(104px, .7fr) minmax(124px, .8fr) minmax(170px, 1.25fr) 32px !important;
 }
 .row > .r-fo { overflow: visible; }
 .row .r-fo .mo, .row .r-fo span { text-overflow: clip; white-space: nowrap; }
@@ -360,3 +360,14 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 #pop .pf-fx .fxw .qrow { grid-template-columns: minmax(0, 1fr) 112px; }
 #pop .pf-fx .fxw .qin.qsap { padding: 0 6px; letter-spacing: 0; }
 @media (max-width: 640px) { #pop .pf-fx .fxw .qin { font-size: 16px; height: 46px; } }
+
+/* Agrégats : nom du liant cliquable, deux boutons en bas, encadré de la semaine élargi au survol */
+.s-cn { font-weight: 700; padding: 0 4px; border-radius: 4px; white-space: nowrap; flex: none; }
+.s-cn:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.hb-add, .agg-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.agg-btns { margin-top: 8px; }
+.grid3 > .panel.agg-p { position: relative; transition: box-shadow .15s ease; }
+.grid3 > .panel.agg-p:hover, .grid3 > .panel.agg-p:focus-within {
+  z-index: 6; width: max-content; min-width: 100%; max-width: min(760px, calc(100vw - 230px));
+  box-shadow: var(--shadow); background: var(--panel);
+}
