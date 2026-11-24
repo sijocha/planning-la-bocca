@@ -349,3 +349,7 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 /* [+] orange : complément à confirmer en un clic */
 .t-add.t-cpl { border-color: var(--orange) !important; color: var(--orange) !important; background-color: color-mix(in srgb, var(--orange) 10%, transparent) !important; font-weight: 700; }
 .t-add.t-cpl:hover { background-color: var(--orange) !important; color: #fff !important; }
+
+/* Installer l'application : marche à suivre */
+.inst-ol { margin: 4px 0 0; padding-left: 20px; font-size: 13.5px; line-height: 1.5; }
+.inst-ol li { margin: 3px 0; }

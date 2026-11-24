@@ -1,5 +1,6 @@
 <!doctype html><html lang="fr"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <title>Planning La Bocca</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#141413"><link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="La Bocca"><meta name="apple-mobile-web-app-status-bar-style" content="black">
 <script>window.STANDALONE=true;</script>
 <script src="vendor/supabase-2.119.0.js"></script>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1373,7 +1374,7 @@ table.conv tfoot td.tours-tot{line-height:1.6}table.conv tfoot td.tours-tot .btn
 }
 @media (prefers-reduced-motion:reduce){#gate *,#gate *::before,#gate *::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 </style>
-<link rel="stylesheet" href="ameliorations-ui.css?v=10">
+<link rel="stylesheet" href="ameliorations-ui.css?v=11">
 <link rel="stylesheet" href="formules.css?v=3">
 
 </head>
@@ -1966,6 +1967,8 @@ const AIDE=[
  ['Fin de journée, sauvegarde',[
   ['centraliste','Clôturer la journée',`<p>Badge du compte → <b>Clôturer la journée</b> → confirmation. Le PDF de clôture se télécharge et la clôture est notée au journal. Ensuite, le même bouton permet de retélécharger le PDF.</p><p>Le <b>dernier jour ouvré du mois</b> (hors week-end), le badge propose aussi <b>Imprimer le mois</b> (convocations).</p>`],
   ['tous','Imprimer, PDF et journal',`<ul><li><b>Imprimer</b> : badge du compte → Journée → <b>Imprimer / PDF</b> : jour ou plusieurs jours, A4 ou A3.</li><li><b>Journal</b> : toutes les modifications du jour, avec l'heure et l'auteur.</li><li>Dans Claude, le téléchargement demande d'être connecté à un compte Claude ; la version en ligne télécharge directement.</li></ul>`],
+  ['tous','Une commande ouverte par quelqu\'un d\'autre (verrou)',`<ul><li>Quand quelqu'un ouvre une commande pour la modifier, sa ligne s'affiche <b>grisée</b> avec « <b>Verrouillée · nom modifie</b> » chez tous les autres.</li><li>Tant qu'elle est verrouillée, on ne peut ni l'ouvrir ni cliquer sur ses boutons (tours, pompe, paiement, formule…) : un message dit qui la modifie.</li><li>Le verrou se libère dès que la personne <b>valide ou ferme</b> la commande, ou après <b>5 minutes sans action</b> (rien n'est enregistré dans ce cas).</li><li>Si deux personnes ouvrent la même commande au même instant, la première garde la main ; l'autre voit un message et sa fenêtre se ferme.</li><li>Téléphone mis en veille avec une commande ouverte : au-delà de 5 minutes, la commande est libérée. Si quelqu'un d'autre l'a ouverte entre-temps, c'est lui qui garde la main.</li></ul>`],
+  ['tous','Installer l\'application sur le téléphone',`<p>Le planning s'installe comme une application, sans magasin d'applications : une icône « <b>La Bocca</b> » sur l'écran d'accueil, en plein écran, mise à jour automatiquement.</p><ul><li><b>Android</b> : ouvrir le planning dans <b>Chrome</b> → menu <b>⋮</b> → <b>Installer l'application</b> (ou Ajouter à l'écran d'accueil).</li><li><b>iPhone</b> : ouvrir le planning dans <b>Safari</b> → bouton <b>Partager</b> → <b>Sur l'écran d'accueil</b> → Ajouter. Se connecter une fois avec Google dans l'application.</li><li>Raccourci : badge du compte → Aide → <b>Installer l'application sur cet appareil</b>.</li></ul>`],
   ['tous','Synchronisation et hors connexion',`<ul><li>Badge du compte <b>vert</b> = tout est synchronisé ; <b>rouge</b> = pas encore.</li><li>Sans réseau, on continue de travailler : les changements partent au retour du réseau.</li><li>Badge → <b>Forcer la synchronisation</b> en cas de doute.</li></ul>`],
   ['tous','Carte du chantier',`<p>Clic sur le nom du chantier : une petite fenêtre <b>Google Maps</b> s'ouvre (version en ligne), à déplacer par sa barre noire. <b>×</b> orange pour fermer, <b>Itinéraire ↗</b> pour ouvrir Google Maps.</p><ol><li><b>Placer le point exact</b> (en bas de la fenêtre).</li><li>Cliquer à l'endroit du chantier (zoom à la molette).</li><li><b>Valider ce point</b>. Il est gardé pour ce chantier, y compris quand on duplique la commande.</li></ol><p>Dans Claude, Google Maps s'ouvre dans un onglet.</p>`]]]
 ];
@@ -2052,10 +2055,15 @@ function setEditing(id){if(id&&ME&&ME.role==='lecture')id=null;   // lecture seu
   myEdit=id||null;myEditAt=id?Date.now():0;clearTimeout(idleT);if(id)idleT=setTimeout(lockIdle,LOCK_IDLE);if(room)room.presence({edit:myEdit,editAt:myEditAt}).catch(()=>{})}
 function lockIdle(){if(!myEdit)return;closePop();closeDrawer();toast('5 minutes sans action : la commande est libérée, rien n\'a été enregistré')}
 ['input','pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(myEdit){clearTimeout(idleT);idleT=setTimeout(lockIdle,LOCK_IDLE)}},true));
+// retour de veille (téléphone dans la poche) : au-delà de 5 min le verrou est rendu ; sinon on se ré-annonce comme le plus récent,
+// pour que celui qui a ouvert la commande pendant l'absence garde la main
+let hiddenAt=0;document.addEventListener('visibilitychange',()=>{if(document.hidden){hiddenAt=Date.now();return}
+  if(!myEdit||!hiddenAt)return;const away=Date.now()-hiddenAt;hiddenAt=0;if(away>=LOCK_IDLE){lockIdle();return}
+  myEditAt=Date.now();if(room)room.presence({edit:myEdit,editAt:myEditAt}).catch(()=>{})});
 const lockedBy=id=>editingMap()[id]||null;
 function lockStop(id){const who=id&&lockedBy(id);if(!who)return false;toast(`${who} modifie cette commande : elle se libère dès sa validation`);return true}
 // deux personnes au même instant : la première garde la main, l'autre est sortie
-function lockRace(){if(!myEdit)return;const riv=peers.find(p=>!p.sameTab&&p.presence&&p.presence.edit===myEdit&&(p.presence.editAt||0)<myEditAt);if(!riv)return;const n=riv.presence.nom||'Quelqu\'un';closePop();closeDrawer();toast(`${n} a pris la main sur cette commande juste avant vous`)}
+function lockRace(){if(!myEdit)return;const riv=peers.find(p=>!p.sameTab&&p.presence&&p.presence.edit===myEdit&&(p.presence.editAt||0)<myEditAt);if(!riv)return;const n=riv.presence.nom||'Quelqu\'un';closePop();closeDrawer();toast(`${n} a la main sur cette commande : votre saisie n'a pas été enregistrée`)}
 function whoHTML(){
   const list=peers.filter(p=>p.kind==='viewer'&&!p.isMe);
   const seen=new Set();
@@ -2586,6 +2594,22 @@ function convPrintPop(anchor){
   {go(f){const mo=f.querySelector('#cp-m').value;if(!/^\d{4}-\d{2}$/.test(mo)){toast('Choisissez un mois');return 'keep'}const fi=f.querySelector('input[name="cp-f"]:checked').value==='1';const fm=f.querySelector('input[name="cp-s"]:checked').value;savePDF(`convocations-la-bocca-${mo}-${fm}${fi?'':'-vide'}.pdf`,()=>convPDF(mo,fi,fm))}});
 }
 
+/* ---------- application installable (PWA) ---------- */
+let installEvt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e});
+window.addEventListener('appinstalled',()=>{installEvt=null;toast('Application installée : retrouvez « La Bocca » sur l\'écran d\'accueil')});
+const isInstalled=()=>!!((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone);
+const isIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+async function installApp(anchor){
+  if(installEvt){const e=installEvt;installEvt=null;e.prompt();try{await e.userChoice}catch(_){}return}
+  const ios=isIOS();
+  openPop(anchor,`<div class="pop-h">Installer l'application</div>${ios?
+   `<ol class="inst-ol"><li>Ouvrez cette page dans <b>Safari</b>.</li><li>Touchez le bouton <b>Partager</b> (carré avec une flèche vers le haut).</li><li>Choisissez <b>Sur l'écran d'accueil</b>, puis <b>Ajouter</b>.</li><li>Ouvrez « La Bocca » depuis l'icône et connectez-vous une fois avec Google.</li></ol>`:
+   `<ol class="inst-ol"><li>Ouvrez cette page dans <b>Chrome</b>.</li><li>Touchez le menu <b>⋮</b> en haut à droite.</li><li>Choisissez <b>Installer l'application</b> (ou <b>Ajouter à l'écran d'accueil</b>).</li><li>Ouvrez « La Bocca » depuis l'icône.</li></ol>`}
+   <p class="muted" style="margin:6px 0 0;font-size:12.5px">Sur ordinateur, Chrome et Edge proposent aussi l'installation : icône à droite de la barre d'adresse.</p>`)
+}
+if('serviceWorker' in navigator&&location.protocol==='https:')window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+
 function settingsPop(anchor){
   const u=prefs.user||{};const ce=role()==='centraliste';const d=view.date;const c=dayRO(d).cloture;
   const lastWD=(()=>{if(isWE(d))return false;let n=addDays(d,1);while(isWE(n))n=addDays(n,1);return n.slice(0,7)!==d.slice(0,7)})();
@@ -2602,12 +2626,12 @@ function settingsPop(anchor){
      <button class="pop-b ${lastWD?'strong':''}" data-pa="moisclot">Clôture de fin de mois : ${esc(moisN)} (PDF + .json)</button>
      <button class="pop-b" data-pa="archive">Consulter un mois archivé (.json)…</button></section>`:''}
    ${ce||role()==='commercial'||isAdmin()?`<section class="ps"><div class="pop-l">Centrale</div><button class="pop-b" data-pa="cfg">Administration · catalogue de la centrale</button>${ce?layoutPopHTML():''}</section>`:''}
-   <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button></section>
+   <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button>${isInstalled()?'':'<button class="pop-b" data-pa="install">Installer l\'application sur cet appareil</button>'}</section>
    <section class="ps"><div class="pop-l">Affichage</div><div class="pop-grid">${[['auto','Auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div></section>
 
    <section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}</button></section>
    <section class="ps ps-sync"><div class="pop-l">Synchronisation et état</div><div class="sync-box">${syncDetail()}</div><button class="pop-b" data-pa="force">Forcer la synchronisation</button></section>`,
-  {journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
+  {install(){const a=popAnchor;setTimeout(()=>installApp(a));return 'close'},journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
    'lay-reset'(){const k=meKey();const had=prefs.layouts&&prefs.layouts[k];if(had){delete prefs.layouts[k];savePrefs()}applyLayout();toast(had?'Disposition réinitialisée : '+(S.config&&S.config.layout?'celle de la centrale':'celle par défaut'):'Déjà sur la disposition de la centrale');return 'close'},
    'lay-set'(){const L=layoutGet();S.config.layout={order:L.order.slice(),pos:L.pos};const k=meKey();if(prefs.layouts&&prefs.layouts[k]){delete prefs.layouts[k];savePrefs()}toast('Disposition de la centrale enregistrée pour tous les centralistes')},
    moisclot(){setTimeout(()=>clotureMois(view.date));return 'close'},archive(){setTimeout(consulterArchive);return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'}});
