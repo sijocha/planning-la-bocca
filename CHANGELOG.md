@@ -53,3 +53,4 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - `index.html` découpé en `styles.css` et `app.js` : ouverture plus rapide, rien ne change à l'écran.
 - Le planning ne se redessine plus quand l'onglet est caché.
 - Mode d'emploi mis à jour.
+- Ce journal des modifications est publié à chaque grosse session (fichier `CHANGELOG.md` et page *Releases* du dépôt).

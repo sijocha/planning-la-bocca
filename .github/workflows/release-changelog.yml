@@ -1,0 +1,40 @@
+name: Publier le changelog
+
+# À chaque mise à jour de CHANGELOG.md, la session la plus récente devient une « release » datée.
+on:
+  push:
+    branches: [main]
+    paths: [CHANGELOG.md]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Créer ou mettre à jour la release de la dernière session
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import re, subprocess, unicodedata
+          txt = open("CHANGELOG.md", encoding="utf-8").read()
+          parts = re.split(r"^## ", txt, flags=re.M)[1:]
+          titre, _, corps = parts[0].partition("\n")
+          titre = titre.strip()
+          mois = {"janvier":1,"février":2,"mars":3,"avril":4,"mai":5,"juin":6,"juillet":7,"août":8,"septembre":9,"octobre":10,"novembre":11,"décembre":12}
+          m = re.match(r"(\d{1,2}) (\S+) (\d{4})", titre)
+          tag = f"{m.group(3)}-{mois[m.group(2).lower()]:02d}-{int(m.group(1)):02d}" if m else re.sub(r"\W+", "-", unicodedata.normalize("NFKD", titre)).strip("-").lower()
+          open("notes.md", "w", encoding="utf-8").write(corps.strip() + "\n")
+          open("tag.txt", "w").write(tag)
+          open("titre.txt", "w", encoding="utf-8").write("Nouveautés du " + titre)
+          PY
+          TAG=$(cat tag.txt); TITRE=$(cat titre.txt)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TITRE" --notes-file notes.md
+          else
+            gh release create "$TAG" --title "$TITRE" --notes-file notes.md --target "$GITHUB_SHA"
+          fi
