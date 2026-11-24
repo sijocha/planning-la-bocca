@@ -654,6 +654,7 @@ let room=null,peers=[];
 function editingMap(){const m={};Object.keys(dbLocks).forEach(id=>{const w=dbLockOther(id);if(w)m[id]=w});peers.forEach(p=>{if(p.sameTab)return;const pr=p.presence||{};if(pr.edit&&pr.nom)m[pr.edit]=`${pr.nom}${pr.role?' ('+(ROLES[pr.role]||pr.role).toLowerCase()+')':''}`});return m}
 let myEdit=null,myEditAt=0,idleT=null;const LOCK_IDLE=5*60e3;
 function setEditing(id){if(id&&ME&&ME.role==='lecture')id=null;   // lecture seule : n'ouvre jamais de verrou
+  if((id||null)===myEdit){if(id){clearTimeout(idleT);idleT=setTimeout(lockIdle,LOCK_IDLE)}return}   // même commande : on garde le verrou tel quel
   dbLockSet(id);
   myEdit=id||null;myEditAt=id?Date.now():0;clearTimeout(idleT);if(id)idleT=setTimeout(lockIdle,LOCK_IDLE);if(room)room.presence({edit:myEdit,editAt:myEditAt}).catch(()=>{})}
 function lockIdle(){if(!myEdit)return;closePop();closeDrawer();toast('5 minutes sans action : la commande est libérée, rien n\'a été enregistré')}
@@ -903,7 +904,7 @@ function openPop(anchor,html,handlers){
 }
 function placePop(){if(!popAnchor)return;let r=popAnchor.getBoundingClientRect();if(!r.width&&lastRect)r=lastRect;const w=popEl.offsetWidth,h=popEl.offsetHeight;
   let x=Math.min(Math.max(8,r.left),window.innerWidth-w-8),y=r.bottom+6;if(y+h>window.innerHeight-8)y=Math.max(8,r.top-h-6);popEl.style.left=x+'px';popEl.style.top=y+'px'}
-function closePop(){if(popEl.hidden)return;popEl.hidden=true;document.querySelectorAll('.hb.pop-hold').forEach(h=>h.classList.remove('open','pop-hold'));if(popEl.classList.contains('as-sheet')){popEl.classList.remove('as-sheet','sheet-scroll');popEl.style.transform='';document.documentElement.classList.remove('sheet-open')}popEl.innerHTML='';popH={};popAnchor=null;setEditing(null);if(renderPending)render()}
+function closePop(){if(popEl.hidden)return;popEl.hidden=true;document.querySelectorAll('.hb.pop-hold').forEach(h=>h.classList.remove('open','pop-hold'));if(popEl.classList.contains('as-sheet')){popEl.classList.remove('as-sheet','sheet-scroll');popEl.style.transform='';document.documentElement.classList.remove('sheet-open')}popEl.innerHTML='';popH={};popAnchor=null;setEditing(!drawerEl.hidden&&formCtx&&formCtx.id?formCtx.id:null);if(renderPending)render()}
 function runPop(el){const fn=popH[el.dataset.pa];if(!fn)return;const ar=popAnchor&&popAnchor.getBoundingClientRect();lastRect=ar;const r=fn(el);if(r==='keep')return;if(r==='close'){closePop();return}commit();closePop();render()}
 let lastRect=null;
 /* Double sécurité : petite fenêtre de confirmation. anchor=null remplace la fenêtre déjà ouverte. */
