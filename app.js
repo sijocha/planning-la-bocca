@@ -569,7 +569,7 @@ const AIDE=[
   ['centraliste','Clôturer la journée',`<p>Badge du compte → <b>Clôturer la journée</b> → confirmation. Le PDF de clôture se télécharge et la clôture est notée au journal. Ensuite, le même bouton permet de retélécharger le PDF.</p><p>Le <b>dernier jour ouvré du mois</b> (hors week-end), le badge propose aussi <b>Imprimer le mois</b> (convocations).</p>`],
   ['tous','Imprimer, PDF et journal',`<ul><li><b>Imprimer</b> : badge du compte → Journée → <b>Imprimer / PDF</b> : jour ou plusieurs jours, A4 ou A3.</li><li><b>Journal</b> : toutes les modifications du jour, avec l'heure et l'auteur.</li><li>Dans Claude, le téléchargement demande d'être connecté à un compte Claude ; la version en ligne télécharge directement.</li></ul>`],
   ['tous','Ouverture exceptionnelle et nuit',`<ul><li><b>Samedi ou dimanche</b> : aller sur le jour → <b>Créer une journée planning ce jour</b>. Le jour s'ajoute au planning, à la navigation et à l'onglet <b>Agrégats</b>.</li><li><b>Nuit</b> : saisir le chantier sur le jour où il <b>commence</b> (ex. mercredi 22 h 00). À partir de 19 h, il s'affiche dans une section <b>☾ Nuit</b>.</li><li>Le lendemain, le planning reprend ces chantiers tout en haut, dans <b>☾ Nuit précédente</b> (fond bleuté) : celui qui prend le poste le matin voit les tours chargés et ceux qui restent, et peut continuer à remplir les bulles.</li><li>Vendredi soir (ou veille d'un jour fermé) : le <b>samedi s'affiche tout seul</b> avec la fin de la nuit, sans ouvrir de journée ; bouton <b>Créer une journée planning ce jour</b> si on travaille aussi le samedi.</li></ul>`],
-  ['tous','Une commande ouverte par quelqu\'un d\'autre (verrou)',`<ul><li>Quand quelqu'un ouvre une commande pour la modifier, sa ligne s'affiche <b>grisée</b> avec « <b>Verrouillée · nom modifie</b> » chez tous les autres.</li><li>Tant qu'elle est verrouillée, on ne peut ni l'ouvrir ni cliquer sur ses boutons (tours, pompe, paiement, formule…) : un message dit qui la modifie.</li><li>Le verrou se libère dès que la personne <b>valide ou ferme</b> la commande, ou après <b>5 minutes sans action</b> (rien n'est enregistré dans ce cas).</li><li>Si deux personnes ouvrent la même commande au même instant, la première garde la main ; l'autre voit un message et sa fenêtre se ferme.</li><li>Téléphone mis en veille avec une commande ouverte : au-delà de 5 minutes, la commande est libérée. Si quelqu'un d'autre l'a ouverte entre-temps, c'est lui qui garde la main.</li></ul>`],
+  ['tous','Une commande ouverte par quelqu\'un d\'autre (verrou)',`<ul><li>Quand quelqu'un ouvre une commande pour la modifier, sa ligne s'affiche <b>grisée</b> avec « <b>Verrouillée · nom modifie</b> » chez tous les autres.</li><li>Tant qu'elle est verrouillée, on ne peut ni l'ouvrir ni cliquer sur ses boutons (tours, pompe, paiement, formule…) : un message dit qui la modifie.</li><li>Le verrou se libère dès que la personne <b>valide ou ferme</b> la commande, ou après <b>5 minutes sans action</b> (rien n'est enregistré dans ce cas).</li><li>Le verrou est <b>tenu par la base</b> : même si l'affichage en direct d'un téléphone est en retard, la base refuse l'enregistrement d'une commande ouverte par quelqu'un d'autre (message « … modifie cette commande : votre changement n'a pas été enregistré »).</li><li>Si deux personnes ouvrent la même commande au même instant, la première garde la main ; l'autre voit un message et sa fenêtre se ferme.</li><li>Téléphone mis en veille avec une commande ouverte : au-delà de 5 minutes, la commande est libérée. Si quelqu'un d'autre l'a ouverte entre-temps, c'est lui qui garde la main.</li></ul>`],
   ['tous','Installer l\'application sur le téléphone',`<p>Le planning s'installe comme une application, sans magasin d'applications : une icône « <b>La Bocca</b> » sur l'écran d'accueil, en plein écran, mise à jour automatiquement.</p><ul><li><b>Android</b> : ouvrir le planning dans <b>Chrome</b> → menu <b>⋮</b> → <b>Installer l'application</b> (ou Ajouter à l'écran d'accueil).</li><li><b>iPhone</b> : ouvrir le planning dans <b>Safari</b> → bouton <b>Partager</b> → <b>Sur l'écran d'accueil</b> → Ajouter. Se connecter une fois avec Google dans l'application.</li><li>Raccourci : badge du compte → Aide → <b>Installer l'application sur cet appareil</b>.</li></ul>`],
   ['tous','Synchronisation et hors connexion',`<ul><li>Badge du compte <b>vert</b> = tout est synchronisé ; <b>rouge</b> = pas encore.</li><li>Sans réseau, on continue de travailler : les changements partent au retour du réseau.</li><li>Badge → <b>Forcer la synchronisation</b> en cas de doute.</li></ul>`],
   ['tous','Carte du chantier',`<p>Clic sur le nom du chantier : une petite fenêtre <b>Google Maps</b> s'ouvre (version en ligne), à déplacer par sa barre noire. <b>×</b> orange pour fermer, <b>Itinéraire ↗</b> pour ouvrir Google Maps.</p><ol><li><b>Placer le point exact</b> (en bas de la fenêtre).</li><li>Cliquer à l'endroit du chantier (zoom à la molette).</li><li><b>Valider ce point</b>. Il est gardé pour ce chantier, y compris quand on duplique la commande.</li></ol><p>Dans Claude, Google Maps s'ouvre dans un onglet.</p>`]]]
@@ -651,9 +651,10 @@ function liensHTML(){
 
 /* ---------- présence (qui modifie quoi) ---------- */
 let room=null,peers=[];
-function editingMap(){const m={};peers.forEach(p=>{if(p.sameTab)return;const pr=p.presence||{};if(pr.edit&&pr.nom)m[pr.edit]=`${pr.nom}${pr.role?' ('+(ROLES[pr.role]||pr.role).toLowerCase()+')':''}`});return m}
+function editingMap(){const m={};Object.keys(dbLocks).forEach(id=>{const w=dbLockOther(id);if(w)m[id]=w});peers.forEach(p=>{if(p.sameTab)return;const pr=p.presence||{};if(pr.edit&&pr.nom)m[pr.edit]=`${pr.nom}${pr.role?' ('+(ROLES[pr.role]||pr.role).toLowerCase()+')':''}`});return m}
 let myEdit=null,myEditAt=0,idleT=null;const LOCK_IDLE=5*60e3;
 function setEditing(id){if(id&&ME&&ME.role==='lecture')id=null;   // lecture seule : n'ouvre jamais de verrou
+  dbLockSet(id);
   myEdit=id||null;myEditAt=id?Date.now():0;clearTimeout(idleT);if(id)idleT=setTimeout(lockIdle,LOCK_IDLE);if(room)room.presence({edit:myEdit,editAt:myEditAt}).catch(()=>{})}
 function lockIdle(){if(!myEdit)return;closePop();closeDrawer();toast('5 minutes sans action : la commande est libérée, rien n\'a été enregistré')}
 ['input','pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(myEdit){clearTimeout(idleT);idleT=setTimeout(lockIdle,LOCK_IDLE)}},true));
@@ -663,6 +664,40 @@ let hiddenAt=0;document.addEventListener('visibilitychange',()=>{if(document.hid
   if(!myEdit||!hiddenAt)return;const away=Date.now()-hiddenAt;hiddenAt=0;if(away>=LOCK_IDLE){lockIdle();return}
   myEditAt=Date.now();if(room)room.presence({edit:myEdit,editAt:myEditAt}).catch(()=>{})});
 const lockedBy=id=>editingMap()[id]||null;
+/* Verrou tenu par la base (supabase/09_verrous.sql) : ne dépend pas de la présence en direct.
+   La base donne le verrou au premier qui ouvre la commande et refuse les enregistrements des autres. */
+let dbLocks={},LOCKS_ON=false,MYUID=null,myDbLock=null,lockQ=Promise.resolve(),lockBeat=null;
+const LOCK_MS=5*60e3;
+function dbLockOther(id){const v=dbLocks[id];if(!v||!LOCKS_ON||v.par===MYUID)return null;if(Date.now()-Date.parse(v.vu_le||v.depuis||0)>=LOCK_MS)return null;return v.nom||'Un collègue'}
+function lockCall(fn){lockQ=lockQ.then(fn).catch(()=>{});return lockQ}
+function dbLockSet(id){
+  if(!LOCKS_ON||!SB)return;id=id||null;const prev=myDbLock;
+  if(prev&&prev!==id){myDbLock=null;delete dbLocks[prev];lockCall(()=>SB.rpc('rendre_verrou',{p_commande:prev}))}
+  clearInterval(lockBeat);lockBeat=null;if(!id)return;
+  myDbLock=id;const take=()=>lockCall(async()=>{
+    const {data,error}=await SB.rpc('prendre_verrou',{p_commande:id,p_nom:author()});if(error||!data||!data[0])return;
+    const v=data[0];dbLocks[id]={commande:id,par:v.par,nom:v.nom,depuis:v.depuis,vu_le:new Date().toISOString()};
+    if(!v.a_moi&&myEdit===id){myDbLock=null;clearInterval(lockBeat);lockBeat=null;closePop();closeDrawer();toast(`${v.nom||'Un collègue'} modifie cette commande : elle se libère dès sa validation`);render()}});
+  take();lockBeat=setInterval(()=>{if(myEdit===id&&document.visibilityState==='visible')take()},60e3);
+}
+async function verrousInit(){
+  try{MYUID=(await SB.auth.getSession()).data.session.user.id}catch(e){return}
+  const load=async()=>{const {data,error}=await SB.from('verrous').select('commande,par,nom,depuis,vu_le');if(error)return false;
+    const m={};data.forEach(v=>m[v.commande]=v);dbLocks=m;if(myDbLock&&!dbLocks[myDbLock])dbLocks[myDbLock]={commande:myDbLock,par:MYUID,vu_le:new Date().toISOString()};return true};
+  if(!await load())return;   // 09_verrous.sql pas encore exécuté : on reste sur le verrou par présence
+  LOCKS_ON=true;if(myEdit)dbLockSet(myEdit);
+  const redraw=()=>{if(!S)return;if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()};
+  SB.channel('documents-direct-verrous-'+Math.random().toString(36).slice(2,8),{config:{private:true}})
+    .on('postgres_changes',{event:'*',schema:'public',table:'verrous'},pl=>{
+      if(pl.eventType==='DELETE'){const k=(pl.old||{}).commande;if(k&&k!==myDbLock)delete dbLocks[k]}else if(pl.new)dbLocks[pl.new.commande]=pl.new;
+      const w=myEdit&&dbLockOther(myEdit);if(w&&dbLocks[myEdit].depuis&&myDbLock===myEdit){/* un autre a la main : on vérifie auprès de la base */dbLockSet(myEdit)}
+      redraw()})
+    .subscribe();
+  // filet : relecture régulière (réseau mobile, veille), sans boucle de reconnexion
+  setInterval(()=>{if(document.visibilityState==='visible')load().then(ok=>{if(ok)redraw()})},20000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load().then(ok=>{if(ok)redraw()})});
+  window.addEventListener('pagehide',()=>{if(myDbLock)try{SB.rpc('rendre_verrou',{p_commande:myDbLock})}catch(e){}});
+}
 function lockStop(id){const who=id&&lockedBy(id);if(!who)return false;toast(`${who} modifie cette commande : elle se libère dès sa validation`);return true}
 // deux personnes au même instant : la première garde la main, l'autre est sortie
 function lockRace(){if(!myEdit)return;const riv=peers.find(p=>!p.sameTab&&p.presence&&p.presence.edit===myEdit&&(p.presence.editAt||0)<myEditAt);if(!riv)return;const n=riv.presence.nom||'Quelqu\'un';closePop();closeDrawer();toast(`${n} a la main sur cette commande : votre saisie n'a pas été enregistrée`)}
@@ -1247,7 +1282,7 @@ function settingsPop(anchor){
    <section class="ps ps-who"><div class="pop-l">Vous êtes${isAdmin()?' <span class="ps-adm">Admin</span>':''}</div>
      <p class="ps-me ps-line"><span><b>${esc(u.nom||'?')}</b> · ${esc(ROLES[u.role]||'')}</span><span class="ps-mail">${esc(ME?ME.email:'')}</span></p>
      <div class="pop-row"><button class="pop-b" data-pa="who">Page de connexion</button><button class="pop-b" data-pa="logout">Se déconnecter</button></div></section>
-   ${isAdmin()?`<section class="ps"><div class="pop-l">Administration</div><button class="pop-b" data-pa="importer">Importer une sauvegarde (.json)…</button></section>`:''}
+   ${isAdmin()?`<section class="ps"><div class="pop-l">Sauvegarde</div><button class="pop-b" data-pa="importer">Restaurer une sauvegarde…</button></section>`:''}
    ${ce?`<section class="ps"><div class="pop-l">Journée du ${esc(dayShort(d).toLowerCase())}</div>
      <button class="pop-b" data-pa="print">Imprimer / PDF (A3 · A4)…</button></section>
    <section class="ps"><div class="pop-l">Fin de mois</div>
@@ -1720,7 +1755,8 @@ function flush(){
       if(res.merged){applyDoc(path,pending[path]?pending[path].body:sent);saveMirror();render();toast('Modification fusionnée avec celle d\'un collègue')}
     }).catch(err=>{
       const c=err&&err.code;
-      if(c==='not_granted'||c==='permission_denied'){delete pending[path];if(ME&&ME.role==='lecture')sync.err='Lecture seule : ce compte ne peut pas modifier le planning.';else{toast('Action refusée : réservée au centraliste');clearTimeout(flush.t);flush.t=setTimeout(()=>forceSync(true),300)}}
+      if(c==='locked'){delete pending[path];const who=String(err.message||'').replace(/^.*verrouillée par\s*/i,'')||'Un collègue';toast(`${who} modifie cette commande : votre changement n'a pas été enregistré`);clearTimeout(flush.t);flush.t=setTimeout(()=>forceSync(true),300)}
+      else if(c==='not_granted'||c==='permission_denied'){delete pending[path];if(ME&&ME.role==='lecture')sync.err='Lecture seule : ce compte ne peut pas modifier le planning.';else{toast('Action refusée : réservée au centraliste');clearTimeout(flush.t);flush.t=setTimeout(()=>forceSync(true),300)}}
       else sync.online=false;
     }).finally(()=>{delete inflight[path];lsSet(LS_PEND,pending);renderSync();if(pending[path]&&pending[path]!==P&&sync.online)flush()});
   });
@@ -1977,7 +2013,7 @@ let SB=null,ME=null;
 const ROLE_UI={admin:'centraliste',centraliste:'centraliste',commercial:'commercial',labo:'labo',lecture:'commercial'};
 const ROLE_NOM={admin:'Admin',centraliste:'Centraliste',commercial:'Commercial',labo:'Tech labo',lecture:'Lecture seule'};
 const isAdmin=()=>!!(ME&&ME.actif&&ME.role==='admin');
-function supaErr(e){const msg=(e&&e.message)||'';const denied=(e&&e.code==='42501')||/row-level security|permission denied/i.test(msg);return {code:denied?'permission_denied':'unavailable',message:msg}}
+function supaErr(e){const msg=(e&&e.message)||'';if(e&&e.code==='55P03')return {code:'locked',message:msg};const denied=(e&&e.code==='42501')||/row-level security|permission denied/i.test(msg);return {code:denied?'permission_denied':'unavailable',message:msg}}
 
 // Même interface que la base précédente : collection(n).onSnapshot(cb) et doc(chemin).set()/delete()
 function supaDb(sb){
@@ -2172,7 +2208,7 @@ function importerSauvegarde(){
       Object.keys(S.days||{}).forEach(k=>{if(M.has(k.slice(0,7)))delete S.days[k]});Object.assign(S.days,clone(d.days||{}));
       commit();render(true);toast('Restauré : '+noms);return}
     if(!confirm('Remplacer TOUT le planning partagé par cette sauvegarde ?\n'+d.orders.length+' commandes'+(mois.length?' ('+mois[0]+(mois.length>1?' → '+mois[mois.length-1]:'')+')':'')+', '+fs.length+' fichier'+(fs.length>1?'s':'')+'.\nLes autres utilisateurs verront le changement tout de suite.'))return;
-    remplacerDonnees(d,'Sauvegarde importée')};
+    remplacerDonnees(d,'Sauvegarde restaurée')};
   inp.click();
 }
 // Sauvegardes mensuelles : plusieurs fichiers (un par mois + listes.json) réunis en un seul planning
@@ -2221,7 +2257,7 @@ async function supaBoot(){
   document.body.classList.toggle('ro',ME.role==='lecture');
   if(!prefs.user||prefs.gate!==TODAY||prefs.email!==ME.email)showGate();
   startShared(supaDb(SB));setTimeout(histTrap,800);
-  room=supaRoom(SB);
+  room=supaRoom(SB);verrousInit();
   if(prefs.user)room.presence({nom:prefs.user.nom,role:prefs.user.role,edit:null}).catch(()=>{});
   room.onPeers(ch=>{peers=ch.peers.slice();lockRace();if(S){if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()}});
   setTimeout(()=>loadPdf().catch(()=>{}),2500);
