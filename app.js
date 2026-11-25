@@ -579,7 +579,7 @@ const AIDE=[
   ['tous','Commentaires (pastilles)',`<ul><li><b>+ Info</b> sur la ligne : pastilles toutes prêtes ou texte libre. « Citybag 1er camion » et « Bétobag 1er camion » ne sont proposés que sur les chantiers avec pompe.</li><li>Clic sur une pastille pour la modifier ; <b>×</b> pour la supprimer (avec confirmation).</li></ul>`]]],
  ['Disposition de l\'écran',[
   ['centraliste','Déplacer les trois encadrés du haut',`<p>Un encadré <b>vide</b> se replie (titre et boutons « + ») et laisse sa place aux autres ; quand les trois sont vides, la bande devient une ligne fine qui se déplie au survol.</p><ol><li><b>Rester appuyé</b> un instant sur le bord ou le titre d'un encadré (Planning camions, Journal de bord, Agrégats). Le contour devient orange.</li><li>Sans relâcher, glisser à gauche ou à droite des autres encadrés.</li><li>Glisser vers le bas de l'écran : <b>les trois encadrés passent ensemble en bas</b> de la page ; vers le haut, ils remontent.</li><li>Relâcher. La disposition est gardée pour vous. <b>Échap</b> pendant le geste annule.</li></ol><p>Les lignes du planning ne bougent jamais.</p>`],
-  ['tous','Ouvrir ou fermer ce mode d\'emploi',`<p>Il s'ouvre depuis le <b>badge du compte</b> → <b>Aide</b> → <b>Mode d'emploi</b> : un onglet s'ajoute au menu de gauche. Pour le fermer : <b>clic droit</b> sur l'onglet, ou <b>× Fermer l'onglet</b> en haut de cette page.</p>`],
+  ['tous','Ouvrir ou fermer ce mode d\'emploi',`<p>Il s'ouvre depuis le <b>badge du compte</b> → <b>Aide</b> → <b>Mode d'emploi</b> : un onglet s'ajoute au menu de gauche. Pour le fermer : <b>clic droit</b> sur l'onglet, ou <b>× Fermer l'onglet</b> en haut de cette page.</p><ul><li><b>? Qu'est-ce que c'est ?</b> (en haut de cette page, dans le badge du compte → Aide, ou la touche <b>?</b> du clavier) : touchez ensuite n'importe quel élément du planning (bulle, étiquette, bouton, encadré) : sa rubrique s'ouvre ici. Rien n'est modifié. Échap pour annuler.</li><li><b>◎ Montrer sur l'écran</b> (au bas d'une rubrique) : retour au planning, l'élément est entouré en orange quelques secondes.</li></ul>`],
   ['centraliste','Réinitialiser la disposition',`<p><b>Badge du compte</b> → <b>Disposition des encadrés</b> :</p><ul><li><b>Réinitialiser la disposition</b> : revient à la disposition de la centrale (ou à celle par défaut).</li><li><b>Définir comme disposition de la centrale</b> : votre disposition devient celle de tous les centralistes qui n'ont pas la leur.</li></ul>`],
   ['centraliste','Réduire le menu de gauche',`<ul><li>Tirer le <b>bord droit</b> du menu pour l'élargir ou le réduire, jusqu'à des carrés avec icône et numéro.</li><li><b>Double-clic</b> sur ce bord : carrés ↔ menu normal. La taille est gardée.</li></ul>`],
   ['tous','Thème clair ou sombre',`<p>Badge du compte → <b>Centrale</b> → Thème auto, Clair ou Sombre.</p>`]]],
@@ -642,28 +642,117 @@ const anS=(states,h)=>`<div class="an an${states.length}" style="--h:${h||78}px"
 const bu=(v,p,cls)=>`<span class="t t2 ${cls||''}"><b>${v}</b><small>${p}</small></span>`;
 const anRow=(c,txt,grad)=>`<div class="an-row" style="--c:${c};${grad?'':'--g:transparent'}"><b>07:30</b> <b>BATISUD</b> <span>30/30</span> <span class="muted">${txt}</span></div>`;
 const AIDE_ANIM={
-  'Paiements comptant':()=>anS([[`<b>MARTIN Paul</b> <span class="tag pay">€</span>`,'Client comptant : paiement en attente · clic sur €'],[`<b>MARTIN Paul</b> <span class="tag pay ok">PAYÉ</span>`,'Confirmé : le paiement est reçu']]),
+  'Paiements comptant':()=>anS([[`<b>MARTIN Paul</b> <span class="tag pay">€</span>`,'Client comptant : paiement en attente · clic sur €'],[`<b>MARTIN Paul</b> <span class="tag pay ok">PAYÉ</span>`,'Confirmé : le paiement est reçu']],106),
   'Pompes, bon de pompe et réservations':()=>anS([[`<button class="mo warn">Fica 42 m</button> <button class="mo warn">À RÉSERVER</button>`,'Pompe à réserver, bon à faire'],[`<button class="mo warn">Fica 42 m</button> <button class="mo on">RÉSERVÉ</button>`,'Clic sur À RÉSERVER : pompe réservée'],[`<button class="mo on">Fica 42 m</button> <button class="mo on">RÉSERVÉ</button>`,'Clic sur la pompe : bon de pompe fait']]),
-  'Remplir une bulle (plaque du camion)':()=>anS([[bu('7,5','—')+bu('7,5','—'),'Tours prévus : cubage en haut'],[bu('7,5','GW','on')+bu('7,5','—'),'Clic sur la bulle, choix de la plaque : chargé'],[bu('7,5','GW','on')+bu('7,5','EF','on')+`<span class="t-add">+</span>`,'Tous chargés · + pour ajouter un tour (7,5 m³ prérempli)']]),
+  'Remplir une bulle (plaque du camion)':()=>anS([[bu('7,5','—')+bu('7,5','—'),'Tours prévus : cubage en haut'],[bu('7,5','GW','on')+bu('7,5','—'),'Clic sur la bulle, choix de la plaque : chargé'],[bu('7,5','GW','on')+bu('7,5','EF','on')+`<span class="t-add">+</span>`,'Tous chargés · + pour ajouter un tour (7,5 m³ prérempli)']],98),
   'Replacer un camion déjà chargé sur un autre chantier':()=>anS([[bu('7,5','GW','on'),'Camion chargé pour BATISUD'],[bu('7,5','GW','on mv')+` <span class="mono">→</span> `+bu('7,5','GW','on rf'),'Replacé : barré ici, ↪ bleu sur le nouveau chantier']]),
   'Lire une bulle de tour':()=>anS([[bu('7,5','—'),'Prévu, pas encore chargé'],[bu('7,5','GW','on'),'Chargé : cubage en haut, plaque en bas'],[bu('5','V955','cp'),'Complément (moins qu\'un camion plein)'],[bu('7,5','Nice','on ext')+`<span class="t t2 t-plus"><b>?</b><small>+1T</small></span>`,'Autre centrale · 1 tour à confirmer']]),
   'Saisir une commande':()=>anS([[`<span class="an-q">15 m³</span><span class="plus-t"><span>[+]</span></span>`,'Quantité · [+] si le client prendra un complément'],[`<span class="an-q">15 m³</span><span class="plus-t on"><span>[+]</span></span>`,'[+] coché : « 15 et plus »'],[bu('7,5','—')+bu('7,5','—')+`<span class="t t2 t-plus"><b>?</b><small>+1T</small></span>`,'Sur le planning : 15/15 + et la bulle orange']]),
   'Modifier, dupliquer, annuler une commande':()=>anS([[anRow('#FF8A00','En attente',1),'Statut En attente : barre et dégradé orange'],[anRow('#1E9E4A','En cours',0),'En cours : barre verte'],[anRow('#2F6FD6','Terminée',1),'Terminée : barre et dégradé bleus']],70),
-  'Commentaires (pastilles)':()=>anS([[`<span class="chip on"><span class="pt">Appeler avant départ</span></span><span class="chip more">+2</span><span class="chip add">+ Info</span>`,'Plus de 2 infos : la première et un compteur'],[`<div class="an-list"><span class="chip on"><span class="pt">Appeler avant départ</span></span><span class="chip"><span class="pt">Accès étroit</span></span><span class="chip"><span class="pt">Prévoir 2 hommes</span></span></div>`,'Survol ou clic sur +2 : toutes les infos']],112),
+  'Commentaires (pastilles)':()=>anS([[`<span class="chip on"><span class="pt">Appeler avant départ</span></span><span class="chip more">+2</span><span class="chip add">+ Info</span>`,'Plus de 2 infos : la première et un compteur'],[`<div class="an-list"><span class="chip on"><span class="pt">Appeler avant départ</span></span><span class="chip"><span class="pt">Accès étroit</span></span><span class="chip"><span class="pt">Prévoir 2 hommes</span></span></div>`,'Survol ou clic sur +2 : toutes les infos']],124),
   'Planning camions : renforts, détachements, convocations':()=>anS([[`<span class="lbl">Absents</span> <span class="muted">—</span> <span class="chip add">+ Absent</span>`,'+ Absent : plaque, Matin / Après-midi / Journée, raison'],[`<span class="lbl">Absents</span> <span class="chip bad"><b>7656</b> <small>Matin</small> <small>· Congé</small><span class="x">×</span></span>`,'× pour annuler · clic droit : menu']]),
   'Ligne « À surveiller »':()=>anS([[`<span class="chip bad">Paiement · MARTIN</span><span class="chip info">2 à placer</span>`,'Ce qui demande une action aujourd\'hui'],[`<span class="chip info">2 à placer</span><span class="chip warn">Pompe à réserver</span>`,'Clic sur une alerte : la ligne concernée s\'ouvre']])
 };
 function aideHTML(){const ce=role()==='centraliste';
   return `<div class="aide-top"><div class="aide-t"><h2>Mode d'emploi</h2><button class="btn sm aide-x" data-act="aide-close" title="Le rouvrir : badge du compte → Mode d'emploi">× Fermer l'onglet</button></div>
    <p class="muted">Un dépliant par élément : cliquez sur un titre pour l'ouvrir.</p>
-   <div class="aide-bt"><button class="btn sm" data-act="aide-all" data-v="1">Tout ouvrir</button><button class="btn sm" data-act="aide-all" data-v="0">Tout fermer</button></div>
+   <div class="aide-bt"><button class="btn sm primary aide-pickb" data-act="aide-pick" title="Ou la touche ? du clavier">? Qu'est-ce que c'est ? Toucher un élément</button><button class="btn sm" data-act="aide-all" data-v="1">Tout ouvrir</button><button class="btn sm" data-act="aide-all" data-v="0">Tout fermer</button></div>
    <input class="aide-q" type="search" placeholder="Que voulez-vous faire ? (ex. plaque, paiement, réinitialiser)" aria-label="Chercher dans le mode d'emploi" data-act="aide-q"></div>
-   <div class="aide">${AIDE.map(([g,L])=>{const it=L.filter(x=>ce||x[0]==='tous');return it.length?`<section class="aide-g"><h3>${esc(g)}</h3>${it.map(([w,t,b])=>`<details class="aide-d"><summary><span>${esc(t)}</span>${w==='centraliste'&&ce?'':''}</summary><div class="aide-b">${AIDE_ANIM[t]?AIDE_ANIM[t]():''}${b}</div></details>`).join('')}</section>`:''}).join('')}
+   <div class="aide">${AIDE.map(([g,L])=>{const it=L.filter(x=>ce||x[0]==='tous');return it.length?`<section class="aide-g"><h3>${esc(g)}</h3>${it.map(([w,t,b])=>`<details class="aide-d"><summary><span>${esc(t)}</span>${w==='centraliste'&&ce?'':''}</summary><div class="aide-b">${AIDE_ANIM[t]?AIDE_ANIM[t]():''}${b}${AIDE_CIBLES.some(([,...ts])=>ts.includes(t))?`<button class="btn sm aide-show" data-act="aide-show" data-t="${esc(t)}">◎ Montrer sur l'écran</button>`:''}</div></details>`).join('')}</section>`:''}).join('')}
    <p class="aide-none muted" hidden>Rien trouvé : essayez un autre mot.</p></div>`}
 document.addEventListener('input',e=>{if(!e.target.matches||!e.target.matches('.aide-q'))return;const q=e.target.value.trim().toLowerCase();let n=0;
   document.querySelectorAll('.aide-d').forEach(d=>{const ok=!q||d.textContent.toLowerCase().includes(q);d.hidden=!ok;if(ok)n++;d.open=!!q&&ok});
   document.querySelectorAll('.aide-g').forEach(g=>{g.hidden=![...g.querySelectorAll('.aide-d')].some(d=>!d.hidden)});
   const no=document.querySelector('.aide-none');if(no)no.hidden=n>0});
+/* Mode d'emploi : animations des nouveautés */
+const anMenu=(on)=>`<div class="an-mcol"><div class="an-mrow"><b>07:30</b> <b>BATISUD</b> <span class="muted">30 m³</span><span class="an-dots ${on?'on':''}">⋯</span></div>${on?`<div class="an-menu"><span>Modifier la commande</span><span>Dupliquer…</span><span>Statut ▸</span><span class="bad">Supprimer</span></div>`:''}</div>`;
+Object.assign(AIDE_ANIM,{
+  'Se connecter et changer d\'utilisateur':()=>anS([[`<span class="an-badge">JO</span> <b>Jonathan</b> <span class="chip on">Centraliste</span><span class="chip an-off">Commercial</span><span class="chip an-off">Labo</span>`,'Votre badge, votre prénom, votre rôle (les autres grisés)'],[`<span class="an-badge">JO</span><span class="an-badge c">MO</span><span class="an-badge l">LE</span>`,'En dessous : les personnes connectées, par rôle']],104),
+  'Changer de jour, de semaine ou de vue':()=>anS([[`<span class="seg an-seg"><span class="on">Jour</span><span>Semaine</span></span>`,'Jour : le détail de la journée'],[`<div class="an-wk">${[[60,20,0],[90,40,0],[30,50,20],[100,30,0],[45,10,0]].map(([m,a,n],i)=>`<div><small>${'LMMJV'[i]}</small><i style="--m:${m}%;--a:${a}%;--n:${n}%"></i></div>`).join('')}</div>`,'Semaine : une barre de charge par jour (matin, après-midi, nuit)']]),
+  'Modifier, dupliquer, annuler une commande':()=>anS([[anMenu(0),'Le menu ⋯ au bout de la ligne'],[anMenu(1),'Clic : modifier, dupliquer, statut, supprimer'],[anRow('#FF8A00','En attente',1),'Statut En attente : barre orange'],[anRow('#2F6FD6','Terminée',1),'Terminée : barre bleue, plus de complément']],172),
+  'Valider une commande du commercial':()=>anS([[`<b>BATISUD</b> <span class="tag modv">Modif. à valider</span>`,'Le commercial a modifié une commande validée'],[`<div class="an-diff"><span>Heure</span><s>07:30</s><b>09:30</b><span>Cubage</span><s>30 m³</s><b>36 m³</b></div>`,'Clic : ce qui a changé, avant → après'],[`<b>BATISUD</b> <span class="muted">09:30 · 36 m³</span>`,'Valider : la commande est à jour']],84),
+  'Formule en attente : proposition du labo':()=>anS([[`<button class="r-form att">Formule ?</button>`,'Formule en attente'],[`<button class="r-form att">Formule ?</button><span class="flabo"><span>Labo</span></span>`,'Le labo propose sa formule : badge LABO'],[`<button class="r-form fam-b">C25/30 D20 S4 XC1</button>`,'Clic sur LABO → Appliquer : formule de la commande']]),
+  'Paiements comptant':()=>anS([[`<b>MARTIN Paul</b> <span class="tag pay">€</span>`,'Paiement en attente · clic : reçu'],[`<div class="an-diff an-pay"><span>200,00 €</span><b>CB · 4821</b><span>150,50 €</span><b>Virement</b><span>Total</span><b>350,50 €</b></div>`,'Clic droit : une ligne par paiement, + Autre paiement'],[`<b>MARTIN Paul</b> <span class="tag pay ok">PAYÉ</span>`,'Plus rien en attente : payé']],116),
+  'Remplir une bulle (plaque du camion)':()=>anS([[bu('7,5','GW','on')+bu('7,5','EF','on')+`<span class="t t2 t-plus"><b>?</b><small>+1T</small></span><span class="t-add">+</span>`,'Chargés · orange = complément prévu · [+] gris = non prévu'],[bu('7,5','GW','on')+bu('7,5','EF','on')+bu('4','V955','on cp')+`<span class="t-add">+</span>`,'Complément chargé'],[`<div class="an-ask"><b>Encore un complément prévu ?</b><span class="chip on">Oui</span><span class="chip">Non, c'est le dernier</span></div>`,'Le planning demande à chaque fois'],[anRow('#2F6FD6','Terminée',1),'Non : la commande passe Terminée']],100),
+  'Agrégats et ciments':()=>anS([[`<span class="lbl">Semi 1</span> <span class="chip">0/4 Carrière</span><span class="chip">4/10</span><span class="chip add">+</span>`,'Produits demandés au chauffeur'],[`<span class="lbl">Semi 1</span> <span class="chip an-stab">0/4 Carrière</span><span class="chip">4/10</span><span class="chip add">+</span>`,'Clic : reçu, surligné comme au stabilo'],[`<span class="chip add">+ Semi</span><span class="chip add">+ Liant</span>`,'En bas de l\'encadré : nouvelle semi, nouveau liant']]),
+  'Une commande ouverte par quelqu\'un d\'autre (verrou)':()=>anS([[anRow('#1E9E4A','En cours',0),'Ligne normale'],[`<div class="an-row an-lock"><b>07:30</b> <b>BATISUD</b> <span>Verrouillée · Morgan modifie</span></div>`,'Ouverte ailleurs : grisée jusqu\'à la validation']],88),
+  'Journée clôturée':()=>anS([[`<span class="chip ok">Ouverte</span> <b>Mer. 26 nov.</b>`,'Journée en cours'],[`<span class="chip">🔒 Clôturée 18:00</span> <b>Mer. 26 nov.</b>`,'Clôturée : seul le centraliste la modifie']]),
+  'Ouverture exceptionnelle et nuit':()=>anS([[`<span class="lbl">Matin</span><span class="lbl">Après-midi</span>`,'Avant 19 h : matin et après-midi'],[`<span class="lbl">Matin</span><span class="lbl">Après-midi</span><span class="lbl an-nuit">☾ Nuit · 22:00</span>`,'À partir de 19 h : la section Nuit'],[`<span class="lbl an-nuit">Nuit précédente · 22:00</span>`,'Le lendemain matin : la nuit de la veille']]),
+  'Déplacer les trois encadrés du haut':()=>anS([[`<span class="an-box">Planning camions<br><small>2 renforts</small></span><span class="an-box">Journal<br><small>—</small></span><span class="an-box">Agrégats<br><small>Semi 1</small></span>`,'Encadrés remplis'],[`<span class="an-box">Planning camions<br><small>2 renforts</small></span><span class="an-box mini">Journal +</span><span class="an-box">Agrégats<br><small>Semi 1</small></span>`,'Un encadré vide se replie et laisse sa place']]),
+  'Notifications sur le téléphone':()=>anS([[`<div class="an-notif"><b>La Bocca · Commande à valider</b><small>BATISUD · jeu. 26 nov. 07:30 · 8 m³</small></div>`,'Sur l\'écran de verrouillage, même fermé'],[`<div class="an-notif"><b>La Bocca · Bons de pompe</b><small>Demain : 2 bons à faire</small></div>`,'Chaque matin à 6 h 45 : les bons de pompe']],84),
+  'Synchronisation et hors connexion':()=>anS([[`<span class="an-badge ok">JO</span>`,'Vert : tout est synchronisé'],[`<span class="an-badge ko">JO</span>`,'Rouge : modifications pas encore envoyées']]),
+  'Compte en lecture seule':()=>anS([[anMenu(0)+'',`Compte normal : menu ⋯ et boutons`],[`<div class="an-mrow"><b>07:30</b> <b>BATISUD</b> <span class="muted">30 m³</span></div>`,'Lecture seule : on consulte, rien ne s\'ouvre']])
+});
+
+/* Mode d'emploi relié à l'écran : « Qu'est-ce que c'est ? » (clic sur un élément → sa rubrique) et « Montrer sur l'écran » */
+const AIDE_CIBLES=[
+  ['.flabo','Formule en attente : proposition du labo'],
+  ['.t-plus,.t-add,[data-act=addtour]','Remplir une bulle (plaque du camion)','Lire une bulle de tour'],
+  ['[data-act=tour]','Remplir une bulle (plaque du camion)','Lire une bulle de tour'],
+  ['[data-act=formule]','Saisir la formule (saisie rapide)'],
+  ['[data-act=pay]','Paiements comptant'],
+  ['[data-act=pompe],[data-act=presa],[data-act=resa]','Pompes, bon de pompe et réservations'],
+  ['[data-act=modv]','Valider une commande du commercial'],
+  ['[data-act=ap-ok],[data-act=ap-show],[data-act=ap-menu]','Valider une commande du commercial'],
+  ['[data-act=menu]','Modifier, dupliquer, annuler une commande'],
+  ['[data-act=pill],[data-act=addpill],[data-act=pills-all],[data-act=pill-x],[data-act=pills-edit]','Commentaires (pastilles)'],
+  ['[data-act=map]','Carte du chantier'],
+  ['[data-act=we-open]','Ouvrir la centrale un week-end'],
+  ['[data-act^=semi],[data-act^=cim],.hb-w.agg','Agrégats et ciments'],
+  ['[data-act=etat],[data-act^=panne]','Centrale fermée ou en panne'],
+  ['[data-act=pres-add],[data-act^=pass],[data-act=ev-add],[data-act=labo-add],[data-act=prod-chg]','Journal de bord'],
+  ['[data-act=ech-add],[data-act^=conv],[data-act=tours-per]','Planning camions : renforts, détachements, convocations'],
+  ['[data-act=dem-add],[data-act^=dem-],[data-act=dfilter]','Page À traiter (02 Demandes)'],
+  ['.nav-b[data-v=demandes]','Page À traiter (02 Demandes)'],
+  ['.nav-b[data-v=agregats]','Agrégats et ciments'],
+  ['.nav-b[data-v=camions]','Planning camions : renforts, détachements, convocations'],
+  ['.nav-b[data-v=adjuvants],[data-act^=adj]','Adjuvants'],
+  ['.nav-b[data-v=liens],[data-act=liens-cfg]','Raccourcis'],
+  ['.nav-b[data-v=aide]','Ouvrir ou fermer ce mode d\'emploi'],
+  ['#watchbar','Ligne « À surveiller »'],
+  ['.chat-b,[data-act=chat]','Chat de la centrale'],
+  ['#sync','Synchronisation et hors connexion'],
+  ['#me,#who','Se connecter et changer d\'utilisateur'],
+  ['[data-act=vue]','Lire une bulle de tour'],
+  ['.wk-load','Changer de jour, de semaine ou de vue'],
+  ['#seg,#dlabel,[data-act=prev],[data-act=next],[data-act=today],[data-act=mode],[data-act=pickdate]','Changer de jour, de semaine ou de vue'],
+  ['.row.veille','Ouverture exceptionnelle et nuit'],
+  ['.hb-h','Déplacer les trois encadrés du haut'],
+  ['.hb-w:not(.agg)','Planning camions : renforts, détachements, convocations'],
+  ['.row','Lire l\'écran du jour'],
+];
+const aideTitres=()=>{const ce=role()==='centraliste';const r=new Set();AIDE.forEach(([,L])=>L.forEach(([w,t])=>{if(ce||w==='tous')r.add(t)}));return r};
+function aideCible(el){const T=aideTitres();for(const [sel,...ts] of AIDE_CIBLES){const m=el.closest&&el.closest(sel);if(m){const t=ts.find(x=>T.has(x));if(t)return {el:m,t}}}return null}
+function aideOuvrir(t){prefs.aideOn=true;savePrefs();view.tab='aide';render(true);
+  setTimeout(()=>{const d=[...document.querySelectorAll('.aide-d')].find(x=>x.querySelector('summary span').textContent===t);if(!d)return;
+    document.querySelectorAll('.aide-d[open]').forEach(x=>{if(x!==d)x.open=false});d.open=true;d.scrollIntoView({block:'center',behavior:'smooth'});
+    d.classList.remove('aide-flash');void d.offsetWidth;d.classList.add('aide-flash')},60)}
+let aidePick=false,aideHl=null;
+function aidePickSet(on){aidePick=!!on;document.body.classList.toggle('aide-pick',aidePick);if(aideHl){aideHl.classList.remove('aide-hl');aideHl=null}
+  let b=document.getElementById('aidepickbar');
+  if(aidePick&&!b){b=document.createElement('div');b.id='aidepickbar';b.className='aide-pickbar';b.innerHTML=`<span>Touchez un élément du planning pour voir son mode d'emploi</span><button class="btn sm" type="button">Annuler (Échap)</button>`;document.body.appendChild(b);b.querySelector('button').onclick=()=>aidePickSet(false)}
+  if(!aidePick){if(b)b.remove();const t=document.getElementById('aidepicktip');if(t)t.remove()}
+  if(aidePick){if(view.tab==='aide'){view.tab='planning';render(true)}if(typeof closePop==='function')try{closePop()}catch(_){}}}
+const aidePickStop=e=>{if(!aidePick)return;if(e.target.closest&&e.target.closest('#aidepickbar'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()};
+['pointerdown','mousedown','touchstart','contextmenu','dblclick'].forEach(ev=>window.addEventListener(ev,aidePickStop,{capture:true,passive:false}));
+window.addEventListener('click',e=>{if(!aidePick)return;if(e.target.closest&&e.target.closest('#aidepickbar'))return;aidePickStop(e);
+  const c=aideCible(e.target);if(!c){toast('Pas de rubrique pour cet élément : essayez une bulle, une étiquette, un bouton');return}
+  aidePickSet(false);aideOuvrir(c.t)},true);
+window.addEventListener('mouseover',e=>{if(!aidePick)return;const c=aideCible(e.target);const el=c&&c.el;if(el===aideHl)return;if(aideHl)aideHl.classList.remove('aide-hl');aideHl=el;
+  let tip=document.getElementById('aidepicktip');if(!el){if(tip)tip.remove();return}el.classList.add('aide-hl');
+  if(!tip){tip=document.createElement('div');tip.id='aidepicktip';tip.className='aide-tip pick';document.body.appendChild(tip)}tip.textContent='? '+c.t;
+  const b=el.getBoundingClientRect();tip.style.left=Math.max(8,Math.min(innerWidth-tip.offsetWidth-8,b.left))+'px';tip.style.top=(b.top>50?b.top-tip.offsetHeight-6:b.bottom+6)+'px'},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&aidePick){aidePickSet(false);return}
+  if(e.key==='?'&&!e.ctrlKey&&!e.metaKey&&!(e.target.closest&&e.target.closest('input,textarea,select,[contenteditable]'))&&ME&&(document.getElementById('gate')||{hidden:true}).hidden){e.preventDefault();aidePickSet(!aidePick)}});
+function aideMontrer(t){const r=AIDE_CIBLES.find(([,...ts])=>ts.includes(t));if(!r)return;
+  view.tab='planning';if(view.mode!=='jour'&&!/wk-load/.test(r[0]))view.mode='jour';if(/wk-load/.test(r[0]))view.mode='semaine';render(true);
+  setTimeout(()=>{const vis=[...document.querySelectorAll(r[0])].filter(x=>x.offsetParent||x.getClientRects().length);const el=vis[0];
+    if(!el){toast('Pas visible sur ce jour (rien de ce type aujourd\'hui) : essayez un autre jour');return}
+    el.scrollIntoView({block:'center',behavior:'smooth'});
+    document.querySelectorAll('.aide-spot').forEach(x=>x.classList.remove('aide-spot'));document.querySelectorAll('.aide-tip').forEach(x=>x.remove());
+    el.classList.add('aide-spot');const tip=document.createElement('div');tip.className='aide-tip';tip.textContent=t;document.body.appendChild(tip);
+    const place=()=>{const b=el.getBoundingClientRect();tip.style.left=Math.max(8,Math.min(innerWidth-tip.offsetWidth-8,b.left))+'px';tip.style.top=(b.top>60?b.top-tip.offsetHeight-8:b.bottom+8)+'px'};
+    setTimeout(place,350);const fin=()=>{el.classList.remove('aide-spot');tip.remove();removeEventListener('scroll',place,true)};addEventListener('scroll',place,true);setTimeout(fin,4500)},80)}
 function liensHTML(){
   const L=S.liens||[];const cats=[...new Set(L.map(l=>l.cat))];
   return `<div class="sec-h"><h2>Raccourcis</h2><p>Les sites et formulaires de la centrale à portée de clic, utiles pour un remplaçant.</p>${role()==='centraliste'?'<button class="btn sm" data-act="liens-cfg">Modifier dans les réglages</button>':''}</div>
@@ -1127,7 +1216,7 @@ function demPop(anchor,oid,typeDef,pourDef){
 
 // lecture seule : consulter uniquement (planning, demandes, carte, impression) ; aucune fenêtre de modification
 const RO=()=>!!(ME&&ME.role==='lecture');
-const RO_ACTS=['prev','next','today','mode','tab','goto','focus','pickdate','vue','settings','banner-ok','dfilter','hb','adj-year','map','aide-q','aide-close','aide-all','export','tours-print','tours-per','conv-print','cmonth','ap-show','peek-x','pills-all'];
+const RO_ACTS=['prev','next','today','mode','tab','goto','focus','pickdate','vue','settings','banner-ok','dfilter','hb','adj-year','map','aide-q','aide-close','aide-all','aide-pick','aide-show','export','tours-print','tours-per','conv-print','cmonth','ap-show','peek-x','pills-all'];
 // tours et compléments : réservés au centraliste (le commercial et le labo voient, sans pouvoir ajouter ni charger)
 const TOUR_ACTS=['plus','addtour','cpl-add','tour'];
 function act(a,el,o,e){
@@ -1270,6 +1359,8 @@ function act(a,el,o,e){
     case 'we-open':{const d=el.dataset.d;return confirmPop(el,'Ouvrir la centrale ce jour ?',dayLong(d)+' · ouverture exceptionnelle du week-end','Oui, créer la journée',()=>{const x=day(d);const n=new Date();x.ouvert={by:author(),at:`${pad(n.getHours())}:${pad(n.getMinutes())}`};jlog(d,'Ouverture exceptionnelle du week-end');toast('Journée planning créée : '+dayShort(d))})}
     case 'aide-q':return;
     case 'aide-close':return closeAide();
+    case 'aide-pick':return aidePickSet(true);
+    case 'aide-show':return aideMontrer(el.dataset.t);
     case 'aide-all':document.querySelectorAll('.aide-d:not([hidden])').forEach(d=>d.open=el.dataset.v==='1');return;
     case 'clo-rep':{const d=view.date;return listPop(el,'Replacer les tours non chargés vers…',AG(),c=>{const w=closedWin(d);let n=0,m=0;ordersOn(d).filter(o=>statut(o)!=='annulee'&&inWin(o.h,w)).forEach(o=>TR(o).forEach(t=>{if(!t.s&&!t.c){t.c=c;t.s=1;n++;m+=t.v}}));if(n)jlog(d,`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c} (${fmt(m)} m³) · centrale fermée`);toast(n?`${n} tour${n>1?'s':''} replacé${n>1?'s':''} à ${c}`:'Aucun tour à replacer')})}
     case 'map':{if(e.ctrlKey||e.metaKey||e.shiftKey)return;e.preventDefault();return openMap(o)}
@@ -1453,11 +1544,11 @@ function settingsPop(anchor){
      <button class="pop-b" data-pa="archive">Consulter un mois archivé (.json)…</button></section>`:''}
    <section class="ps"><div class="pop-l">Centrale</div>${RO()?'<button class="pop-b" data-pa="cfgro">Camions, pompes, agence, raccourcis (consultation)</button>':(ce||role()==='commercial'||isAdmin()?'<button class="pop-b" data-pa="cfg">Administration · catalogue de la centrale</button>':'')}${MODE==='shared'&&!RO()?'<button class="pop-b" data-pa="notifs">Notifications sur cet appareil…</button>':''}
      <div class="pop-grid">${[['auto','Thème auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div>${ce?layoutPopHTML():''}</section>
-   <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button>${isInstalled()?'':'<button class="pop-b" data-pa="install">Installer l\'application sur cet appareil</button>'}</section>
+   <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button><button class="pop-b" data-pa="aidepick">Qu'est-ce que c'est ? (toucher un élément)</button>${isInstalled()?'':'<button class="pop-b" data-pa="install">Installer l\'application sur cet appareil</button>'}</section>
 
    ${RO()?'':`<section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}</button></section>`}
    <section class="ps ps-sync"><div class="pop-l">Synchronisation et état</div><div class="sync-box">${syncDetail()}</div><button class="pop-b" data-pa="force">Forcer la synchronisation</button></section>`,
-  {install(){const a=popAnchor;setTimeout(()=>installApp(a));return 'close'},notifs(){const a=popAnchor;setTimeout(()=>notifPop(a));return 'close'},journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
+  {install(){const a=popAnchor;setTimeout(()=>installApp(a));return 'close'},notifs(){const a=popAnchor;setTimeout(()=>notifPop(a));return 'close'},journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},aidepick(){setTimeout(()=>aidePickSet(true),50);return 'close'},
    'lay-reset'(){const k=meKey();const had=prefs.layouts&&prefs.layouts[k];if(had){delete prefs.layouts[k];savePrefs()}applyLayout();toast(had?'Disposition réinitialisée : '+(S.config&&S.config.layout?'celle de la centrale':'celle par défaut'):'Déjà sur la disposition de la centrale');return 'close'},
    'lay-set'(){const L=layoutGet();S.config.layout={order:L.order.slice(),pos:L.pos};const k=meKey();if(prefs.layouts&&prefs.layouts[k]){delete prefs.layouts[k];savePrefs()}toast('Disposition de la centrale enregistrée pour tous les centralistes')},
    moisclot(){setTimeout(()=>clotureMois(view.date));return 'close'},archive(){setTimeout(consulterArchive);return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},cfgro(){setTimeout(()=>openConfig(null,{ro:true}));return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'}});

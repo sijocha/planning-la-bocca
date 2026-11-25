@@ -82,6 +82,11 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - Nouvelles rubriques : **Ce que chaque rôle peut faire**, **Compte en lecture seule**, **Formule en attente : proposition du labo**.
 - Mises à jour : connexion (badge et prénom imposés, personnes connectées, déconnexion automatique), paiements en plusieurs lignes, compléments (« Non, c'est le dernier » = Terminée), statut Terminée, validation des modifications (avant → après), agrégats et liants ([+ Semi], [+ Liant], stabilo), section Nuit, charge de la semaine, résumé sur téléphone, rappel des bons de pompe, Betobag, journée clôturée, réglages ouverts au commercial, thème dans Centrale, encadrés repliés.
 
+### Mode d'emploi vivant
+- **? Qu'est-ce que c'est ?** : un bouton (ou la touche **?**), puis on touche un élément du planning (bulle, étiquette paiement, pompe, formule, menu ⋯, encadré, badge…) : sa rubrique s'ouvre dans le mode d'emploi. Rien n'est modifié ; Échap pour annuler.
+- **◎ Montrer sur l'écran** au bas des rubriques : retour au planning, l'élément est entouré en orange avec son nom.
+- **Nouvelles animations** : menu ⋯, compléments (orange, [+] gris, « Encore un complément ? »), modification à valider (avant → après), proposition du labo, paiements en plusieurs lignes, stabilo des agrégats, verrou, journée clôturée, section Nuit, charge de la semaine, encadrés repliés, notification sur l'écran de verrouillage, badge de synchronisation, connexion.
+
 ### En coulisses
 - Une seule feuille de styles (`styles.css`) au lieu de deux : 362 réglages jamais appliqués retirés, affichage vérifié identique sur 15 écrans.
 - README à jour (fichiers de la page, scripts SQL 01 à 13).

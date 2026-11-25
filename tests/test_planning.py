@@ -174,3 +174,26 @@ def test_mode_d_emploi(ouvrir):
     for t in ("Ce que chaque rôle peut faire", "Compte en lecture seule", "proposition du labo", "Paiements comptant", "Journée clôturée"):
         assert t in txt, t
     assert pg.errs == []
+
+
+def test_mode_d_emploi_relie_a_l_ecran(ouvrir):
+    pg = ouvrir()
+    # chaque rubrique visée (animations, éléments de l'écran) existe vraiment
+    manquants = pg.evaluate("""()=>{const T=new Set();AIDE.forEach(([,L])=>L.forEach(([,t])=>T.add(t)));
+      return [...Object.keys(AIDE_ANIM),...AIDE_CIBLES.flatMap(([,...ts])=>ts)].filter(t=>!T.has(t))}""")
+    assert manquants == []
+    # « Qu'est-ce que c'est ? » : toucher l'étiquette paiement ouvre sa rubrique, sans rien modifier
+    oid = pg.evaluate("()=>{const o=S.orders.find(o=>o.pay&&!o.pay.paye);view.date=o.date;render(true);return o.id}")
+    pg.evaluate("()=>aidePickSet(true)")
+    pg.click(f"#row-{oid} [data-act=pay]"); pg.wait_for_timeout(400)
+    assert pg.evaluate("()=>view.tab") == "aide"
+    assert pg.evaluate("()=>document.querySelector('.aide-d[open] summary').textContent") == "Paiements comptant"
+    assert pg.evaluate(f"()=>byId('{oid}').pay.paye") is False
+    assert pg.evaluate("()=>[aidePick,document.body.classList.contains('aide-pick')]") == [False, False]
+    # « Montrer sur l'écran » : retour au planning, élément entouré
+    pg.click(".aide-d[open] .aide-show"); pg.wait_for_timeout(400)
+    assert pg.evaluate("()=>[view.tab,!!document.querySelector('[data-act=pay].aide-spot'),!!document.querySelector('.aide-tip')]") == ["planning", True, True]
+    # touche ? : active / Échap : annule
+    pg.keyboard.press("?"); assert pg.evaluate("()=>aidePick") is True
+    pg.keyboard.press("Escape"); assert pg.evaluate("()=>[aidePick,!!document.getElementById('aidepickbar')]") == [False, False]
+    assert pg.errs == []
