@@ -2,7 +2,7 @@
    Planning La Bocca — animations de sortie façon Material 3 (v1)
    À charger à la fin de index.html, après le grand <script> :
      <script src="motion-m3.js"></script>
-   Le CSS (ameliorations-ui.css) gère les entrées ; ce fichier fait
+   Le CSS (styles.css, partie Retouches) gère les entrées ; ce fichier fait
    jouer les sorties avant de cacher les éléments, sans toucher à la logique.
    ===================================================================== */
 (function () {
