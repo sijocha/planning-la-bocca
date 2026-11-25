@@ -717,6 +717,32 @@ let renderPending=false,lastAnim='';
 const typingInMain=()=>{const a=document.activeElement;return !!(a&&a.matches&&a.matches('input:not([type=checkbox]):not([type=radio]),textarea,select,[contenteditable="true"]')&&!a.closest('#pop,#drawer,#gate'))};
 document.addEventListener('focusout',()=>setTimeout(()=>{if(renderPending&&!typingInMain()&&popEl.hidden&&drawerEl.hidden)render()},0));
 const migDone=new WeakSet();
+/* Mise à jour fine de l'écran : on calcule toute la page, mais on ne touche qu'aux éléments qui ont changé
+   (ligne ouverte, défilement, saisie en cours, encadré déplié restent en place). */
+function morphAttrs(a,b){
+  for(const at of [...a.attributes])if(!b.hasAttribute(at.name))a.removeAttribute(at.name);
+  for(const at of [...b.attributes])if(a.getAttribute(at.name)!==at.value)a.setAttribute(at.name,at.value);
+  if(a!==document.activeElement){
+    if(a.tagName==='INPUT'){if(a.type==='checkbox'||a.type==='radio')a.checked=b.hasAttribute('checked');else if(a.value!==(b.getAttribute('value')||''))a.value=b.getAttribute('value')||''}
+    else if(a.tagName==='TEXTAREA'&&a.value!==b.textContent)a.value=b.textContent;
+  }
+}
+function morphKids(a,b){
+  const nk=[...b.childNodes];const ids=new Map();for(const n of a.childNodes)if(n.nodeType===1&&n.id)ids.set(n.id,n);
+  let i=0;
+  for(const nn of nk){
+    let cur=a.childNodes[i]||null;
+    if(nn.nodeType===1&&nn.id&&ids.has(nn.id)){const o=ids.get(nn.id);if(o!==cur){a.insertBefore(o,cur);cur=o}}
+    if(cur&&cur.nodeType===nn.nodeType&&cur.nodeName===nn.nodeName&&(cur.nodeType!==1||cur.id===nn.id)){
+      if(cur.nodeType===1){if(!cur.isEqualNode(nn)){morphAttrs(cur,nn);if(cur.tagName==='TEXTAREA')cur.textContent=nn.textContent;else morphKids(cur,nn)}}
+      else if(cur.nodeValue!==nn.nodeValue)cur.nodeValue=nn.nodeValue;
+    }else a.insertBefore(nn,cur);
+    i++;
+  }
+  while(a.childNodes.length>nk.length)a.removeChild(a.lastChild);
+}
+function morph(el,html){const t=document.createElement('template');t.innerHTML=html;morphKids(el,t.content)}
+
 function render(force){if(typeof gateDay==='function'&&!document.getElementById('gate').hidden)gateDay();
   plRefresh();
   if(!S)return;
@@ -736,7 +762,8 @@ function render(force){if(typeof gateDay==='function'&&!document.getElementById(
   applyLayout();
   m.classList.toggle('cols',jour);m.classList.toggle('simple',simple());m.classList.toggle('compact',jour&&prefs.vue==='simple'&&!isPhone());
   const ak=t+view.mode+view.date;const anim=ak!==lastAnim;lastAnim=ak;m.classList.remove('anim');
-  m.innerHTML=t==='planning'?(view.mode==='jour'?dayHTML(view.date):weekHTML()):t==='demandes'?demandesHTML():t==='agregats'?aggTabHTML():t==='camions'?camionsHTML():t==='liens'?liensHTML():t==='aide'?aideHTML():adjHTML();
+  const mh=t==='planning'?(view.mode==='jour'?dayHTML(view.date):weekHTML()):t==='demandes'?demandesHTML():t==='agregats'?aggTabHTML():t==='camions'?camionsHTML():t==='liens'?liensHTML():t==='aide'?aideHTML():adjHTML();
+  if(anim||!m.firstChild||window.NO_MORPH)m.innerHTML=mh;else morph(m,mh);   // changement d'onglet ou de jour : page neuve (animation d'entrée)
   document.getElementById('foot').innerHTML=footHTML(view.date);
   {let pv=document.getElementById('phviews');const on=false;
    if(on&&!pv){pv=document.createElement('div');pv.id='phviews';pv.className='phviews';pv.setAttribute('role','group');pv.setAttribute('aria-label','Affichage des chantiers');document.body.appendChild(pv)}
