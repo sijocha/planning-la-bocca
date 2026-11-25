@@ -36,6 +36,9 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - Pompe : seul le **Betobag** (sac de lavage) est proposé.
 - **Citybag** = produit BAG rempli à la centrale : le planning compte les sacs (1 bag = 0,5 m³), sous le cubage et dans chaque bulle.
 
+### Téléphone
+- Commande ouverte avec camion et pompe : le camion et la pompe ont chacun leur ligne ; le nom du client, l'adresse et la formule reprennent toute la largeur.
+
 ### Lecture seule stricte
 - Un compte en lecture seule **consulte uniquement** : planning complet, demandes en cours, carte, impression, et en consultation les camions, pompes, fournisseurs, agence et raccourcis.
 - Plus de menu ⋯ sur les commandes, plus de chat, ni notifications ni administration ; un clic sur une formule, une bulle ou une commande n'ouvre rien.

@@ -565,7 +565,7 @@ body{background-color:var(--bg);background-image:radial-gradient(var(--dot) 1px,
   .nav-b .n{position:absolute;top:4px;right:4px;margin:0;font-size:9.5px;padding:0 4px;min-width:0}
   .nav-b::before{display:none}
   .work{padding-bottom:calc(54px + env(safe-area-inset-bottom,0px))}
-  .row{grid-template-rows:none;grid-template-columns:48px minmax(0,1fr) auto 28px;grid-template-areas:"time client vol menu" "time site site site" "time form form form" "time cam pom pom" "time tel tel tel" "time pills pills pills"}
+  .row{grid-template-rows:none;grid-template-columns:48px minmax(0,1fr) auto 28px;grid-template-areas:"time client vol menu" "time site site site" "time form form form" "time cam cam cam" "time pom pom pom" "time tel tel tel" "time pills pills pills"}
   .row>*:not(.editby){height:auto!important;border:0!important;padding:1px 6px!important}.row>.r-ch{white-space:normal}.row>.r-tel{grid-area:tel}
   .row>.r-tel:has(.faint){display:none}.row>.r-menu{height:28px!important}
   .row>.r-cam:has(.faint),.row>.r-pom:has(.faint){display:none}
@@ -1148,7 +1148,7 @@ table.conv th,table.conv td{overflow:hidden;text-overflow:ellipsis}
   .row.ph:not(.open){grid-template-areas:"time client vol menu" "time site site site" "time form form form"!important}
   .row.ph:not(.open)>.r-tours.ph-t{display:none!important}
   .row.ph>.r-fo{display:flex!important}
-  .row.ph.open{grid-template-areas:"time client vol menu" "time site site site" "time form form form" "time cam pom pom" "time tel tel tel" "time pills pills pills" "time tours tours tours" "time det det det"!important;background:color-mix(in srgb,var(--ink) 4%,var(--panel))!important;box-shadow:inset 0 0 0 1px var(--ink)}
+  .row.ph.open{grid-template-areas:"time client vol menu" "time site site site" "time form form form" "time cam cam cam" "time pom pom pom" "time tel tel tel" "time pills pills pills" "time tours tours tours" "time det det det"!important;background:color-mix(in srgb,var(--ink) 4%,var(--panel))!important;box-shadow:inset 0 0 0 1px var(--ink)}
   .row.ph>.r-tours.ph-t{display:flex!important;grid-area:tours;flex-wrap:wrap;gap:3px;height:auto!important;padding:3px 6px 2px!important;border:0!important;align-items:center}
   .ph-t .t{height:22px;min-width:auto;padding:0 6px;gap:3px;font-size:11px;pointer-events:none}
   .ph-t .t small{font:500 10px var(--mono)}
@@ -1763,3 +1763,6 @@ body.ro #main [data-act]:not([data-act="focus"]):not([data-act="goto"]):not([dat
 body.ro #main .r-form:hover, body.ro #main .t:hover { filter: none; transform: none; }
 body.ro .dl .btn:not([data-act="focus"]):not([data-act="goto"]), body.ro .dl [data-act="dem-done"], body.ro .dl [data-act="dem-rep"] { display: none !important; }
 .cfg-ro .inline-f, .cfg-ro .cfg-lf, .cfg-ro .x, .cfg-ro [data-cfg] { display: none !important; }
+
+/* Téléphone, ligne ouverte : camion et pompe chacun sur sa ligne (la pompe n'élargit plus la colonne du volume) */
+@media (max-width:760px){ .row.ph.open>.r-cam, .row.ph.open>.r-pom { justify-self: start; } }
