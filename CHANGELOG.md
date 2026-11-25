@@ -36,6 +36,9 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - Pompe : seul le **Betobag** (sac de lavage) est proposé.
 - **Citybag** = produit BAG rempli à la centrale : le planning compte les sacs (1 bag = 0,5 m³), sous le cubage et dans chaque bulle.
 
+### Prise de poste
+- Un compte qui n'est pas admin ouvre le planning **avec son prénom et son rôle attribués** (Administration → Accès) : les autres personnes et les autres rôles s'affichent grisés. Un admin garde le libre choix (poste partagé de la centrale).
+
 ### Vue semaine : charge par jour
 - Chaque jour affiche une barre de charge (m³ du matin, de l'après-midi et de la nuit, comparés au jour le plus chargé de la semaine), le nombre de tours, de pompes et de commandes à valider.
 

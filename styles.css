@@ -1744,3 +1744,8 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 .wk-s em { font-style: normal; color: var(--orange); font-weight: 700; }
 .wk-legend { display: flex; gap: 14px; font: 500 11.5px var(--mono); color: var(--muted); margin: 0 0 8px; }
 .wk-legend i { display: inline-block; width: 10px; height: 6px; margin-right: 5px; vertical-align: middle; }
+
+/* Prise de poste : rôle et prénom imposés pour un compte non admin (les autres choix grisés) */
+.g2-person[disabled] { opacity: .38; cursor: not-allowed; filter: grayscale(1); }
+.g2-roles.fixe label.off { opacity: .38; cursor: not-allowed; }
+.g2-roles.fixe input:disabled + span { cursor: not-allowed; }

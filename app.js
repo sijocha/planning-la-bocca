@@ -1757,12 +1757,17 @@ async function gateNoms(){
   (rows||[]).filter(x=>x.r!=='lecture').sort((a,b)=>String(a.n).localeCompare(String(b.n),'fr')).forEach(x=>add(x.n,x.r));
   return out;
 }
+// prénom attribué au compte (liste des accès) : seul choix possible pour un compte qui n'est pas admin
+const gAssigned=()=>gPrenom((ME&&(ME.nom||ME.email))||'');
 function gatePeople(list){
   const box=document.getElementById('g2-people');if(!box)return;
+  const libre=isAdmin();const mine=gAssigned();
+  if(!libre&&mine&&!list.some(x=>x.p.toLowerCase()===mine.toLowerCase()))list=[{p:mine,r:ME.role},...list];
+  if(!libre&&mine){const i=document.getElementById('g-nom');if(i)i.value=mine}
   const cur=(document.getElementById('g-nom')||{}).value||'';
-  box.innerHTML=list.map((x,i)=>`<button type="button" class="g2-person" data-gp="${esc(x.p)}" data-gr="${esc(ROLE_UI[x.r]||'')}" aria-pressed="${x.p.toLowerCase()===cur.toLowerCase()}"><i class="g2-av">${esc(gInit(x.p))}</i><b>${esc(x.p)}</b>${x.r?`<small>${esc(ROLE_NOM[x.r]||x.r)}</small>`:''}</button>`).join('')
-    +`<button type="button" class="g2-person" data-gp="" aria-pressed="false"><i class="g2-av">+</i><b>Autre</b><small>Prénom libre</small></button>`;
-  box.querySelectorAll('.g2-person').forEach(b=>b.onclick=()=>{
+  box.innerHTML=list.map((x,i)=>{const off=!libre&&x.p.toLowerCase()!==mine.toLowerCase();return `<button type="button" class="g2-person" data-gp="${esc(x.p)}" data-gr="${esc(ROLE_UI[x.r]||'')}" aria-pressed="${x.p.toLowerCase()===cur.toLowerCase()}" ${off?'disabled title="Vous vous connectez avec votre prénom attribué"':''}><i class="g2-av">${esc(gInit(x.p))}</i><b>${esc(x.p)}</b>${x.r?`<small>${esc(ROLE_NOM[x.r]||x.r)}</small>`:''}</button>`}).join('')
+    +(libre?`<button type="button" class="g2-person" data-gp="" aria-pressed="false"><i class="g2-av">+</i><b>Autre</b><small>Prénom libre</small></button>`:'');
+  box.querySelectorAll('.g2-person:not([disabled])').forEach(b=>b.onclick=()=>{
     box.querySelectorAll('.g2-person').forEach(x=>x.setAttribute('aria-pressed',x===b));
     const inp=document.getElementById('g-nom'),oth=document.getElementById('g2-other');
     if(b.dataset.gp){inp.value=b.dataset.gp;oth.hidden=true;const r=b.dataset.gr&&document.querySelector(`#gate input[name="g-role"][value="${b.dataset.gr}"]`);if(r)r.checked=true;document.getElementById('g-err').textContent=''}
@@ -1791,12 +1796,12 @@ function showGate(){
   }
   const u=prefs.user||{};
   const nom0=u.nom||gPrenom(ME.nom||ME.email)||'';
-  const roleUI=isAdmin()?`<div class="g2-field"><span class="g2-flbl">Ouvrir en tant que (admin)</span><div class="g2-roles" role="radiogroup">${Object.entries(ROLES).map(([k,l])=>`<label><input type="radio" name="g-role" value="${k}" ${(u.role||'centraliste')===k?'checked':''}><span>${l}</span></label>`).join('')}</div></div>`
-    :`<p class="g2-small">Rôle : <b>${esc(ROLE_NOM[ME.role]||ME.role)}</b></p>`;
+  const adm=isAdmin(),monR=ROLE_UI[ME.role]||'commercial';
+  const roleUI=`<div class="g2-field"><span class="g2-flbl">${adm?'Ouvrir en tant que (admin)':'Votre rôle'}</span><div class="g2-roles ${adm?'':'fixe'}" role="radiogroup">${Object.entries(ROLES).map(([k,l])=>`<label ${!adm&&k!==monR?'class="off" title="Rôle attribué par l\'administrateur"':''}><input type="radio" name="g-role" value="${k}" ${(adm?(u.role||'centraliste'):monR)===k?'checked':''} ${adm?'':'disabled'}><span>${l}</span></label>`).join('')}</div></div>`;
   g.innerHTML=`<div class="g2">${gSideDay()}<main class="g2-main"><form id="gateform" class="g2-card" autocomplete="off" data-step="nom">
     <div class="g2-acct"><i class="g2-av">${esc(gInit(ME.nom||ME.email))}</i><span>${esc(ME.email)} · ${esc(ROLE_NOM[ME.role]||'')}</span></div>
     <span class="g2-lbl"><i class="g2-led"></i>// Prise de poste</span>
-    <h2>Bonjour, qui prend le poste&nbsp;?</h2>
+    <h2>${isAdmin()?'Bonjour, qui prend le poste&nbsp;?':`Bonjour ${esc(gAssigned()||'')}&nbsp;!`}</h2>
     <div class="g2-field"><span class="g2-flbl">Personnes autorisées</span><div class="g2-people" id="g2-people" role="group" aria-label="Choisir un prénom"><span class="g2-loading">Chargement des prénoms…</span></div></div>
     <div class="g2-field" id="g2-other" hidden><label for="g-nom">Autre prénom</label><input class="g2-input" id="g-nom" value="${esc(nom0)}" maxlength="24" placeholder="Prénom"></div>
     ${roleUI}
@@ -1814,7 +1819,7 @@ function gateSubmit(f){
   const step=f.dataset.step;
   if(step==='login')return supaLogin();
   if(step==='refus')return supaLogout();
-  const nom=f.querySelector('#g-nom').value.trim();if(!nom){f.querySelector('#g-err').textContent='Choisissez votre prénom.';return}
+  const nom=(isAdmin()?f.querySelector('#g-nom').value:(gAssigned()||f.querySelector('#g-nom').value)).trim();if(!nom){f.querySelector('#g-err').textContent='Choisissez votre prénom.';return}
   const r=f.querySelector('input[name="g-role"]:checked');
   prefs.user={nom:nom.slice(0,24),role:isAdmin()&&r?r.value:(ROLE_UI[ME.role]||'commercial')};prefs.gate=TODAY;prefs.email=ME.email;
   prefs.recents=[prefs.user.nom,...(prefs.recents||[]).filter(n=>n.toLowerCase()!==prefs.user.nom.toLowerCase())].slice(0,6);
@@ -2451,6 +2456,8 @@ async function supaBoot(){
   if(!ME.actif){prefs.user=null;savePrefs();main.innerHTML='<p class="empty">Accès non autorisé.</p>';showGate();return}
   if(prefs.user&&!isAdmin())prefs.user.role=ROLE_UI[ME.role]||'commercial';
   document.body.classList.toggle('ro',ME.role==='lecture');
+  // compte non admin : prénom et rôle toujours ceux attribués dans les accès (corrige un ancien choix enregistré sur l'appareil)
+  if(prefs.user&&ME&&ME.actif&&!isAdmin()){const n=gAssigned(),r=ROLE_UI[ME.role]||'commercial';if((n&&prefs.user.nom!==n)||prefs.user.role!==r){prefs.user={nom:n||prefs.user.nom,role:r};savePrefs()}}
   if(!prefs.user||prefs.gate!==TODAY||prefs.email!==ME.email)showGate();
   startShared(supaDb(SB));setTimeout(histTrap,800);
   room=supaRoom(SB);verrousInit();setTimeout(notifRefresh,3000);if(location.search)navFromUrl(location.search);
