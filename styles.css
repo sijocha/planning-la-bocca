@@ -1707,3 +1707,18 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 #pop:has(.mod-diff) { width: min(640px, 94vw) !important; max-width: min(640px, 94vw) !important; }
 #pop:has(.mod-diff) .pop-cf { flex-wrap: wrap; }
 .mod-diff td:nth-child(3) { width: 24px; text-align: center; color: var(--muted); }
+
+/* Encadrés du haut : vides = repliés ; tous vides = une seule ligne fine */
+#head .hb-w.hb-vide .hb-body { display: none; }
+#head .hb-w.hb-vide .hb { gap: 6px; }
+#head .hb-w.hb-vide .hb-add { border-top: 0; padding-top: 0; margin-top: auto; flex-wrap: wrap; white-space: normal; }
+#head.tout-vide { --headH: 46px; }
+#head.tout-vide .hb-w.hb-vide .hb { flex-direction: row; align-items: center; padding: 6px 10px; }
+#head.tout-vide .hb-w.hb-vide .hb-h { flex: none; }
+#head.tout-vide .hb-w.hb-vide .hb-h .chip { display: none; }
+#head.tout-vide .hb-w.hb-vide .hb-add { margin: 0 0 0 auto; flex-wrap: nowrap; overflow: hidden; }
+#head.tout-vide .hb-w.hb-vide .hb-add { mask-image: linear-gradient(90deg, #000 85%, transparent); }
+#head.tout-vide .hb-w.hb-vide .hb:hover, #head.tout-vide .hb-w.hb-vide .hb.open, #head.tout-vide .hb-w.hb-vide .hb:has(:focus-visible) {
+  flex-direction: column; align-items: stretch; height: auto; }
+#head.tout-vide .hb-w.hb-vide .hb:hover .hb-add, #head.tout-vide .hb-w.hb-vide .hb.open .hb-add, #head.tout-vide .hb-w.hb-vide .hb:has(:focus-visible) .hb-add {
+  margin: 0; flex-wrap: wrap; mask-image: none; }

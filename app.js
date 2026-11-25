@@ -178,7 +178,9 @@ function layoutGet(){const u=(prefs.layouts||{})[meKey()];const c=S&&S.config&&S
 function applyLayout(L){const hd=document.getElementById('head'),m=document.getElementById('main');if(!hd||!m)return;L=L||layoutGet();
   if(L.pos==='bottom'){if(m.nextElementSibling!==hd)m.after(hd)}else if(hd.nextElementSibling!==m)m.before(hd);
   hd.classList.toggle('at-bottom',L.pos==='bottom');
-  hd.style.gridTemplateColumns=innerWidth>900?L.order.map(k=>`minmax(0,${BOXES[k]}fr)`).join(' '):'';
+  const vide=k=>{const w=hd.querySelector(`.hb-w[data-box="${k}"]`);return !!(w&&w.classList.contains('hb-vide'))};const tout=Object.keys(BOXES).every(vide);
+  hd.classList.toggle('tout-vide',tout);
+  hd.style.gridTemplateColumns=innerWidth>900?L.order.map(k=>`minmax(0,${!tout&&vide(k)?0.6:BOXES[k]}fr)`).join(' '):'';
   hd.querySelectorAll('.hb-w[data-box]').forEach(w=>{w.style.order=L.order.indexOf(w.dataset.box)})}
 function saveMyLayout(L){prefs.layouts=prefs.layouts||{};prefs.layouts[meKey()]={order:L.order.slice(),pos:L.pos};savePrefs()}
 let hbDrag=null,hbSwallow=0;
@@ -225,7 +227,9 @@ function headHTML(iso){
   const etW=etatWin(iso);const etChip=(!et.k||et.k==='ouverte'||et.k==='panne')?`<button class="chip ok" data-act="etat" title="État de la centrale · ajouter une panne">Ouverte</button>`:`<button class="chip bad" data-act="etat">Fermée ${esc(etW?etW.lbl:'')}${et.t?' · '+esc(et.t):''}</button>`;
   const pn=pannesOn(iso);const pannesLine=pn.length?`<div class="chips pannes">${pn.map((x,i)=>`<span class="chip panne ${x.fin?'fin':''}" title="${x.fin?'Panne terminée à '+esc(hm(x.fin))+(x.finBy?' · '+esc(x.finBy):''):'Panne en cours'}${x.by?' · notée par '+esc(x.by):''}"><b>Panne</b> ${esc(panneLbl(x))}${x.t?' · '+esc(x.t):''}${x.fin?' · terminée':''}${x.fin?'':`<button class="pn-b" data-act="panne-end" data-i="${i}" title="La panne est réparée : fermer la case">Terminée</button>`}<button class="x" data-act="panne-x" data-i="${i}" aria-label="Annuler cette panne" title="Annuler (panne notée par erreur)">×</button></span>`).join('')}</div>`:'';
   const det=ech('donne')+convChips(iso,'pret')+convChips(iso,'ailleurs');
-  return `<div class="hb-w" data-box="ech"><div class="hb" data-act="hb">
+  // encadrés vides : repliés (titre et boutons « + » seulement)
+  const vEch=!dd.ech.length&&!det&&!convChips(iso,'abs'),vVie=!dd.presents.length&&!dd.passation.length&&!dd.events.length&&!dd.labo.length&&!pn.length&&(!et.k||et.k==='ouverte'),vAgg=!(dd.semis||[]).length&&!(dd.ciments||[]).length;
+  return `<div class="hb-w ${vEch?'hb-vide':''}" data-box="ech"><div class="hb" data-act="hb">
       <div class="hb-h"><span class="lbl" title="Rester appuyé sur le bord ou le titre pour déplacer">// Planning camions</span></div>
       <div class="hb-body">
       <div class="chips"><span class="lbl" title="Camions qui viennent à la centrale">Renforts</span>${ech('recu')||'<span class="muted">—</span>'}</div>
@@ -234,7 +238,7 @@ function headHTML(iso){
       </div>
       <div class="hb-add"><button class="chip add" data-act="ech-add" data-v="Renfort">+ Renfort</button><button class="chip add" data-act="ech-add" data-v="Détachement">+ Détachement</button><button class="chip add" data-act="ech-add" data-v="Camion absent">+ Absent</button></div>
     </div></div>
-    <div class="hb-w" data-box="vie"><div class="hb" data-act="hb">
+    <div class="hb-w ${vVie?'hb-vide':''}" data-box="vie"><div class="hb" data-act="hb">
       <div class="hb-h"><span class="lbl" title="Rester appuyé sur le bord ou le titre pour déplacer">// Journal de bord</span>${etChip}</div>
       <div class="hb-body">${pannesLine}
       ${dd.presents.length?`<div class="chips">${dd.presents.map((p,i)=>`<span class="chip ${p.rempl?'warn':''}" title="${p.rempl?'Remplaçant':'Centraliste'}"><b>${esc(p.n)}</b><small>${esc(p.pl)}${p.rempl?' · remplaçant':''}</small>${role()==='centraliste'?chipX('pres-x',i,p.n):''}</span>`).join('')}</div>`:''}
@@ -244,7 +248,7 @@ function headHTML(iso){
       </div>
       <div class="hb-add">${role()==='centraliste'?'<button class="chip add" data-act="pres-add">+ Présent</button>':''}<button class="chip add" data-act="pass-add">+ Passation</button><button class="chip add" data-act="ev-add">+ Événement</button><button class="chip add" data-act="prod-chg">+ Changement produit</button><button class="chip add" data-act="labo-add">+ RDV labo</button></div>
     </div></div>
-    <div class="hb-w agg" data-box="agg"><div class="hb" data-act="hb" data-day="${iso}">
+    <div class="hb-w agg ${vAgg?'hb-vide':''}" data-box="agg"><div class="hb" data-act="hb" data-day="${iso}">
       <div class="hb-h"><span class="lbl" title="Rester appuyé sur le bord ou le titre pour déplacer">// Agrégats · ciments</span></div>
       <div class="hb-body">${aggInner(iso)}</div>
       <div class="hb-add"><button class="chip add" data-act="semi-add">+ Semi</button><button class="chip add" data-act="cim-add">+ Liant</button></div>
