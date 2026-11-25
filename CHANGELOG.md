@@ -80,7 +80,8 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 
 ### En coulisses
 - Une seule feuille de styles (`styles.css`) au lieu de deux : 362 réglages jamais appliqués retirés, affichage vérifié identique sur 15 écrans.
-- README à jour (fichiers de la page, scripts SQL 01 à 12).
+- README à jour (fichiers de la page, scripts SQL 01 à 13).
+- **Tests automatiques sur GitHub** : à chaque envoi, 15 vérifications du planning dans un vrai navigateur (données fictives), 5 de la fonction des notifications et une série sur les scripts de la base (verrou, journée clôturée, droits, notifications). Coche verte ou croix rouge sur chaque modification, badge en tête du README.
 
 ## 24 novembre 2026
 
