@@ -1769,3 +1769,12 @@ body.ro .dl .btn:not([data-act="focus"]):not([data-act="goto"]), body.ro .dl [da
 /* Prise de poste : badge fixe de la personne connectée, connectés en lecture seule */
 #gate .g2-person.g2-self { border-color: #141413; cursor: default; width: 92px; }
 #gate span.g2-person { cursor: default; }
+
+/* Prise de poste sur téléphone : tout tient dans la largeur de l'écran (l'adresse longue passe à la ligne) */
+@media (max-width: 900px) {
+  #gate .g2 { grid-template-columns: minmax(0, 1fr) !important; overflow-x: hidden; }
+  #gate .g2-side, #gate .g2-main, #gate .g2-card { min-width: 0; max-width: 100%; }
+  #gate .g2-card { width: 100%; }
+  #gate .g2-acct span:last-child { white-space: normal; overflow-wrap: anywhere; }
+  #gate .g2-go { width: 100%; }
+}
