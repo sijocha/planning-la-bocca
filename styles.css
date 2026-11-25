@@ -1819,3 +1819,19 @@ body.aide-pick .aide-hl{outline:2px dashed var(--orange)!important;outline-offse
 .aide-tip{position:fixed;z-index:90;padding:5px 10px;background:var(--orange);color:#fff;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);pointer-events:none;animation:anDrop .25s ease-out}
 @media (max-width:760px){.aide-pickbar{width:auto;flex-direction:column;align-items:stretch;text-align:center;bottom:calc(76px + env(safe-area-inset-bottom))}}
 @media (prefers-reduced-motion:reduce){.aide-spot,.an-menu,.an-notif,.an-wk i,.aide-d.aide-flash{animation:none}}
+/* Exemples à essayer dans le mode d'emploi */
+.an[data-an]{cursor:pointer;user-select:none}
+.an[data-an]:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.an-s{padding-bottom:20px}
+.an-step{position:absolute;left:0;right:0;bottom:3px;text-align:center;font:500 10.5px var(--mono);color:var(--orange);opacity:0}
+.an.man .an-step{opacity:1}
+.an-try{position:absolute;right:6px;top:4px;padding:1px 7px;font:600 10.5px var(--mono);color:var(--orange);border:1px solid color-mix(in srgb,var(--orange) 50%,transparent);background:var(--panel);pointer-events:none}
+.an.man .an-try{display:none}
+.an.man .an-s{animation:none;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(3px);transition:opacity .25s,transform .25s,visibility 0s .25s}
+.an.man .an-s.cur{opacity:1;visibility:visible;pointer-events:auto;transform:none;transition:opacity .25s,transform .25s}
+.an.man .an-go{pointer-events:auto;cursor:pointer;outline:2px solid var(--orange);outline-offset:2px;animation:anGoP 1.2s ease-in-out infinite}
+.an:not(.man) .an-go{outline:none}
+@keyframes anGoP{50%{outline-offset:5px;outline-color:color-mix(in srgb,var(--orange) 35%,transparent)}}
+.an-go.an-nudge{animation:anNudge .35s}
+@keyframes anNudge{20%,60%{transform:translateX(-3px)}40%,80%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.an.man .an-go{animation:none}}

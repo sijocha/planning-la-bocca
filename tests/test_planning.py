@@ -190,9 +190,18 @@ def test_mode_d_emploi_relie_a_l_ecran(ouvrir):
     assert pg.evaluate("()=>document.querySelector('.aide-d[open] summary').textContent") == "Paiements comptant"
     assert pg.evaluate(f"()=>byId('{oid}').pay.paye") is False
     assert pg.evaluate("()=>[aidePick,document.body.classList.contains('aide-pick')]") == [False, False]
-    # « Montrer sur l'écran » : retour au planning, élément entouré
-    pg.click(".aide-d[open] .aide-show"); pg.wait_for_timeout(400)
-    assert pg.evaluate("()=>[view.tab,!!document.querySelector('[data-act=pay].aide-spot'),!!document.querySelector('.aide-tip')]") == ["planning", True, True]
+    # rubrique avec exemple animé : on essaie dans l'exemple (pas de « Montrer sur l'écran »)
+    assert pg.evaluate("()=>!!document.querySelector('.aide-d[open] .an[data-an]') && !document.querySelector('.aide-d[open] .aide-show')")
+    ex = ".aide-d[data-t='Paiements comptant'] .an[data-an]"
+    pg.click(ex); pg.click(ex + " .an-s.cur .an-go"); pg.wait_for_timeout(200)
+    assert pg.evaluate("()=>anStep['Paiements comptant']") == 1
+    # les rubriques ouvertes et l'étape de l'exemple restent après une mise à jour de l'écran
+    pg.evaluate("()=>{render(true);render(true)}")
+    assert pg.evaluate("()=>[document.querySelector('.aide-d[data-t=\"Paiements comptant\"]').open,[...document.querySelectorAll(\"[data-an='Paiements comptant'] .an-s\")].findIndex(x=>x.classList.contains('cur'))]") == [True, 1]
+    # « Montrer sur l'écran » (rubrique sans exemple) : retour au planning, élément entouré
+    pg.evaluate("()=>aideOuvrir('Carte du chantier')"); pg.wait_for_timeout(300)
+    pg.click(".aide-d[data-t='Carte du chantier'] .aide-show"); pg.wait_for_timeout(400)
+    assert pg.evaluate("()=>[view.tab,!!document.querySelector('[data-act=map].aide-spot'),!!document.querySelector('.aide-tip')]") == ["planning", True, True]
     # touche ? : active / Échap : annule
     pg.keyboard.press("?"); assert pg.evaluate("()=>aidePick") is True
     pg.keyboard.press("Escape"); assert pg.evaluate("()=>[aidePick,!!document.getElementById('aidepickbar')]") == [False, False]

@@ -84,7 +84,9 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 
 ### Mode d'emploi vivant
 - **? Qu'est-ce que c'est ?** : un bouton (ou la touche **?**), puis on touche un élément du planning (bulle, étiquette paiement, pompe, formule, menu ⋯, encadré, badge…) : sa rubrique s'ouvre dans le mode d'emploi. Rien n'est modifié ; Échap pour annuler.
-- **◎ Montrer sur l'écran** au bas des rubriques : retour au planning, l'élément est entouré en orange avec son nom.
+- **Exemples à essayer** : chaque exemple animé devient un petit planning d'essai. On clique dedans, puis sur l'élément entouré d'orange (le €, le menu ⋯, la bulle orange, le badge LABO…) pour passer à l'étape suivante. Rien n'est modifié dans le vrai planning.
+- **◎ Montrer sur l'écran** pour les rubriques sans exemple : retour au planning, l'élément est entouré en orange avec son nom.
+- Les rubriques ouvertes, la recherche et l'étape des exemples **ne se referment plus** quand le planning se met à jour (toutes les minutes ou à chaque modification d'un autre poste).
 - **Nouvelles animations** : menu ⋯, compléments (orange, [+] gris, « Encore un complément ? »), modification à valider (avant → après), proposition du labo, paiements en plusieurs lignes, stabilo des agrégats, verrou, journée clôturée, section Nuit, charge de la semaine, encadrés repliés, notification sur l'écran de verrouillage, badge de synchronisation, connexion.
 
 ### En coulisses
