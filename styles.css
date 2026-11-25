@@ -1766,3 +1766,6 @@ body.ro .dl .btn:not([data-act="focus"]):not([data-act="goto"]), body.ro .dl [da
 
 /* Téléphone, ligne ouverte : camion et pompe chacun sur sa ligne (la pompe n'élargit plus la colonne du volume) */
 @media (max-width:760px){ .row.ph.open>.r-cam, .row.ph.open>.r-pom { justify-self: start; } }
+/* Prise de poste : badge fixe de la personne connectée, connectés en lecture seule */
+#gate .g2-person.g2-self { border-color: #141413; cursor: default; width: 92px; }
+#gate span.g2-person { cursor: default; }

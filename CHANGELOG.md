@@ -48,8 +48,9 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - Si l'admin change le rôle d'une personne ou désactive son accès, elle est **déconnectée automatiquement** (vérification toutes les 30 secondes et au retour sur la page), avec un message sur l'écran de connexion.
 
 ### Prise de poste
-- L'écran de connexion présente les personnes **en organigramme** : Admin, Centralistes, Commerciaux, Tech labo, avec le rôle sous chaque badge.
-- Un compte qui n'est pas admin ouvre le planning **avec son prénom et son rôle attribués** (Administration → Accès) : les autres personnes et les autres rôles s'affichent grisés. Un admin garde le libre choix (poste partagé de la centrale).
+- Chacun ouvre le planning **avec son badge et son prénom** (ceux de son compte, Administration → Accès) : plus de choix d'un autre prénom ni de prénom libre.
+- En dessous, **les personnes connectées en ce moment**, en organigramme par rôle (centralistes, commerciaux, tech labo).
+- Le rôle est imposé, sauf pour un admin qui choisit le rôle sous lequel il travaille.
 
 ### Réglages de la centrale pour le commercial
 - Le commercial a accès à **tous les réglages de la centrale** (camions, pompes, fournisseurs, agence, carrières, raccourcis). *(nécessite `supabase/13_reglages_commercial.sql`)*

@@ -1734,7 +1734,15 @@ function gSideDay(){return `<aside class="g2-side">${gCorners}
   <div id="g2-day"></div>
   <div class="g2-ruler"><span>Synchro <b id="g2-sync">en cours</b></span></div></aside>`}
 // Chiffres de la journée : remplis dès que les données arrivent (appelé aussi par render)
-function gateDay(){
+function gateOnline(){const box=document.getElementById('g2-people');if(!box)return;
+  const ps=(typeof peers!=='undefined'?peers:[]).filter(p=>p.kind==='viewer'&&p.presence&&p.presence.nom&&!p.isMe);
+  const seen=new Set(),list=[];ps.forEach(p=>{const k=p.presence.nom.toLowerCase();if(seen.has(k))return;seen.add(k);list.push({p:p.presence.nom,r:p.presence.role||''})});
+  if(!list.length){box.innerHTML='<span class="g2-loading">Personne d\'autre n\'est connecté pour l\'instant.</span>';return}
+  const GR=[['centraliste','Centralistes'],['commercial','Commerciaux'],['labo','Tech labo']];
+  const card=x=>`<span class="g2-person"><i class="g2-av">${esc(gInit(x.p))}</i><b>${esc(x.p)}</b>${x.r?`<small>${esc(ROLE_NOM[x.r]||x.r)}</small>`:''}</span>`;
+  box.innerHTML=GR.map(([k,l])=>{const g=list.filter(x=>x.r===k);return g.length?`<div class="g2-org"><span class="g2-org-l">${l}</span><div class="g2-org-p">${g.map(card).join('')}</div></div>`:''}).join('')
+    +(list.some(x=>!GR.some(z=>z[0]===x.r))?`<div class="g2-org"><span class="g2-org-l">Autres</span><div class="g2-org-p">${list.filter(x=>!GR.some(z=>z[0]===x.r)).map(card).join('')}</div></div>`:'')}
+function gateDay(){gateOnline();
   const box=document.getElementById('g2-day');if(!box)return;
   const d=D(TODAY);const jour=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][d.getUTCDay()];
   let t={m3:0,n:0,c:0},ap=0,first=null,ok=false;
@@ -1810,9 +1818,10 @@ function showGate(){
   g.innerHTML=`<div class="g2">${gSideDay()}<main class="g2-main"><form id="gateform" class="g2-card" autocomplete="off" data-step="nom">
     <div class="g2-acct"><i class="g2-av">${esc(gInit(ME.nom||ME.email))}</i><span>${esc(ME.email)} · ${esc(ROLE_NOM[ME.role]||'')}</span></div>
     <span class="g2-lbl"><i class="g2-led"></i>// Prise de poste</span>
-    <h2>${isAdmin()?'Bonjour, qui prend le poste&nbsp;?':`Bonjour ${esc(gAssigned()||'')}&nbsp;!`}</h2>
-    ${lect?'':`<div class="g2-field"><span class="g2-flbl">Personnes autorisées</span><div class="g2-people" id="g2-people" role="group" aria-label="Choisir un prénom"><span class="g2-loading">Chargement des prénoms…</span></div></div>`}
-    <div class="g2-field" id="g2-other" hidden><label for="g-nom">Autre prénom</label><input class="g2-input" id="g-nom" value="${esc(nom0)}" maxlength="24" placeholder="Prénom"></div>
+    <h2>Bonjour ${esc(gAssigned()||'')}&nbsp;!</h2>
+    <input type="hidden" id="g-nom" value="${esc(gAssigned()||nom0)}">
+    ${lect?'':`<div class="g2-field"><span class="g2-flbl">Vous</span><div class="g2-org-p"><span class="g2-person g2-self" aria-pressed="true"><i class="g2-av">${esc(gInit(gAssigned()||nom0))}</i><b>${esc(gAssigned()||nom0)}</b><small>${esc(ROLE_NOM[ME.role]||ME.role)}</small></span></div></div>
+    <div class="g2-field"><span class="g2-flbl">Connectés en ce moment</span><div class="g2-people" id="g2-people" aria-live="polite"></div></div>`}
     ${roleUI}
     <p class="err" id="g-err" role="alert"></p>
     <button class="g2-go" type="submit"><span><i class="g2-led"></i>Ouvrir le planning →</span><kbd>Entrée</kbd></button>
@@ -1821,16 +1830,16 @@ function showGate(){
   </form></main></div>`;
   g.hidden=false;gStartClock();gateDay();
   const fill=list=>{gNoms=list;gatePeople(list);if(!list.length){document.getElementById('g2-other').hidden=false}};
-  if(!lect){if(gNoms)fill(gNoms);gateNoms().then(fill).catch(()=>fill(gNoms||[]))}
+  if(prefs.recents){delete prefs.recents;savePrefs()}   // anciens prénoms libres : effacés
+  gateOnline();
 }
 function gateSubmit(f){
   const step=f.dataset.step;
   if(step==='login')return supaLogin();
   if(step==='refus')return supaLogout();
-  const nom=(isAdmin()?f.querySelector('#g-nom').value:(gAssigned()||f.querySelector('#g-nom').value)).trim();if(!nom){f.querySelector('#g-err').textContent='Choisissez votre prénom.';return}
+  const nom=(gAssigned()||f.querySelector('#g-nom').value).trim();if(!nom){f.querySelector('#g-err').textContent='Choisissez votre prénom.';return}
   const r=f.querySelector('input[name="g-role"]:checked');
   prefs.user={nom:nom.slice(0,24),role:isAdmin()&&r?r.value:(ROLE_UI[ME.role]||'commercial')};prefs.gate=TODAY;prefs.email=ME.email;
-  prefs.recents=[prefs.user.nom,...(prefs.recents||[]).filter(n=>n.toLowerCase()!==prefs.user.nom.toLowerCase())].slice(0,6);
   savePrefs();
   const g=document.getElementById('gate');
   const done=()=>{g.hidden=true;g.classList.remove('g2-leaving');clearInterval(gClockT)};
@@ -2472,7 +2481,7 @@ async function supaBoot(){
   if(prefs.user&&!isAdmin())prefs.user.role=ROLE_UI[ME.role]||'commercial';
   document.body.classList.toggle('ro',ME.role==='lecture');
   // compte non admin : prénom et rôle toujours ceux attribués dans les accès (corrige un ancien choix enregistré sur l'appareil)
-  if(prefs.user&&ME&&ME.actif&&!isAdmin()){const n=gAssigned(),r=ROLE_UI[ME.role]||'commercial';if((n&&prefs.user.nom!==n)||prefs.user.role!==r){prefs.user={nom:n||prefs.user.nom,role:r};savePrefs()}}
+  if(prefs.user&&ME&&ME.actif){const n=gAssigned(),r=isAdmin()?prefs.user.role:(ROLE_UI[ME.role]||'commercial');if((n&&prefs.user.nom!==n)||prefs.user.role!==r){prefs.user={nom:n||prefs.user.nom,role:r};savePrefs()}}   // prénom du compte pour tous ; rôle libre pour l'admin seulement
   if(!prefs.user||prefs.gate!==TODAY||prefs.email!==ME.email)showGate();
   startShared(supaDb(SB));setTimeout(histTrap,800);
   room=supaRoom(SB);verrousInit();setTimeout(notifRefresh,3000);accesWatch();if(location.search)navFromUrl(location.search);
