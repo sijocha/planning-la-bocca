@@ -1481,7 +1481,7 @@ function openConfig(focus){
         <form class="cfg-lf" data-cfgform="liens"><input id="cf-ln" placeholder="Nom (ex. Bon de pompe)" aria-label="Nom du raccourci"><input id="cf-lu" placeholder="https://…" aria-label="Adresse"><input id="cf-lc" list="cf-cats" placeholder="Thème (ex. Formulaires)" aria-label="Thème"><datalist id="cf-cats">${[...new Set(['Commandes','Formulaires','Sécurité','Contacts'].concat((S.liens||[]).map(l=>l.cat)))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist><button class="btn sm">Ajouter</button></form>
         <p class="muted" style="font-size:12.5px;margin:6px 0 0">Cliquez sur un raccourci pour le modifier. Un nouveau thème se crée en tapant son nom.</p></div></div>
 `;
-  const ce=role()==='centraliste'||isAdmin();
+  const ce=role()==='centraliste'||role()==='commercial'||isAdmin();   // réglages de la centrale : centraliste, commercial, admin
   const adm=isAdmin()&&MODE==='shared'&&SB;
   const navH=[...(adm?[['adm-acces','Accès']]:[]),['adm-formules','Formules'],...(ce?[['adm-camions','Camions et pompes'],['adm-agence','Agence'],['adm-liens','Raccourcis']]:[])].map(([h,t])=>`<a href="#${h}" data-adm="${h}">${t}</a>`).join('');
   drawerEl.innerHTML=`<div class="scrim" data-act="dr-close-bg"><div class="drawer wide" role="dialog" aria-label="Administration · catalogue de la centrale">
@@ -1747,7 +1747,7 @@ function gateDay(){
 // Prénoms des personnes autorisées (Supabase), puis ceux déjà utilisés sur cet appareil
 async function gateNoms(){
   const out=[];const seen=new Set();
-  const add=(n,r)=>{const p=gPrenom(n);if(!p)return;const k=p.toLowerCase();if(seen.has(k))return;seen.add(k);out.push({p,r:r||''})};
+  const add=(n,r)=>{const p=gPrenom(n);if(!p)return;const k=p.toLowerCase();if(seen.has(k)){if(r){const x=out.find(y=>y.p.toLowerCase()===k);if(x&&!x.r)x.r=r}return}seen.add(k);out.push({p,r:r||''})};
   (prefs.recents||[]).forEach(n=>add(n));
   if(prefs.user&&prefs.user.nom)add(prefs.user.nom);
   let rows=null;
@@ -1765,8 +1765,10 @@ function gatePeople(list){
   if(!libre&&mine&&!list.some(x=>x.p.toLowerCase()===mine.toLowerCase()))list=[{p:mine,r:ME.role},...list];
   if(!libre&&mine){const i=document.getElementById('g-nom');if(i)i.value=mine}
   const cur=(document.getElementById('g-nom')||{}).value||'';
-  box.innerHTML=list.map((x,i)=>{const off=!libre&&x.p.toLowerCase()!==mine.toLowerCase();return `<button type="button" class="g2-person" data-gp="${esc(x.p)}" data-gr="${esc(ROLE_UI[x.r]||'')}" aria-pressed="${x.p.toLowerCase()===cur.toLowerCase()}" ${off?'disabled title="Vous vous connectez avec votre prénom attribué"':''}><i class="g2-av">${esc(gInit(x.p))}</i><b>${esc(x.p)}</b>${x.r?`<small>${esc(ROLE_NOM[x.r]||x.r)}</small>`:''}</button>`}).join('')
-    +(libre?`<button type="button" class="g2-person" data-gp="" aria-pressed="false"><i class="g2-av">+</i><b>Autre</b><small>Prénom libre</small></button>`:'');
+  const card=x=>{const off=!libre&&x.p.toLowerCase()!==mine.toLowerCase();return `<button type="button" class="g2-person" data-gp="${esc(x.p)}" data-gr="${esc(ROLE_UI[x.r]||'')}" aria-pressed="${x.p.toLowerCase()===cur.toLowerCase()}" ${off?'disabled title="Vous vous connectez avec votre prénom attribué"':''}><i class="g2-av">${esc(gInit(x.p))}</i><b>${esc(x.p)}</b>${x.r?`<small>${esc(ROLE_NOM[x.r]||x.r)}</small>`:''}</button>`};
+  const GR=[['admin','Admin'],['centraliste','Centralistes'],['commercial','Commerciaux'],['labo','Tech labo'],['','Sur cet appareil']];
+  box.innerHTML=GR.map(([k,l])=>{const g=list.filter(x=>(x.r||'')===k||(k===''&&x.r&&!GR.some(z=>z[0]===x.r)));return g.length?`<div class="g2-org"><span class="g2-org-l">${l}</span><div class="g2-org-p">${g.map(card).join('')}</div></div>`:''}).join('')
+    +(libre?`<div class="g2-org"><span class="g2-org-l">&nbsp;</span><div class="g2-org-p"><button type="button" class="g2-person" data-gp="" aria-pressed="false"><i class="g2-av">+</i><b>Autre</b><small>Prénom libre</small></button></div></div>`:'');
   box.querySelectorAll('.g2-person:not([disabled])').forEach(b=>b.onclick=()=>{
     box.querySelectorAll('.g2-person').forEach(x=>x.setAttribute('aria-pressed',x===b));
     const inp=document.getElementById('g-nom'),oth=document.getElementById('g2-other');
