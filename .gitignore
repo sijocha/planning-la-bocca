@@ -1,0 +1,4 @@
+__pycache__/
+.test-page-*.html
+tests/notifs/node_modules/
+tests/notifs/notifs.mjs

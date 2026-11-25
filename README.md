@@ -1,5 +1,7 @@
 # Planning La Bocca
 
+[![Tests](https://github.com/sijocha/planning-la-bocca/actions/workflows/tests.yml/badge.svg)](https://github.com/sijocha/planning-la-bocca/actions/workflows/tests.yml)
+
 Planning des livraisons de béton de la centrale de Cannes La Bocca.
 
 - Lien : https://sijocha.github.io/planning-la-bocca/
@@ -26,10 +28,11 @@ Scripts SQL qui ont créé la base, dans l'ordre : structure, rôles et règles 
 - `motion-m3.js` : animations de fermeture des menus, du tiroir, du chat et des messages, sans toucher à la logique.
 - `sw.js`, `manifest.webmanifest`, `icons/` : application installable et notifications.
 - `vendor/leaflet/` : carte pour placer le point exact d'un chantier (chargée seulement à la demande).
+- `tests/` : tests automatiques (voir en bas de page).
 
 ## Dossier `supabase/`, scripts à exécuter dans l'ordre (SQL Editor)
 
-01 à 06 : structure, rôles, droits, concurrence, prénoms du poste · 07 : catalogue des formules (commercial) · 08 : temps réel réservé aux membres · 09 : verrou des commandes · 10 : notifications · 11 : rappel des bons de pompe · 12 : journée clôturée réservée au centraliste. La fonction `functions/notifs/index.ts` se déploie dans Edge Functions (nom `notifs`, « Verify JWT » désactivé).
+01 à 06 : structure, rôles, droits, concurrence, prénoms du poste · 07 : catalogue des formules (commercial) · 08 : temps réel réservé aux membres · 09 : verrou des commandes · 10 : notifications · 11 : rappel des bons de pompe · 12 : journée clôturée réservée au centraliste · 13 : réglages de la centrale ouverts au commercial. La fonction `functions/notifs/index.ts` se déploie dans Edge Functions (nom `notifs`, « Verify JWT » désactivé).
 
 ## Dossier `vendor/`
 
@@ -58,3 +61,14 @@ Copie figée de la bibliothèque Supabase (supabase-js 2.119.0, licence MIT). La
 | `operateurs` | Centralistes du poste partagé |
 
 Les autres tables créées par `01_structure.sql` (commandes, clients, chantiers, camions, tours…) **ne sont pas utilisées** par la page : tout passe par `documents`. Ne pas y écrire.
+
+## Tests automatiques
+
+À chaque envoi sur GitHub, trois séries de tests tournent (onglet **Actions**, environ 2 minutes) :
+
+- `tests/test_planning.py` : le planning dans un vrai navigateur, avec des données fictives (`tests/demo.js`) ;
+- `tests/notifs/` : la fonction des notifications (chiffrement, signature, destinataires) ;
+- `tests/sql/` : les scripts `supabase/` sur une base PostgreSQL vide (verrou, journée clôturée, droits, notifications).
+
+Coche verte : tout passe. Croix rouge : un comportement a changé, le détail est dans l'onglet Actions.
+

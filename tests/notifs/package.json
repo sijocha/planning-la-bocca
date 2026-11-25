@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild ../../supabase/functions/notifs/index.ts --format=esm --outfile=notifs.mjs --log-level=warning",
+    "test": "npm run build && node --test notifs.test.mjs"
+  },
+  "devDependencies": { "esbuild": "^0.28.2", "http_ece": "^1.2.1", "jose": "^6.2.18" }
+}
