@@ -2,6 +2,30 @@
 
 Les nouveautés du Planning La Bocca, session par session (la plus récente en haut).
 
+## 25 novembre 2026
+
+Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et rouvrir l'application sur téléphone).
+
+### Demandes
+- Le bouton **+ Nouvelle demande** est de nouveau bien visible en haut de l'onglet (il avait l'air désactivé), en pleine largeur sur téléphone.
+
+### Commande sur téléphone
+- **Résumé fixe** au-dessus d'« Enregistrer » : jour · heure · client · m³ · formule ; ce qui manque s'affiche en orange.
+
+### Bons de pompe
+- **Rappel chaque matin à 6 h 45** (notification) : les pompes du prochain jour travaillé dont le bon n'est pas fait. Le vendredi, il couvre le lundi, sauf si le samedi est ouvert. Activé pour le centraliste, au choix pour le commercial. *(nécessite `supabase/11_rappel_pompes.sql` et la fonction `notifs` à jour)*
+
+### Journée clôturée
+- **Seul le centraliste** peut modifier une journée clôturée (commandes, agrégats, liants), règle appliquée par la base. Le commercial et le labo peuvent toujours la consulter, ouvrir la carte et dupliquer une commande vers un autre jour. *(nécessite `supabase/12_journee_cloturee.sql`)*
+
+### Stabilité de l'écran
+- Une mise à jour (venue d'un autre poste ou de la minute qui passe) ne modifie plus que ce qui a changé : une ligne ouverte, le défilement, un encadré déplié ou une saisie restent en place.
+- Fermer une commande puis en ouvrir une autre aussitôt ne vide plus le nouveau formulaire.
+
+### En coulisses
+- Une seule feuille de styles (`styles.css`) au lieu de deux : 362 réglages jamais appliqués retirés, affichage vérifié identique sur 15 écrans.
+- README à jour (fichiers de la page, scripts SQL 01 à 12).
+
 ## 24 novembre 2026
 
 Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et rouvrir l'onglet ou l'application sur téléphone).
