@@ -413,8 +413,15 @@ function weekHTML(){
   const idx=Object.fromEntries(ds.map((d,i)=>[d,i]));
   const by={};ds.forEach(d=>ordersOn(d).forEach(o=>{if(statut(o)==='annulee'||o.kind==='pour')return;(by[o.ch]=by[o.ch]||[]).push(o)}));
   const series=Object.keys(by).map(k=>{const l=by[k];return {l,dset:[...new Set(l.map(o=>o.date))].sort()}}).filter(s=>s.dset.length>1);
-  let h=`<div class="wk-scroll"><div class="wk" style="grid-template-columns:repeat(${ds.length},minmax(160px,1fr))">`;
-  ds.forEach((d,i)=>{const t=totals(d);h+=`<button class="wk-h ${d===TODAY?'today':''} ${d===view.date?'sel':''}" style="grid-column:${i+1};grid-row:1" data-act="goto" data-d="${d}"><span class="wk-d">${JC[dow(d)]} ${D(d).getUTCDate()}</span><span class="wk-t">${fmt(t.m3)} m³ · ${t.n} tours</span></button>`});
+  let h=`<div class="wk-legend" aria-hidden="true"><span><i style="background:var(--ink)"></i>Matin</span><span><i style="background:var(--orange)"></i>Après-midi</span><span><i style="background:#3b4cc0"></i>Nuit</span><span>barre : m³ du jour, comparés au jour le plus chargé de la semaine</span></div><div class="wk-scroll"><div class="wk" style="grid-template-columns:repeat(${ds.length},minmax(160px,1fr))">`;
+  // charge de chaque jour : m³ matin / après-midi / nuit, à l'échelle du jour le plus chargé de la semaine
+  const ch=ds.map(d=>{const os=ordersOn(d).filter(o=>statut(o)!=='annulee'&&o.kind!=='pour');const sum=f=>os.filter(f).reduce((a,o)=>a+total(o),0);
+    return {am:sum(o=>mins(o.h)<720),pm:sum(o=>mins(o.h)>=720&&mins(o.h)<NUIT),nu:sum(o=>mins(o.h)>=NUIT),pomp:os.filter(o=>o.pompe).length,av:pendingOn(d).length}});
+  const mx=Math.max(1,...ch.map(c=>c.am+c.pm+c.nu));
+  ds.forEach((d,i)=>{const t=totals(d),c=ch[i],w=v=>(100*v/mx).toFixed(1)+'%';
+    h+=`<button class="wk-h ${d===TODAY?'today':''} ${d===view.date?'sel':''}" style="grid-column:${i+1};grid-row:1" data-act="goto" data-d="${d}" title="${fmt(c.am)} m³ le matin · ${fmt(c.pm)} m³ l'après-midi${c.nu?' · '+fmt(c.nu)+' m³ la nuit':''}"><span class="wk-d">${JC[dow(d)]} ${D(d).getUTCDate()}</span><span class="wk-t"><b>${fmt(t.m3)}</b> m³</span>
+      <span class="wk-load" aria-hidden="true"><i class="am" style="width:${w(c.am)}"></i><i class="pm" style="width:${w(c.pm)}"></i><i class="nu" style="width:${w(c.nu)}"></i></span>
+      <span class="wk-s">${t.n} tour${t.n>1?'s':''}${c.pomp?` · ${c.pomp} pompe${c.pomp>1?'s':''}`:''}${c.av?` · <em>${c.av} à valider</em>`:''}</span></button>`});
   series.forEach((s,k)=>{const a=idx[s.dset[0]],b=idx[s.dset[s.dset.length-1]];const m=s.l.reduce((x,o)=>x+total(o),0);
     h+=`<button class="wk-bar" style="grid-column:${a+1}/${b+2};grid-row:${k+2}" data-act="goto" data-d="${s.dset[0]}" title="Chantier sur ${s.dset.length} jours"><b>${esc(siteName(s.l[0]))}</b> ${esc(cl(s.l[0].cl).n)} · ${s.dset.length} jours · ${fmt(m)} m³</button>`});
   const r=series.length+2;

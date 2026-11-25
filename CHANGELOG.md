@@ -36,6 +36,9 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - Pompe : seul le **Betobag** (sac de lavage) est proposé.
 - **Citybag** = produit BAG rempli à la centrale : le planning compte les sacs (1 bag = 0,5 m³), sous le cubage et dans chaque bulle.
 
+### Vue semaine : charge par jour
+- Chaque jour affiche une barre de charge (m³ du matin, de l'après-midi et de la nuit, comparés au jour le plus chargé de la semaine), le nombre de tours, de pompes et de commandes à valider.
+
 ### Tours et compléments réservés au centraliste
 - Le commercial et le labo voient les tours et la bulle « +1T à confirmer », mais ne peuvent plus ajouter de tour, de complément ni charger une bulle. Le commercial peut toujours cocher [+] en passant une nouvelle commande.
 

@@ -1732,3 +1732,15 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 .acc-em { font-family: var(--mono); font-size: 12.5px; word-break: break-all; }
 .acc-add { flex-wrap: wrap; }
 @media (max-width: 760px) { .acc-t thead { display: none; } .acc-t tr { display: grid; grid-template-columns: 1fr 1fr auto; gap: 4px 8px; padding: 8px 0; border-bottom: 1px solid var(--line); } .acc-t td { border: 0; padding: 0; } .acc-t td.acc-em { grid-column: 1 / -1; } }
+
+/* Vue semaine : charge du jour (m³ matin / après-midi / nuit, à l'échelle du jour le plus chargé) */
+.wk-h .wk-t b { font-size: 1.15em; }
+.wk-load { display: flex; width: 100%; align-self: stretch; flex: none; height: 6px; margin: 5px 0 4px; background: color-mix(in srgb, var(--ink) 7%, transparent); overflow: hidden; }
+.wk-load i { display: block; height: 100%; }
+.wk-load i.am { background: var(--ink); }
+.wk-load i.pm { background: var(--orange); }
+.wk-load i.nu { background: #3b4cc0; }
+.wk-s { display: block; font: 500 11.5px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wk-s em { font-style: normal; color: var(--orange); font-weight: 700; }
+.wk-legend { display: flex; gap: 14px; font: 500 11.5px var(--mono); color: var(--muted); margin: 0 0 8px; }
+.wk-legend i { display: inline-block; width: 10px; height: 6px; margin-right: 5px; vertical-align: middle; }
