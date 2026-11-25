@@ -1522,9 +1522,9 @@ async function accesLoad(){const box=document.getElementById('acces-box');if(!bo
         <td class="muted">${v?'depuis le '+esc(new Date(v).toLocaleDateString('fr-FR')):'jamais'}</td>
         <td>${lock?'':'<button type="button" class="ib acc-del" title="Retirer l\'accès" aria-label="Retirer">×</button>'}</td></tr>`}).join('')}
     </tbody></table>
-    <form class="inline-f acc-add"><input id="acc-em" type="email" placeholder="adresse Google (ex. prenom.nom@gmail.com)" aria-label="Adresse" required><input id="acc-nm" placeholder="Prénom" aria-label="Prénom" style="max-width:150px">
+    <form class="inline-f acc-add"><input id="acc-nm" placeholder="Prénom" aria-label="Prénom" style="max-width:150px"><input id="acc-em" type="email" placeholder="adresse Google (ex. prenom.nom@gmail.com)" aria-label="Adresse" required>
       <select id="acc-rl" aria-label="Rôle">${ACC_ROLES.filter(x=>x[0]!=='admin').map(([k,l])=>`<option value="${k}" ${k==='commercial'?'selected':''}>${l}</option>`).join('')}</select><button class="btn sm primary">Ajouter</button></form>
-    <p class="muted" style="font-size:12.5px;margin:6px 0 0">La personne se connecte avec ce compte Google. Un compte désactivé ou retiré n'a plus accès dès son prochain chargement. Le prénom sert à l'écran « Qui prend le poste ? ».</p>`;
+    <p class="muted" style="font-size:12.5px;margin:6px 0 0">La personne se connecte avec ce compte Google. Un compte désactivé, retiré ou dont le rôle change est déconnecté automatiquement. Le prénom est celui affiché sur son badge.</p>`;
   const upd=async(em,patch,msg)=>{const {error}=await SB.from('autorisations').update(patch).eq('email',em);toast(error?'Non enregistré : '+error.message:msg);accesLoad()};
   box.querySelectorAll('tr[data-em]').forEach(tr=>{const em=tr.dataset.em;
     tr.querySelector('.acc-role').onchange=e=>upd(em,{role:e.target.value},'Rôle modifié');
