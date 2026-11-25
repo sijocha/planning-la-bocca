@@ -36,6 +36,10 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - Pompe : seul le **Betobag** (sac de lavage) est proposé.
 - **Citybag** = produit BAG rempli à la centrale : le planning compte les sacs (1 bag = 0,5 m³), sous le cubage et dans chaque bulle.
 
+### Lecture seule stricte
+- Un compte en lecture seule **consulte uniquement** : planning complet, demandes en cours, carte, impression, et en consultation les camions, pompes, fournisseurs, agence et raccourcis.
+- Plus de menu ⋯ sur les commandes, plus de chat, ni notifications ni administration ; un clic sur une formule, une bulle ou une commande n'ouvre rien.
+
 ### Prise de poste
 - L'écran de connexion présente les personnes **en organigramme** : Admin, Centralistes, Commerciaux, Tech labo, avec le rôle sous chaque badge.
 - Un compte qui n'est pas admin ouvre le planning **avec son prénom et son rôle attribués** (Administration → Accès) : les autres personnes et les autres rôles s'affichent grisés. Un admin garde le libre choix (poste partagé de la centrale).

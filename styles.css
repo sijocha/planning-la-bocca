@@ -1756,3 +1756,10 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 .g2-org-l { font: 600 10.5px var(--mono, monospace); letter-spacing: .08em; text-transform: uppercase; color: #8a877f; }
 .g2-org-p { display: flex; flex-wrap: wrap; gap: 8px; }
 .g2-org-p .g2-person { width: 92px; }
+
+/* Lecture seule : on consulte, rien ne s'ouvre */
+body.ro [data-act="menu"], body.ro [data-act="chat"], body.ro .chat-b, body.ro .chatwin, body.ro .t-add, body.ro .cpl-prevu { display: none !important; }
+body.ro #main [data-act]:not([data-act="focus"]):not([data-act="goto"]):not([data-act="map"]):not([data-act="dfilter"]):not([data-act="pills-all"]):not([data-act="tab"]) { cursor: default; }
+body.ro #main .r-form:hover, body.ro #main .t:hover { filter: none; transform: none; }
+body.ro .dl .btn:not([data-act="focus"]):not([data-act="goto"]), body.ro .dl [data-act="dem-done"], body.ro .dl [data-act="dem-rep"] { display: none !important; }
+.cfg-ro .inline-f, .cfg-ro .cfg-lf, .cfg-ro .x, .cfg-ro [data-cfg] { display: none !important; }

@@ -606,8 +606,8 @@ function chatSend(t,ref){t=String(t||'').trim();if(!t)return false;S.chat=S.chat
 function chatUnread(){const me=author();return chatList().filter(m=>m.ts>(prefs.chatSeen||0)&&m.by!==me).length}
 const chatOn=()=>!!(chatWin&&!chatWin.hidden);
 function chatNav(){if(isPhone()&&S)renderChrome()}
-function chatToggle(){if(chatWin&&!chatWin.hidden){chatWin.hidden=true;chatNav();return}chatOpen();chatNav()}
-function chatOpen(){
+function chatToggle(){if(RO())return;if(chatWin&&!chatWin.hidden){chatWin.hidden=true;chatNav();return}chatOpen();chatNav()}
+function chatOpen(){if(RO())return;
   if(!chatWin){chatWin=document.createElement('div');chatWin.className='chatwin';chatWin.setAttribute('role','dialog');chatWin.setAttribute('aria-label','Chat de la centrale');
     chatWin.innerHTML=`<div class="cw-h"><div><b>Chat · La Bocca</b><span class="cw-who"></span></div><button class="cw-x" aria-label="Fermer le chat" title="Fermer">×</button></div><div class="cw-l" aria-live="polite"></div>
       <form class="cw-f"><textarea rows="2" placeholder="Écrire un message… (Entrée pour envoyer)" aria-label="Message" maxlength="1000"></textarea><button class="btn primary" type="submit">Envoyer</button></form>
@@ -925,7 +925,7 @@ function sideHTML(){
   const mine=S.demandes.filter(r=>!r.done&&r.pour===role()).length;
   const nd2=role()==='centraliste'?nd:mine;
   const all=[['planning',role()==='centraliste'?'Aujourd\'hui':(isPhone()?'Planning':'Commandes'),role()==='centraliste'?'Aujourd.':'Commandes'],['demandes','Demandes','Demandes'],['agregats','Agrégats','Agrégats'],['camions','Camions','Camions'],['adjuvants','Adjuvants','Adjuv.'],['liens','Raccourcis','Liens']];
-  const it=(role()==='centraliste'?all:all.slice(0,2)).concat(prefs.aideOn?[['aide','Mode d\'emploi','Aide']]:[]).concat(isPhone()?[['chat','Chat','Chat']]:[]);
+  const it=(role()==='centraliste'?all:all.slice(0,2)).concat(prefs.aideOn?[['aide','Mode d\'emploi','Aide']]:[]).concat(isPhone()&&!RO()?[['chat','Chat','Chat']]:[]);
   // Téléphone : Aujourd'hui, Demandes, Chat toujours visibles ; le reste dans « Plus »
   navRest=[];
   if(isPhone()){const keep=['planning','demandes','chat'];navRest=it.filter(x=>!keep.includes(x[0]));const main=keep.map(k=>it.find(x=>x[0]===k)).filter(Boolean);it.length=0;it.push(...main);it.push(['plus','Plus','Plus'])}
@@ -1122,9 +1122,13 @@ function demPop(anchor,oid,typeDef,pourDef){
   v=>{if(!v.t)return 'keep';S.demandes.push({id:'r'+Date.now().toString(36),type:v.type,pour:v.pour,t:v.t,oid:oid||null,de:author(),deRole:role(),le:TODAY,done:false,rep:[]});toast('Demande envoyée')});
 }
 
+// lecture seule : consulter uniquement (planning, demandes, carte, impression) ; aucune fenêtre de modification
+const RO=()=>!!(ME&&ME.role==='lecture');
+const RO_ACTS=['prev','next','today','mode','tab','goto','focus','pickdate','vue','settings','banner-ok','dfilter','hb','adj-year','map','aide-q','aide-close','aide-all','export','tours-print','tours-per','conv-print','cmonth','ap-show','peek-x','pills-all'];
 // tours et compléments : réservés au centraliste (le commercial et le labo voient, sans pouvoir ajouter ni charger)
 const TOUR_ACTS=['plus','addtour','cpl-add','tour'];
 function act(a,el,o,e){
+  if(RO()&&!RO_ACTS.includes(a)){if(e&&e.preventDefault)e.preventDefault();return}
   if(o&&TOUR_ACTS.includes(a)&&role()!=='centraliste'){toast('Tours et compléments : réservés au centraliste');return}
   if(o&&!['focus','pills-all','map','menu'].includes(a)&&closedStop(o.date))return;
   if(!o&&/^(semi|cim|s-)/.test(a||'')){const dd=el.closest&&el.closest('[data-day]');if(dd&&closedStop(dd.dataset.day))return}
@@ -1298,6 +1302,7 @@ function pillEdit(o,i,anchor){const id=o.id;setEditing(id);const p=o.pills[i];
   setTimeout(()=>{const inp=popEl.querySelector('#pe-t');if(inp){inp.focus();inp.select()}},20);
 }
 function longAct(el){const a=el.dataset.act,i=+el.dataset.i;const row=el.closest('[data-id]');
+  if(RO())return;
   if(row&&TOUR_ACTS.includes(a)&&role()!=='centraliste'){toast('Tours et compléments : réservés au centraliste');return}
   if(row&&(closedStop((byId(row.dataset.id)||{}).date)||lockStop(row.dataset.id)))return;
   if(a==='pay'&&row){const o=byId(row.dataset.id);if(o&&o.pay){setEditing(o.id);return payPop(o,el)}}
@@ -1443,18 +1448,18 @@ function settingsPop(anchor){
      ${lastWD?`<p class="ps-note">Dernier jour ouvré du mois : pensez à la clôture</p>`:''}
      <button class="pop-b ${lastWD?'strong':''}" data-pa="moisclot">Clôture de fin de mois : ${esc(moisN)} (PDF + .json)</button>
      <button class="pop-b" data-pa="archive">Consulter un mois archivé (.json)…</button></section>`:''}
-   <section class="ps"><div class="pop-l">Centrale</div>${ce||role()==='commercial'||isAdmin()?'<button class="pop-b" data-pa="cfg">Administration · catalogue de la centrale</button>':''}${MODE==='shared'?'<button class="pop-b" data-pa="notifs">Notifications sur cet appareil…</button>':''}
+   <section class="ps"><div class="pop-l">Centrale</div>${RO()?'<button class="pop-b" data-pa="cfgro">Camions, pompes, agence, raccourcis (consultation)</button>':(ce||role()==='commercial'||isAdmin()?'<button class="pop-b" data-pa="cfg">Administration · catalogue de la centrale</button>':'')}${MODE==='shared'&&!RO()?'<button class="pop-b" data-pa="notifs">Notifications sur cet appareil…</button>':''}
      <div class="pop-grid">${[['auto','Thème auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div>${ce?layoutPopHTML():''}</section>
    <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button>${isInstalled()?'':'<button class="pop-b" data-pa="install">Installer l\'application sur cet appareil</button>'}</section>
 
-   <section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}</button></section>
+   ${RO()?'':`<section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}</button></section>`}
    <section class="ps ps-sync"><div class="pop-l">Synchronisation et état</div><div class="sync-box">${syncDetail()}</div><button class="pop-b" data-pa="force">Forcer la synchronisation</button></section>`,
   {install(){const a=popAnchor;setTimeout(()=>installApp(a));return 'close'},notifs(){const a=popAnchor;setTimeout(()=>notifPop(a));return 'close'},journal(){setTimeout(()=>act('journal',document.querySelector('.top .me')||document.body,null,{}));return 'close'},aide(){prefs.aideOn=true;savePrefs();view.tab='aide';setTimeout(()=>render(true));return 'close'},
    'lay-reset'(){const k=meKey();const had=prefs.layouts&&prefs.layouts[k];if(had){delete prefs.layouts[k];savePrefs()}applyLayout();toast(had?'Disposition réinitialisée : '+(S.config&&S.config.layout?'celle de la centrale':'celle par défaut'):'Déjà sur la disposition de la centrale');return 'close'},
    'lay-set'(){const L=layoutGet();S.config.layout={order:L.order.slice(),pos:L.pos};const k=meKey();if(prefs.layouts&&prefs.layouts[k]){delete prefs.layouts[k];savePrefs()}toast('Disposition de la centrale enregistrée pour tous les centralistes')},
-   moisclot(){setTimeout(()=>clotureMois(view.date));return 'close'},archive(){setTimeout(consulterArchive);return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'}});
+   moisclot(){setTimeout(()=>clotureMois(view.date));return 'close'},archive(){setTimeout(consulterArchive);return 'close'},print(){const a=popAnchor;setTimeout(()=>act('export',a,null,{}));return 'close'},force(){forceSync().then(()=>{const b=popEl.querySelector('.sync-box');if(b)b.innerHTML=syncDetail()});return 'keep'},cfg(){setTimeout(openConfig);return 'close'},cfgro(){setTimeout(()=>openConfig(null,{ro:true}));return 'close'},theme(el){prefs.theme=el.dataset.v;savePrefs();applyTheme()},who(){prefs.gate='';savePrefs();setTimeout(showGate);return 'close'},logout(){setTimeout(supaLogout);return 'close'},importer(){setTimeout(importerSauvegarde);return 'close'}});
 }
-function openConfig(focus){
+function openConfig(focus,opt){const ro=!!(opt&&opt.ro)||RO();
   if(!S.config||!S.config.camions)S.config=CONFIG0();
   const c=S.config;
   const list=(k,items,fmtI)=>`<div class="cfg-l">${items.map((x,i)=>`<span class="chip">${fmtI(x)}<button type="button" class="x" data-cfg="del" data-k="${k}" data-i="${i}" aria-label="Retirer">×</button></span>`).join('')}</div>`;
@@ -1481,21 +1486,22 @@ function openConfig(focus){
         <form class="cfg-lf" data-cfgform="liens"><input id="cf-ln" placeholder="Nom (ex. Bon de pompe)" aria-label="Nom du raccourci"><input id="cf-lu" placeholder="https://…" aria-label="Adresse"><input id="cf-lc" list="cf-cats" placeholder="Thème (ex. Formulaires)" aria-label="Thème"><datalist id="cf-cats">${[...new Set(['Commandes','Formulaires','Sécurité','Contacts'].concat((S.liens||[]).map(l=>l.cat)))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist><button class="btn sm">Ajouter</button></form>
         <p class="muted" style="font-size:12.5px;margin:6px 0 0">Cliquez sur un raccourci pour le modifier. Un nouveau thème se crée en tapant son nom.</p></div></div>
 `;
-  const ce=role()==='centraliste'||role()==='commercial'||isAdmin();   // réglages de la centrale : centraliste, commercial, admin
-  const adm=isAdmin()&&MODE==='shared'&&SB;
-  const navH=[...(adm?[['adm-acces','Accès']]:[]),['adm-formules','Formules'],...(ce?[['adm-camions','Camions et pompes'],['adm-agence','Agence'],['adm-liens','Raccourcis']]:[])].map(([h,t])=>`<a href="#${h}" data-adm="${h}">${t}</a>`).join('');
-  drawerEl.innerHTML=`<div class="scrim" data-act="dr-close-bg"><div class="drawer wide" role="dialog" aria-label="Administration · catalogue de la centrale">
-    <div class="dr-h"><h2>Administration <span class="adm-h">· catalogue de la centrale</span></h2><button type="button" class="ib" data-act="dr-close" aria-label="Fermer">×</button></div>
+  const ce=ro||role()==='centraliste'||role()==='commercial'||isAdmin();   // réglages de la centrale ; lecture seule : consultation
+  const adm=!ro&&isAdmin()&&MODE==='shared'&&SB;
+  const navH=[...(adm?[['adm-acces','Accès']]:[]),...(ro?[]:[['adm-formules','Formules']]),...(ce?[['adm-camions','Camions et pompes'],['adm-agence','Agence'],['adm-liens','Raccourcis']]:[])].map(([h,t])=>`<a href="#${h}" data-adm="${h}">${t}</a>`).join('');
+  drawerEl.innerHTML=`<div class="scrim" data-act="dr-close-bg"><div class="drawer wide ${ro?'cfg-ro':''}" role="dialog" aria-label="Administration · catalogue de la centrale">
+    <div class="dr-h"><h2>${ro?'Réglages de la centrale <span class="adm-h">· consultation</span>':'Administration <span class="adm-h">· catalogue de la centrale</span>'}</h2><button type="button" class="ib" data-act="dr-close" aria-label="Fermer">×</button></div>
     <div class="dr-b">
       <p class="muted adm-intro">Réglages propres à la centrale de ${CENTRALE}. Ils servent à la prise de commande, à la saisie des formules et au calcul des tours.</p>
       <nav class="adm-nav" aria-label="Sections">${navH}</nav>
       ${adm?`<h3 class="adm-g" id="adm-acces"><span>Accès</span><small>Qui peut se connecter au planning, et avec quel rôle</small></h3><div id="acces-box" class="acces-box"><p class="muted">Chargement…</p></div>`:''}
-      <h3 class="adm-g" id="adm-formules"><span>Formules</span><small>Commun au centraliste et au commercial</small></h3>
+      ${ro?'':`<h3 class="adm-g" id="adm-formules"><span>Formules</span><small>Commun au centraliste et au commercial</small></h3>
       <div class="q" id="cfg-formules"><div class="ql">Catalogue<small>Formules béton</small></div><div><p class="muted" style="font-size:12.5px;margin:0 0 8px">Ce que la saisie des formules propose à ${CENTRALE} (expositions, gravillons, liants, options, produits spéciaux), avec les contrôles de la NF EN 206+A2/CN. Les changements valent pour tous les postes.</p><div class="fxw fxadm" id="fx-adm"></div></div></div>
-      ${ce?centraleH():'<p class="muted adm-note">Camions, pompes, agence et raccourcis : réglés par le centraliste.</p>'}
+      `}${ce?centraleH():'<p class="muted adm-note">Camions, pompes, agence et raccourcis : réglés par le centraliste.</p>'}
     </div></div></div>`;
   drawerEl.hidden=false;
   if(adm)accesLoad();
+  if(ro)drawerEl.querySelectorAll('.cfg-ro input,.cfg-ro select,.cfg-ro textarea').forEach(i=>{i.disabled=true});
   {const el=drawerEl.querySelector('#fx-adm');if(el&&window.FX){FX.setCfg(fxCat());FX.admin(el,{onSave:cf=>{S.formcat=cf;commit()}})}}
   drawerEl.querySelectorAll('[data-adm]').forEach(a=>a.onclick=e=>{e.preventDefault();const t=drawerEl.querySelector('#'+a.dataset.adm);if(t)t.scrollIntoView({block:'start',behavior:'smooth'})});
   if(focus){const t=drawerEl.querySelector('#'+focus);if(t)t.scrollIntoView({block:'start'})}
@@ -1551,7 +1557,7 @@ function applyTheme(){const r=document.documentElement;if(prefs.theme==='auto')r
    Formulaire de commande (QQOQCP)
    ===================================================================== */
 let formCtx=null;
-function openOrderForm(o,opt){
+function openOrderForm(o,opt){if(RO())return;
   if(o&&o.id&&!(opt&&opt.dup)&&(closedStop(o.date)||lockStop(o.id)))return;
   if(o&&o.id&&MODE==='shared'&&room&&room.live&&!room.live())toast('Direct interrompu : les autres ne voient pas que vous modifiez cette commande. Reconnexion en cours…');
   opt=opt||{};const isNew=!o||opt.dup;
@@ -2565,7 +2571,7 @@ function boot(){
   let lt=null;
   document.addEventListener('pointerdown',e=>{const el=e.target.closest('[data-long]');if(!el||e.button>0)return;lt=setTimeout(()=>{lt=null;suppressClick=true;longAct(el)},480)});
   ['pointerup','pointercancel','pointerleave','scroll'].forEach(ev=>document.addEventListener(ev,()=>{if(lt){clearTimeout(lt);lt=null}},true));
-  document.addEventListener('dblclick',e=>{const el=e.target.closest('[data-act="pill"]');if(!el)return;e.preventDefault();const row=el.closest('[data-id]');if(row){const o=byId(row.dataset.id),k=+el.dataset.i;if(o&&!lockStop(o.id)){const fresh=document.querySelector(`#row-${o.id} [data-act="pill"][data-i="${k}"]`)||el;pillEdit(o,k,fresh)}}});
+  document.addEventListener('dblclick',e=>{const el=e.target.closest('[data-act="pill"]');if(!el||RO())return;e.preventDefault();const row=el.closest('[data-id]');if(row){const o=byId(row.dataset.id),k=+el.dataset.i;if(o&&!lockStop(o.id)){const fresh=document.querySelector(`#row-${o.id} [data-act="pill"][data-i="${k}"]`)||el;pillEdit(o,k,fresh)}}});
   document.addEventListener('contextmenu',e=>{const el=e.target.closest('[data-long]');if(!el)return;e.preventDefault();if(lt){clearTimeout(lt);lt=null}longAct(el)});
   // recherche
   const q=document.getElementById('q'),qres=document.getElementById('qres');
