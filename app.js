@@ -578,6 +578,7 @@ const AIDE=[
   ['tous','Imprimer, PDF et journal',`<ul><li><b>Imprimer</b> : badge du compte → Journée → <b>Imprimer / PDF</b> : jour ou plusieurs jours, A4 ou A3.</li><li><b>Journal</b> : toutes les modifications du jour, avec l'heure et l'auteur.</li><li>Dans Claude, le téléchargement demande d'être connecté à un compte Claude ; la version en ligne télécharge directement.</li></ul>`],
   ['tous','Ouverture exceptionnelle et nuit',`<ul><li><b>Samedi ou dimanche</b> : aller sur le jour → <b>Créer une journée planning ce jour</b>. Le jour s'ajoute au planning, à la navigation et à l'onglet <b>Agrégats</b>.</li><li><b>Nuit</b> : saisir le chantier sur le jour où il <b>commence</b> (ex. mercredi 22 h 00). À partir de 19 h, il s'affiche dans une section <b>☾ Nuit</b>.</li><li>Le lendemain, le planning reprend ces chantiers tout en haut, dans <b>☾ Nuit précédente</b> (fond bleuté) : celui qui prend le poste le matin voit les tours chargés et ceux qui restent, et peut continuer à remplir les bulles.</li><li>Vendredi soir (ou veille d'un jour fermé) : le <b>samedi s'affiche tout seul</b> avec la fin de la nuit, sans ouvrir de journée ; bouton <b>Créer une journée planning ce jour</b> si on travaille aussi le samedi.</li></ul>`],
   ['tous','Une commande ouverte par quelqu\'un d\'autre (verrou)',`<ul><li>Quand quelqu'un ouvre une commande pour la modifier, sa ligne s'affiche <b>grisée</b> avec « <b>Verrouillée · nom modifie</b> » chez tous les autres.</li><li>Tant qu'elle est verrouillée, on ne peut ni l'ouvrir ni cliquer sur ses boutons (tours, pompe, paiement, formule…) : un message dit qui la modifie.</li><li>Le verrou se libère dès que la personne <b>valide ou ferme</b> la commande, ou après <b>5 minutes sans action</b> (rien n'est enregistré dans ce cas).</li><li>Le verrou est <b>tenu par la base</b> : même si l'affichage en direct d'un téléphone est en retard, la base refuse l'enregistrement d'une commande ouverte par quelqu'un d'autre (message « … modifie cette commande : votre changement n'a pas été enregistré »).</li><li>Si deux personnes ouvrent la même commande au même instant, la première garde la main ; l'autre voit un message et sa fenêtre se ferme.</li><li>Téléphone mis en veille avec une commande ouverte : au-delà de 5 minutes, la commande est libérée. Si quelqu'un d'autre l'a ouverte entre-temps, c'est lui qui garde la main.</li></ul>`],
+  ['centraliste','Accès : qui peut se connecter',`<p>Réservé aux comptes <b>admin</b> : badge du compte → Centrale → <b>Administration</b> → <b>Accès</b>.</p><ul><li><b>Ajouter</b> : adresse Google de la personne, prénom, rôle (centraliste, commercial, tech labo, lecture seule).</li><li>Changer le <b>rôle</b>, <b>désactiver</b> (case Actif) ou <b>retirer</b> (×) une personne : effet à son prochain chargement du planning.</li><li>Colonne <b>Connexion</b> : date de la première connexion, ou « jamais ».</li><li>Votre propre accès et le dernier admin ne peuvent pas être modifiés, pour ne jamais perdre la main.</li></ul>`],
   ['tous','Citybag et Betobag',`<ul><li><b>Betobag</b> : sac de lavage de la pompe, à cocher dans la partie pompe de la commande.</li><li><b>Citybag</b> : produit <b>BAG</b> (saisi dans la formule). Les sacs de 0,5 m³ sont remplis <b>à la centrale</b> par une toupie : on saisit la commande comme un chantier (heure d'enlèvement, cubage), puis chaque tour avec sa plaque et son volume.</li><li>Le planning compte les sacs : 4 m³ = <b>8 bags</b>, affichés sous le cubage (chargés / prévus) et dans chaque bulle.</li></ul>`],
   ['tous','Journée clôturée',`<ul><li>Une fois la journée clôturée par le centraliste, <b>seul le centraliste</b> peut encore la modifier (commandes, agrégats, liants).</li><li>Le commercial et le labo voient la journée, peuvent ouvrir la carte et <b>dupliquer</b> une commande vers un autre jour (menu ⋯), mais pas la modifier ni y déplacer une commande.</li><li>La règle est appliquée par la base : un enregistrement refusé affiche « Journée clôturée : seul le centraliste peut la modifier ».</li></ul>`],
   ['tous','Notifications sur le téléphone',`<p>Une fois l'application installée, le planning peut prévenir sur l'<b>écran de verrouillage</b>, même fermé.</p><ul><li>Badge du compte → Centrale → <b>Notifications sur cet appareil…</b> → <b>Activer les notifications</b>, puis accepter.</li><li><b>Centraliste</b> : commande du commercial à valider, modification à valider, demandes, chat.</li><li><b>Commercial</b> : ses commandes validées, modifiées ou annulées par la centrale, réponses à ses demandes.</li><li><b>Rappel du matin</b> (6 h 45) : les bons de pompe pas encore faits pour le prochain jour travaillé (centraliste ; le commercial peut l'activer).</li><li>Touchez une ligne pour couper ou remettre un type de notification. <b>Envoyer une notification de test</b> pour vérifier.</li><li>Toucher une notification ouvre le planning sur la commande concernée.</li><li>iPhone : seulement dans l'application installée (Safari → Partager → Sur l'écran d'accueil), iOS 16.4 ou plus récent.</li></ul>`],
@@ -1470,20 +1471,53 @@ function openConfig(focus){
         <p class="muted" style="font-size:12.5px;margin:6px 0 0">Cliquez sur un raccourci pour le modifier. Un nouveau thème se crée en tapant son nom.</p></div></div>
 `;
   const ce=role()==='centraliste'||isAdmin();
-  const navH=[['adm-formules','Formules'],...(ce?[['adm-camions','Camions et pompes'],['adm-agence','Agence'],['adm-liens','Raccourcis']]:[])].map(([h,t])=>`<a href="#${h}" data-adm="${h}">${t}</a>`).join('');
+  const adm=isAdmin()&&MODE==='shared'&&SB;
+  const navH=[...(adm?[['adm-acces','Accès']]:[]),['adm-formules','Formules'],...(ce?[['adm-camions','Camions et pompes'],['adm-agence','Agence'],['adm-liens','Raccourcis']]:[])].map(([h,t])=>`<a href="#${h}" data-adm="${h}">${t}</a>`).join('');
   drawerEl.innerHTML=`<div class="scrim" data-act="dr-close-bg"><div class="drawer wide" role="dialog" aria-label="Administration · catalogue de la centrale">
     <div class="dr-h"><h2>Administration <span class="adm-h">· catalogue de la centrale</span></h2><button type="button" class="ib" data-act="dr-close" aria-label="Fermer">×</button></div>
     <div class="dr-b">
       <p class="muted adm-intro">Réglages propres à la centrale de ${CENTRALE}. Ils servent à la prise de commande, à la saisie des formules et au calcul des tours.</p>
       <nav class="adm-nav" aria-label="Sections">${navH}</nav>
+      ${adm?`<h3 class="adm-g" id="adm-acces"><span>Accès</span><small>Qui peut se connecter au planning, et avec quel rôle</small></h3><div id="acces-box" class="acces-box"><p class="muted">Chargement…</p></div>`:''}
       <h3 class="adm-g" id="adm-formules"><span>Formules</span><small>Commun au centraliste et au commercial</small></h3>
       <div class="q" id="cfg-formules"><div class="ql">Catalogue<small>Formules béton</small></div><div><p class="muted" style="font-size:12.5px;margin:0 0 8px">Ce que la saisie des formules propose à ${CENTRALE} (expositions, gravillons, liants, options, produits spéciaux), avec les contrôles de la NF EN 206+A2/CN. Les changements valent pour tous les postes.</p><div class="fxw fxadm" id="fx-adm"></div></div></div>
       ${ce?centraleH():'<p class="muted adm-note">Camions, pompes, agence et raccourcis : réglés par le centraliste.</p>'}
     </div></div></div>`;
   drawerEl.hidden=false;
+  if(adm)accesLoad();
   {const el=drawerEl.querySelector('#fx-adm');if(el&&window.FX){FX.setCfg(fxCat());FX.admin(el,{onSave:cf=>{S.formcat=cf;commit()}})}}
   drawerEl.querySelectorAll('[data-adm]').forEach(a=>a.onclick=e=>{e.preventDefault();const t=drawerEl.querySelector('#'+a.dataset.adm);if(t)t.scrollIntoView({block:'start',behavior:'smooth'})});
   if(focus){const t=drawerEl.querySelector('#'+focus);if(t)t.scrollIntoView({block:'start'})}
+}
+/* ---------- Accès : liste des personnes autorisées (table autorisations, réservée à l'admin par la base) ---------- */
+const ACC_ROLES=[['centraliste','Centraliste'],['commercial','Commercial'],['labo','Tech labo'],['lecture','Lecture seule'],['admin','Admin']];
+async function accesLoad(){const box=document.getElementById('acces-box');if(!box)return;
+  const [a,p]=await Promise.all([SB.from('autorisations').select('email,nom,role,actif,cree_le').order('nom'),SB.from('profils').select('email,cree_le')]);
+  if(a.error){box.innerHTML=`<p class="muted">Liste indisponible : ${esc(a.error.message)}</p>`;return}
+  const vu={};(p.data||[]).forEach(x=>{if(x.email)vu[x.email.toLowerCase()]=x.cree_le});
+  const me=((ME&&ME.email)||'').toLowerCase();const rows=a.data||[];
+  const nAdm=rows.filter(r=>r.role==='admin'&&r.actif).length;
+  box.innerHTML=`<table class="acc-t"><thead><tr><th>Nom</th><th>Adresse</th><th>Rôle</th><th>Actif</th><th>Connexion</th><th></th></tr></thead><tbody>
+    ${rows.map(r=>{const self=r.email.toLowerCase()===me,last=r.role==='admin'&&r.actif&&nAdm<=1,lock=self||last;const v=vu[r.email.toLowerCase()];
+      return `<tr data-em="${esc(r.email)}" class="${r.actif?'':'off'}"><td><input class="acc-nom" value="${esc(r.nom||'')}" placeholder="Prénom" aria-label="Nom affiché"></td><td class="acc-em">${esc(r.email)}${self?' <small>(vous)</small>':''}</td>
+        <td><select class="acc-role" ${lock?'disabled title="Votre propre accès, ou dernier admin : non modifiable"':''}>${ACC_ROLES.map(([k,l])=>`<option value="${k}" ${r.role===k?'selected':''}>${l}</option>`).join('')}</select></td>
+        <td><input type="checkbox" class="acc-actif" ${r.actif?'checked':''} ${lock?'disabled':''} aria-label="Actif"></td>
+        <td class="muted">${v?'depuis le '+esc(new Date(v).toLocaleDateString('fr-FR')):'jamais'}</td>
+        <td>${lock?'':'<button type="button" class="ib acc-del" title="Retirer l\'accès" aria-label="Retirer">×</button>'}</td></tr>`}).join('')}
+    </tbody></table>
+    <form class="inline-f acc-add"><input id="acc-em" type="email" placeholder="adresse Google (ex. prenom.nom@gmail.com)" aria-label="Adresse" required><input id="acc-nm" placeholder="Prénom" aria-label="Prénom" style="max-width:150px">
+      <select id="acc-rl" aria-label="Rôle">${ACC_ROLES.filter(x=>x[0]!=='admin').map(([k,l])=>`<option value="${k}" ${k==='commercial'?'selected':''}>${l}</option>`).join('')}</select><button class="btn sm primary">Ajouter</button></form>
+    <p class="muted" style="font-size:12.5px;margin:6px 0 0">La personne se connecte avec ce compte Google. Un compte désactivé ou retiré n'a plus accès dès son prochain chargement. Le prénom sert à l'écran « Qui prend le poste ? ».</p>`;
+  const upd=async(em,patch,msg)=>{const {error}=await SB.from('autorisations').update(patch).eq('email',em);toast(error?'Non enregistré : '+error.message:msg);accesLoad()};
+  box.querySelectorAll('tr[data-em]').forEach(tr=>{const em=tr.dataset.em;
+    tr.querySelector('.acc-role').onchange=e=>upd(em,{role:e.target.value},'Rôle modifié');
+    tr.querySelector('.acc-actif').onchange=e=>upd(em,{actif:e.target.checked},e.target.checked?'Accès réactivé':'Accès désactivé');
+    tr.querySelector('.acc-nom').onchange=e=>upd(em,{nom:e.target.value.trim()||null},'Prénom enregistré');
+    const d=tr.querySelector('.acc-del');if(d)d.onclick=ev=>{ev.stopPropagation();confirmPop(d,'Retirer l\'accès ?',em,'Oui, retirer',async()=>{const {error}=await SB.from('autorisations').delete().eq('email',em);toast(error?'Non retiré : '+error.message:'Accès retiré');accesLoad()},true)}});
+  box.querySelector('.acc-add').onsubmit=async e=>{e.preventDefault();const em=box.querySelector('#acc-em').value.trim().toLowerCase(),nm=box.querySelector('#acc-nm').value.trim(),rl=box.querySelector('#acc-rl').value;
+    if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(em)){toast('Adresse e-mail invalide');return}
+    if(rows.some(r=>r.email.toLowerCase()===em)){toast('Cette adresse a déjà un accès');return}
+    const {error}=await SB.from('autorisations').insert({email:em,nom:nm||null,role:rl,actif:true});toast(error?'Non ajouté : '+error.message:`Accès ajouté : ${em}`);accesLoad()};
 }
 function cfgAction(el){
   if(el.dataset.cfg==='lien'){const i=+el.dataset.i;const l=S.liens[i];return formPop(el,'Modifier le raccourci',[{k:'n',label:'Nom',val:l.n},{k:'u',label:'Adresse (https://…)',val:l.u},{k:'cat',label:'Thème',val:l.cat,list:[...new Set(S.liens.map(x=>x.cat))]}],v=>{if(!v.n)return 'keep';if(v.u&&!/^https?:\/\//i.test(v.u))v.u='https://'+v.u;S.liens[i]={n:v.n,u:v.u,cat:v.cat||l.cat};setTimeout(openConfig)})}
