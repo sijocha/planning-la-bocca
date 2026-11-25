@@ -40,8 +40,12 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - Commande ouverte avec camion et pompe : le camion et la pompe ont chacun leur ligne ; le nom du client, l'adresse et la formule reprennent toute la largeur.
 
 ### Lecture seule stricte
+- À la connexion, un compte en lecture seule n'a que le bouton **Ouvrir le planning** (ni rôle ni personne à choisir).
 - Un compte en lecture seule **consulte uniquement** : planning complet, demandes en cours, carte, impression, et en consultation les camions, pompes, fournisseurs, agence et raccourcis.
 - Plus de menu ⋯ sur les commandes, plus de chat, ni notifications ni administration ; un clic sur une formule, une bulle ou une commande n'ouvre rien.
+
+### Accès modifié = déconnexion automatique
+- Si l'admin change le rôle d'une personne ou désactive son accès, elle est **déconnectée automatiquement** (vérification toutes les 30 secondes et au retour sur la page), avec un message sur l'écran de connexion.
 
 ### Prise de poste
 - L'écran de connexion présente les personnes **en organigramme** : Admin, Centralistes, Commerciaux, Tech labo, avec le rôle sous chaque badge.

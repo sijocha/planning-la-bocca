@@ -1795,22 +1795,23 @@ function showGate(){
         <button class="g2-gbtn" type="submit" id="g2-gbtn">${G_SVG}<span id="g2-glabel">Se connecter avec Google</span><i class="g2-prog"></i></button>
         <p class="g2-hint">Période de test : utilisez l'adresse ajoutée par l'administrateur.</p>
         ${off?`<div class="g2-state off" role="status"><b>Pas de réseau</b>La connexion sera possible dès le retour du réseau.</div>`:''}`}
-      <p class="err" id="g-err" role="alert"></p>
+      <p class="err" id="g-err" role="alert">${prefs.accesMsg?esc(prefs.accesMsg):''}</p>
       <div class="g2-foot"><span>Données hébergées en Europe</span><span>Planning ${esc(String(CENTRALE||''))}</span></div>
     </form></main></div>`;
     g.hidden=false;gStartClock();
     const gb=document.getElementById('g2-gbtn');if(gb)gb.addEventListener('click',()=>{gb.classList.add('busy');const l=document.getElementById('g2-glabel');if(l)l.textContent='Ouverture de Google…'});
     return;
   }
+  if(prefs.accesMsg){delete prefs.accesMsg;savePrefs()}
   const u=prefs.user||{};
   const nom0=u.nom||gPrenom(ME.nom||ME.email)||'';
-  const adm=isAdmin(),monR=ROLE_UI[ME.role]||'commercial';
-  const roleUI=`<div class="g2-field"><span class="g2-flbl">${adm?'Ouvrir en tant que (admin)':'Votre rôle'}</span><div class="g2-roles ${adm?'':'fixe'}" role="radiogroup">${Object.entries(ROLES).map(([k,l])=>`<label ${!adm&&k!==monR?'class="off" title="Rôle attribué par l\'administrateur"':''}><input type="radio" name="g-role" value="${k}" ${(adm?(u.role||'centraliste'):monR)===k?'checked':''} ${adm?'':'disabled'}><span>${l}</span></label>`).join('')}</div></div>`;
+  const adm=isAdmin(),monR=ROLE_UI[ME.role]||'commercial',lect=ME.role==='lecture';
+  const roleUI=lect?`<p class="g2-small">Accès en <b>consultation</b> : vous voyez le planning sans pouvoir le modifier.</p>`:`<div class="g2-field"><span class="g2-flbl">${adm?'Ouvrir en tant que (admin)':'Votre rôle'}</span><div class="g2-roles ${adm?'':'fixe'}" role="radiogroup">${Object.entries(ROLES).map(([k,l])=>`<label ${!adm&&k!==monR?'class="off" title="Rôle attribué par l\'administrateur"':''}><input type="radio" name="g-role" value="${k}" ${(adm?(u.role||'centraliste'):monR)===k?'checked':''} ${adm?'':'disabled'}><span>${l}</span></label>`).join('')}</div></div>`;
   g.innerHTML=`<div class="g2">${gSideDay()}<main class="g2-main"><form id="gateform" class="g2-card" autocomplete="off" data-step="nom">
     <div class="g2-acct"><i class="g2-av">${esc(gInit(ME.nom||ME.email))}</i><span>${esc(ME.email)} · ${esc(ROLE_NOM[ME.role]||'')}</span></div>
     <span class="g2-lbl"><i class="g2-led"></i>// Prise de poste</span>
     <h2>${isAdmin()?'Bonjour, qui prend le poste&nbsp;?':`Bonjour ${esc(gAssigned()||'')}&nbsp;!`}</h2>
-    <div class="g2-field"><span class="g2-flbl">Personnes autorisées</span><div class="g2-people" id="g2-people" role="group" aria-label="Choisir un prénom"><span class="g2-loading">Chargement des prénoms…</span></div></div>
+    ${lect?'':`<div class="g2-field"><span class="g2-flbl">Personnes autorisées</span><div class="g2-people" id="g2-people" role="group" aria-label="Choisir un prénom"><span class="g2-loading">Chargement des prénoms…</span></div></div>`}
     <div class="g2-field" id="g2-other" hidden><label for="g-nom">Autre prénom</label><input class="g2-input" id="g-nom" value="${esc(nom0)}" maxlength="24" placeholder="Prénom"></div>
     ${roleUI}
     <p class="err" id="g-err" role="alert"></p>
@@ -1820,8 +1821,7 @@ function showGate(){
   </form></main></div>`;
   g.hidden=false;gStartClock();gateDay();
   const fill=list=>{gNoms=list;gatePeople(list);if(!list.length){document.getElementById('g2-other').hidden=false}};
-  if(gNoms)fill(gNoms);
-  gateNoms().then(fill).catch(()=>fill(gNoms||[]));
+  if(!lect){if(gNoms)fill(gNoms);gateNoms().then(fill).catch(()=>fill(gNoms||[]))}
 }
 function gateSubmit(f){
   const step=f.dataset.step;
@@ -2329,6 +2329,13 @@ async function supaLogin(){
   try{await SB.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname,queryParams:{prompt:'select_account'}}})}
   catch(e){toast('Connexion Google impossible pour le moment')}
 }
+// accès modifié par l'admin (rôle changé, compte désactivé ou retiré) : déconnexion automatique, avec un message à la reconnexion
+let accesT=null;
+function accesWatch(){if(accesT)return;const chk=async()=>{if(!SB||!ME||document.visibilityState!=='visible')return;
+    let r;try{const x=await SB.rpc('mon_role');if(x.error)return;r=x.data}catch(e){return}   // réseau coupé : on ne déconnecte pas
+    if((r||null)!==(ME.actif?ME.role:null)){prefs.accesMsg=r?`Votre rôle a été modifié (${ROLE_NOM[r]||r}) : reconnectez-vous.`:'Votre accès au planning a été désactivé ou retiré.';savePrefs();forcedLogout()}};
+  accesT=setInterval(chk,30000);document.addEventListener('visibilitychange',chk)}
+async function forcedLogout(){try{await SB.auth.signOut()}catch(e){}prefs.user=null;prefs.gate='';savePrefs();try{localStorage.removeItem(LS_MIRROR);localStorage.removeItem(LS_PEND)}catch(e){}location.reload()}
 async function supaLogout(){const n=Object.keys(pending).length;if(n&&!confirm(`${n} modification${n>1?'s':''} pas encore envoyée${n>1?'s':''} au serveur (connexion lente ou coupée).\nEn vous déconnectant maintenant, elle${n>1?'s seront perdues':' sera perdue'}.\n\nSe déconnecter quand même ?`))return;try{await SB.auth.signOut()}catch(e){}prefs.user=null;prefs.gate='';savePrefs();try{localStorage.removeItem(LS_MIRROR);localStorage.removeItem(LS_PEND)}catch(e){}location.reload()}
 
 // Remplace toutes les données partagées (import d'une sauvegarde ou démo)
@@ -2468,7 +2475,7 @@ async function supaBoot(){
   if(prefs.user&&ME&&ME.actif&&!isAdmin()){const n=gAssigned(),r=ROLE_UI[ME.role]||'commercial';if((n&&prefs.user.nom!==n)||prefs.user.role!==r){prefs.user={nom:n||prefs.user.nom,role:r};savePrefs()}}
   if(!prefs.user||prefs.gate!==TODAY||prefs.email!==ME.email)showGate();
   startShared(supaDb(SB));setTimeout(histTrap,800);
-  room=supaRoom(SB);verrousInit();setTimeout(notifRefresh,3000);if(location.search)navFromUrl(location.search);
+  room=supaRoom(SB);verrousInit();setTimeout(notifRefresh,3000);accesWatch();if(location.search)navFromUrl(location.search);
   if(prefs.user)room.presence({nom:prefs.user.nom,role:prefs.user.role,edit:null}).catch(()=>{});
   room.onPeers(ch=>{peers=ch.peers.slice();lockRace();if(S){if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()}});
   setTimeout(()=>loadPdf().catch(()=>{}),2500);
