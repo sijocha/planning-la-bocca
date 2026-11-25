@@ -78,6 +78,7 @@ begin
            and old.data->>'h' is not distinct from new.data->>'h'
            and old.data->>'date' is not distinct from new.data->>'date'
            and old.data->>'f' is not distinct from new.data->>'f'
+           and old.data->'fLabo' is not distinct from new.data->'fLabo'
            and vo = vn then return new; end if;
       end if;
     else

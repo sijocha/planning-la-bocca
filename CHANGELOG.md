@@ -22,6 +22,25 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - Une mise à jour (venue d'un autre poste ou de la minute qui passe) ne modifie plus que ce qui a changé : une ligne ouverte, le défilement, un encadré déplié ou une saisie restent en place.
 - Fermer une commande puis en ouvrir une autre aussitôt ne vide plus le nouveau formulaire.
 
+### Validation des modifications du commercial
+- La fenêtre « Valider la modification ? » affiche **ce qui a changé** (avant → après) : jour, heure, cubage, formule, SAP, client, chantier, contact, camion, pompe, ce que fait le client, infos. Le détail apparaît aussi dans l'onglet Demandes et dans la notification.
+- Si le commercial revient à la version validée, il n'y a plus rien à valider.
+
+### Paiement comptant
+- **Clic droit** (appui long sur téléphone) sur le paiement : une ligne par paiement du client, avec montant, mode (Carte, CB, Virement, Attente) et 4 chiffres CB, **+ Autre paiement**, et le total quand il y a plusieurs lignes. Le paiement passe à « Payé » quand rien n'est en attente.
+
+### Formule en attente : proposition du labo
+- Le labo **propose la formule** d'une commande en attente. Elle s'affiche en info (badge **LABO**) ; le centraliste ou le commercial l'applique en un clic. Le labo ne modifie jamais la formule elle-même. *(relancer `supabase/10_notifications.sql` pour la notification)*
+
+### Citybag et Betobag
+- Pompe : seul le **Betobag** (sac de lavage) est proposé.
+- **Citybag** = produit BAG rempli à la centrale : le planning compte les sacs (1 bag = 0,5 m³), sous le cubage et dans chaque bulle.
+
+### Réglages et menu
+- Notifications et thème clair / sombre rangés dans la partie **Centrale** des réglages.
+- « 01 Aujourd'hui » ne clignote plus dans le menu (il était redessiné à chaque mise à jour).
+- Texte « Données · Partagées en direct » retiré ; bouton « + Nouvelle demande » à gauche sur ordinateur.
+
 ### En coulisses
 - Une seule feuille de styles (`styles.css`) au lieu de deux : 362 réglages jamais appliqués retirés, affichage vérifié identique sur 15 écrans.
 - README à jour (fichiers de la page, scripts SQL 01 à 12).

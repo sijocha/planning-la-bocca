@@ -20,7 +20,7 @@ const AG0=['Grasse','Nice','Vallauris','Tourrettes'];
 const FOURN=['Lafarge','Fica','BST','GCA'];
 const TAILLES=['17','20','24','26','28','32','36','42','47','52','BQA'];
 const pPre=o=>P_COMMENT.filter(t=>(o&&o.pompe)||!/citybag|b[ée]tobag/i.test(t));
-const P_COMMENT=['Prendre 1 journée','Appeler avant départ','Appeler chaque camion','Attendre le client','Citybag 1er camion','Bétobag 1er camion','1er camion ferme pour escalier','Formule … en premier','Chef de chantier : ','Retard 1 h','Vidange longue 45 min+','Prévoir 1 h 30 par rotation','Accès difficile'];
+const P_COMMENT=['Prendre 1 journée','Appeler avant départ','Appeler chaque camion','Attendre le client','Bétobag 1er camion','1er camion ferme pour escalier','Formule … en premier','Chef de chantier : ','Retard 1 h','Vidange longue 45 min+','Prévoir 1 h 30 par rotation','Accès difficile'];
 const P_ENTRETIEN=['Graissage malaxeur','Graissage ensilage','Graissage tapis peseur','Nettoyage déchargeur','Nettoyage chargeur','Chargeur fosse','Chaussette ciment','Trappe à ciment','Trappe malaxeur','Piquage trappe malaxeur','Piquage pales malaxeur','Kärcher malaxeur','Rangement local stock','État stocks colorants','Enlèvement bennes : 1x Benne','Enlèvement bennes : 2x Bennes'];
 const ZONES=['La piste','Le labo','Le stock','Local adjuvants','Zone ensilage intérieur','Organes de pesée'];
 const SEMI_MAX=12;  // tours par semi et par jour à La Bocca
@@ -78,7 +78,11 @@ const TR=o=>o.tours.filter(t=>!t.mv);
 const total=o=>TR(o).reduce((a,t)=>a+t.v,0);
 const livre=o=>TR(o).reduce((a,t)=>a+(t.s?t.v:0),0);
 function statut(o){if(o.st)return o.st;const n=TR(o).length,c=TR(o).filter(t=>t.s).length;if(n&&c===n)return o.plus?'encours':'terminee';if(c)return 'encours';return 'attente'}
+// Citybag : produit BAG, sacs de 0,5 m³ remplis à la centrale par la toupie
+const BAG_M3=0.5;const isBag=o=>/^\s*BAG\b|citybag/i.test((o&&o.f)||'');const nBags=v=>Math.round((+v||0)/BAG_M3);
 function family(f){const s=(f||'').toLowerCase();if(/chape|cemexa/.test(s))return 'chape';if(/d[ée]sactiv/.test(s))return 'desac';if(/sable stab/.test(s))return 'sable';return 'beton'}
+// formule proposée par le labo sur une commande en attente : une info ; le centraliste ou le commercial l'applique
+const fLaboTag=o=>o.fLabo&&o.fLabo.f?`<button class="flabo" data-act="flabo" title="Formule proposée par ${esc(o.fLabo.by||'le labo')}${o.fLabo.at?' le '+esc(o.fLabo.at):''}${role()==='labo'?' · clic : modifier':' · clic : appliquer à la commande'} : ${esc(o.fLabo.f)}"><span>Labo</span></button>`:'';
 function attente(f){if(/^ATT\b/.test(f||''))return 'Produit en attente';const m=/attente formule\s*(labo|client|commercial)?/i.exec(f||'');return m?('Attente formule'+(m[1]?' '+m[1].toLowerCase():'')):''}
 
 /* ---------- état ---------- */
@@ -283,8 +287,8 @@ function rowHTML(o,editors){
   const mapQ=ch?(ch.adr||ch.nom):'';
   const cap=capOf(o.cam);const DET2=prefs.vue==='detail'&&!SIM;
   const tours=o.tours.map((t,i)=>{const cp=t.v<cap-0.01;
-    const lab=DET2?`<b>${fmt(t.v)}</b><small>${t.c?esc(t.c):t.p?esc(t.p):'—'}</small>`:t.c?esc(t.c):`${t.p?esc(t.p):''}${cp?(t.p?`<sub>${fmt(t.v)}</sub>`:fmt(t.v)):''}`;
-    const tl=`Tour ${i+1} · ${fmt(t.v)} m³ · ${t.s?'chargé':'prévu'}${t.p?' · '+t.p:''}${t.c?' · chargé par '+t.c:''}${t.x?' · tour ajouté':''}${t.mv&&byId(t.mv)?' · replacé vers '+siteName(byId(t.mv)):''}${t.plein?' · toupie rechargée pleine':''}${t.rf&&byId(t.rf)?' · venu de '+siteName(byId(t.rf)):''}`;
+    const lab=isBag(o)&&!DET2?`${t.p?esc(t.p):''}<sub>${nBags(t.v)}b</sub>`:DET2?`<b>${fmt(t.v)}${isBag(o)?' · '+nBags(t.v)+'b':''}</b><small>${t.c?esc(t.c):t.p?esc(t.p):'—'}</small>`:t.c?esc(t.c):`${t.p?esc(t.p):''}${cp?(t.p?`<sub>${fmt(t.v)}</sub>`:fmt(t.v)):''}`;
+    const tl=`Tour ${i+1} · ${fmt(t.v)} m³${isBag(o)?' = '+nBags(t.v)+' bags':''} · ${t.s?'chargé':'prévu'}${t.p?' · '+t.p:''}${t.c?' · chargé par '+t.c:''}${t.x?' · tour ajouté':''}${t.mv&&byId(t.mv)?' · replacé vers '+siteName(byId(t.mv)):''}${t.plein?' · toupie rechargée pleine':''}${t.rf&&byId(t.rf)?' · venu de '+siteName(byId(t.rf)):''}`;
     return `<button class="t ${DET2?'t2':''} ${t.s?'on':''} ${cp?'cp':''} ${t.c?'ext':''} ${t.x&&!t.rf?'xtra':''} ${t.mv?'mv':''} ${t.rf?'rf':''} ${t.plein?'plein':''}" data-act="tour" data-i="${i}" data-long="1" title="${esc(tl)} · clic long : plaque, centrale, volume" aria-label="${esc(tl)}">${lab}</button>`}).join('');
   const cam=[o.cam,o.camNote].filter(Boolean).join(' ');
   const pom=o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe envoyé':'Bon de pompe à faire la veille'} · clic pour changer">${esc(pompeLabel(o.pompe))}</button>${pompeResa(o)}${o.pompe.t==='BQA'&&!/bqa/i.test(o.f)?'<span class="mo bad">BQA ?</span>':''}`:'<span class="faint">—</span>';
@@ -296,13 +300,13 @@ function rowHTML(o,editors){
   return `<article class="row ${DET2&&!PH?'det2':''} st-${st} kind-${o.kind} ${ed?'editing':''} ${PH?'ph':''} ${OPEN?'open':''}" data-id="${o.id}" id="row-${o.id}">
     ${ed?`<span class="editby">Verrouillée · ${esc(ed)} modifie</span>`:''}
     <div class="r-time">${esc(o.h)}</div>
-    <div class="c r-cl"><button class="r-client" data-act="edit" title="${esc(ouv+(c.note||(c.t==='comptant'?'Client comptant':'Client en compte')))} · modifier">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" title="Client comptant · clic : payé / en attente">${o.pay.paye?'PAYÉ':'€ ATTENTE'}</button>`:''}${o.spec?'<span class="tag spec" title="Mise en avant par le commercial">SPÉCIALE</span>':''}${o.modv?`<button class="tag modv" data-act="modv" title="Modifiée par ${esc(o.modv.by)} à ${esc(o.modv.at)}${role()==='centraliste'?' · clic : valider':''}">MODIF. À VALIDER</button>`:''}</div>
-    <div class="r-vol ${liv>tot+0.01?'over':''}" title="${nC}/${nT} tours${o.plus?' · + 1 tour à confirmer':''}"><b>${fmt(liv)}</b>/${fmt(tot)}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}</div>
+    <div class="c r-cl"><button class="r-client" data-act="edit" title="${esc(ouv+(c.note||(c.t==='comptant'?'Client comptant':'Client en compte')))} · modifier">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" data-long="1" title="Client comptant · clic : payé / en attente · clic droit : paiements du client${payTxt(o.pay)?' · '+esc(payTxt(o.pay)):''}">${o.pay.paye?'PAYÉ':'€ ATTENTE'}${payTot(o.pay)?' '+esc(fmtE(payTot(o.pay))):''}</button>`:''}${o.spec?'<span class="tag spec" title="Mise en avant par le commercial">SPÉCIALE</span>':''}${o.modv?`<button class="tag modv" data-act="modv" title="Modifiée par ${esc(o.modv.by)} à ${esc(o.modv.at)}${role()==='centraliste'?' · clic : valider':''}">MODIF. À VALIDER</button>`:''}</div>
+    <div class="r-vol ${liv>tot+0.01?'over':''}" title="${nC}/${nT} tours${o.plus?' · + 1 tour à confirmer':''}"><b>${fmt(liv)}</b>/${fmt(tot)}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}${isBag(o)?`<small class="bags" title="Citybag : 1 bag = 0,5 m³">${nBags(liv)}/${nBags(tot)} bags</small>`:''}</div>
     <div class="c r-ch">${o.kind==='pour'?`<span class="tag pour" style="margin:0 5px 0 0">POUR ${esc(o.pour.toUpperCase())}</span>`:''}${ch?`<a class="r-site ${ch.nom?'':'adr'}" data-act="map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQ+' 06')}" target="_blank" rel="noopener" title="${esc(siteTitle)}">${esc(siteTxt)}</a>`:''}${ch&&ch.ot?'<span class="tag" title="Adresse unique à ce coulage">OT</span>':''}${o.am?'<span class="tag" title="Déborde sur l\'après-midi">→ AM</span>':''}</div>
-    <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule" title="${esc(o.f)}${sap?' · SAP '+sap:' · pas de SAP'}${known(o.f)?'':' · formule non répertoriée'}">${esc(o.f||'Formule ?')}</button></div>
+    <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule" title="${esc(o.f)}${sap?' · SAP '+sap:' · pas de SAP'}${known(o.f)?'':' · formule non répertoriée'}">${esc(o.f||'Formule ?')}</button>${fLaboTag(o)}</div>
     <div class="r-cam">${cam?`<span class="mo">${esc(cam)}</span>`:'<span class="faint">8x4</span>'}${resaBadge(o)}</div>
     <div class="r-pom">${pom}</div>
-    <div class="r-pills" ${o.pills.length>1?'data-more="1"':''}>${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${o.pompe&&o.pompe.city?'<span class="mo bag" title="Citybag à prévoir (chantier avec pompe)">Citybag</span>':''}${pillsRow(o)}</div>
+    <div class="r-pills" ${o.pills.length>1?'data-more="1"':''}>${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${pillsRow(o)}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande" title="Statut, modifier, dupliquer…">⋯</button>
     ${PH?phT:SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" data-long="1" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Complément non prévu : charger un tour de plus, ou noter un complément prévu" aria-label="Ajouter un complément">+</button></div>`}
     ${prefs.vue==='detail'||OPEN?detLine(o,c,ch,sap):''}
@@ -345,7 +349,7 @@ function rowCompact(o,editors){
     <div class="c r-cl"><button class="r-client" data-act="edit">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" title="${o.pay.paye?'Payé · clic : remettre en attente':'Client comptant · clic : paiement reçu'}">${o.pay.paye?'PAYÉ':'€'}</button>`:''}${o.spec?'<span class="tag spec">SPÉC.</span>':''}</div>
     <div class="r-vol"><b>${fmt(livre(o))}</b>/${fmt(total(o))}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}</div>
     <div class="c r-ch">${o.kind==='pour'?`<span class="tag pour" style="margin:0 5px 0 0">${esc(o.pour.toUpperCase())}</span>`:''}${esc(siteName(o))}</div>
-    <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule">${esc(o.f||'?')}</button></div>
+    <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule">${esc(o.f||'?')}</button>${fLaboTag(o)}</div>
     <div class="r-prog" title="${k}/${n} tours chargés">${bar}<span class="mono">${k}/${n}</span>${o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe fait':'Clic : bon de pompe fait'}">${esc(o.pompe.t==='BQA'?'BQA':o.pompe.t+' m')}</button>`+pompeResa(o):''}${o.cam?`<span class="mo">${esc(o.cam)}</span>`+resaBadge(o):''}${o.plus?'<button class="mo t-plus" data-act="plus" data-long="1" title="Complément à confirmer">+1T ?</button>':''}${o.pills.length?`<button class="tag" data-act="pills-all" title="${esc(o.pills.map(p=>p.t).join(' · '))}">${o.pills.length} info${o.pills.length>1?'s':''}</button>`:''}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande">⋯</button>
   </article>`;
@@ -430,7 +434,7 @@ function demandesHTML(){
   // 1. placement de chantier (commandes du commercial)
   add('place','Demandes de placement de chantier',f==='moi'&&!CE?[]:S.orders.filter(o=>o.kind==='aplacer'&&(CE||o.by===ME)).sort((a,b)=>(a.cre||a.date).localeCompare(b.cre||b.date)).map(o=>dl('ap',o.id,o.cre||o.date,'<span class="chip info">Placement</span>','Centraliste',`${oTxt(o)} · <span class="mono">${esc(o.f)}</span> · souhait ${esc(dayShort(o.date))}${o.souhait?' · '+esc(o.souhait):''}${o.pills.length?' · '+o.pills.map(p=>esc(p.t)).join(' · '):''}`,o.by,peutValider()?`<button class="btn sm primary" data-act="ap-ok">Placer le ${esc(dayShort(o.date))}</button><button class="btn sm" data-act="ap-show">Afficher le planning</button>`:'<span class="muted">En attente du centraliste</span>')));
   // 2. modifications à valider
-  add('modv','Modifications à valider',peutValider()&&f!=='envoyees'?live.filter(o=>o.modv&&o.kind!=='aplacer').map(o=>dl('',o.id,o.date,'<span class="chip warn">Modification</span>','Centraliste',`${oTxt(o)} · modifiée par ${esc(o.modv.by)}`,o.modv.by,`<button class="btn sm primary" data-act="modv">Valider</button>${voir(o)}`)):[]);
+  add('modv','Modifications à valider',peutValider()&&f!=='envoyees'?live.filter(o=>o.modv&&o.kind!=='aplacer').map(o=>dl('',o.id,o.date,'<span class="chip warn">Modification</span>','Centraliste',`${oTxt(o)} · modifiée par ${esc(o.modv.by)}${modTxt(o)?`<br><small class="mod-sum">${esc(modTxt(o))}</small>`:''}`,o.modv.by,`<button class="btn sm primary" data-act="modv">Valider</button>${voir(o)}`)):[]);
   // 3. pompes
   if(f!=='envoyees'){const P=[];live.filter(o=>o.pompe&&o.kind!=='aplacer'&&o.date>=TODAY&&mine(o)).sort((a,b)=>(a.date+a.h).localeCompare(b.date+b.h)).forEach(o=>{
       if(o.pompe.resa==='todo')P.push(dl('bad',o.id,o.date,'<span class="chip bad">À réserver</span>','Centraliste',`${oTxt(o)} · pompe ${esc(pompeLabel(o.pompe))}`,cl(o.cl).n,peutValider()?`<button class="btn sm primary" data-act="presa">Réservée</button>${voir(o)}`:voir(o)));
@@ -442,7 +446,7 @@ function demandesHTML(){
     // 5. paiements
     add('pay','Paiements',S.orders.filter(o=>o.pay&&!o.pay.paye&&o.kind!=='aplacer'&&statut(o)!=='annulee'&&o.date<=step(TODAY,1)&&mine(o)).sort((a,b)=>a.date.localeCompare(b.date)).map(o=>dl('bad',o.id,o.date,'<span class="chip bad">Comptant</span>',o.date<TODAY?'En retard':'Avant chargement',oTxt(o),cl(o.cl).n,`<button class="btn sm primary" data-act="pay">Paiement reçu</button>${voir(o)}`)));
     // formules en attente
-    var att=live.filter(o=>attente(o.f)&&o.date>=TODAY).map(o=>dl('',o.id,o.date,'<span class="chip warn">Formule</span>',/labo/i.test(attente(o.f))?'Labo':'Commercial',`${oTxt(o)} · ${esc(attente(o.f))}`,cl(o.cl).n,voir(o)))}
+    var att=live.filter(o=>attente(o.f)&&o.date>=TODAY).map(o=>dl('',o.id,o.date,'<span class="chip warn">Formule</span>',/labo/i.test(attente(o.f))?'Labo':'Commercial',`${oTxt(o)} · ${esc(attente(o.f))}${o.fLabo?` · <b>labo : ${esc(o.fLabo.f)}</b>`:''}`,cl(o.cl).n,(role()==='labo'?`<button class="btn sm ${o.fLabo?'':'primary'}" data-act="formule">${o.fLabo?'Modifier la proposition':'Proposer la formule'}</button>`:o.fLabo?'<button class="btn sm primary" data-act="flabo">Appliquer la formule du labo</button>':'')+voir(o)))}
   // 6. demandes entre services, par thème
   const D=S.demandes.map((r,i)=>({r,i})).filter(x=>!x.r.done&&fdem(x.r)).sort((a,b)=>(a.r.le||'').localeCompare(b.r.le||''));
   const dline=({r,i},cls)=>{const o=r.oid?byId(r.oid):null;return dl((cls||'')+(r.done?' done':''),'',r.le,`<span class="chip ${r.pour==='labo'?'ok':'info'}">${esc(DEM_TYPES[r.type]||r.type)}</span>`,POUR[r.pour]||r.pour,`${esc(r.t)}${o?` · <a href="#" data-act="focus" data-oid="${o.id}">${esc(siteName(o))}, ${esc(dayShort(o.date))}</a>`:''}${(r.rep||[]).map(a=>`<span class="rep" style="display:block">↳ ${esc(a.by)} : ${esc(a.t)}</span>`).join('')}`,r.de,`<button class="btn sm" data-act="dem-rep" data-i="${i}">Répondre</button><button class="btn sm ${r.done?'':'primary'}" data-act="dem-done" data-i="${i}">${r.done?'Rouvrir':'Traité'}</button>`)};
@@ -570,8 +574,9 @@ const AIDE=[
   ['tous','Imprimer, PDF et journal',`<ul><li><b>Imprimer</b> : badge du compte → Journée → <b>Imprimer / PDF</b> : jour ou plusieurs jours, A4 ou A3.</li><li><b>Journal</b> : toutes les modifications du jour, avec l'heure et l'auteur.</li><li>Dans Claude, le téléchargement demande d'être connecté à un compte Claude ; la version en ligne télécharge directement.</li></ul>`],
   ['tous','Ouverture exceptionnelle et nuit',`<ul><li><b>Samedi ou dimanche</b> : aller sur le jour → <b>Créer une journée planning ce jour</b>. Le jour s'ajoute au planning, à la navigation et à l'onglet <b>Agrégats</b>.</li><li><b>Nuit</b> : saisir le chantier sur le jour où il <b>commence</b> (ex. mercredi 22 h 00). À partir de 19 h, il s'affiche dans une section <b>☾ Nuit</b>.</li><li>Le lendemain, le planning reprend ces chantiers tout en haut, dans <b>☾ Nuit précédente</b> (fond bleuté) : celui qui prend le poste le matin voit les tours chargés et ceux qui restent, et peut continuer à remplir les bulles.</li><li>Vendredi soir (ou veille d'un jour fermé) : le <b>samedi s'affiche tout seul</b> avec la fin de la nuit, sans ouvrir de journée ; bouton <b>Créer une journée planning ce jour</b> si on travaille aussi le samedi.</li></ul>`],
   ['tous','Une commande ouverte par quelqu\'un d\'autre (verrou)',`<ul><li>Quand quelqu'un ouvre une commande pour la modifier, sa ligne s'affiche <b>grisée</b> avec « <b>Verrouillée · nom modifie</b> » chez tous les autres.</li><li>Tant qu'elle est verrouillée, on ne peut ni l'ouvrir ni cliquer sur ses boutons (tours, pompe, paiement, formule…) : un message dit qui la modifie.</li><li>Le verrou se libère dès que la personne <b>valide ou ferme</b> la commande, ou après <b>5 minutes sans action</b> (rien n'est enregistré dans ce cas).</li><li>Le verrou est <b>tenu par la base</b> : même si l'affichage en direct d'un téléphone est en retard, la base refuse l'enregistrement d'une commande ouverte par quelqu'un d'autre (message « … modifie cette commande : votre changement n'a pas été enregistré »).</li><li>Si deux personnes ouvrent la même commande au même instant, la première garde la main ; l'autre voit un message et sa fenêtre se ferme.</li><li>Téléphone mis en veille avec une commande ouverte : au-delà de 5 minutes, la commande est libérée. Si quelqu'un d'autre l'a ouverte entre-temps, c'est lui qui garde la main.</li></ul>`],
+  ['tous','Citybag et Betobag',`<ul><li><b>Betobag</b> : sac de lavage de la pompe, à cocher dans la partie pompe de la commande.</li><li><b>Citybag</b> : produit <b>BAG</b> (saisi dans la formule). Les sacs de 0,5 m³ sont remplis <b>à la centrale</b> par une toupie : on saisit la commande comme un chantier (heure d'enlèvement, cubage), puis chaque tour avec sa plaque et son volume.</li><li>Le planning compte les sacs : 4 m³ = <b>8 bags</b>, affichés sous le cubage (chargés / prévus) et dans chaque bulle.</li></ul>`],
   ['tous','Journée clôturée',`<ul><li>Une fois la journée clôturée par le centraliste, <b>seul le centraliste</b> peut encore la modifier (commandes, agrégats, liants).</li><li>Le commercial et le labo voient la journée, peuvent ouvrir la carte et <b>dupliquer</b> une commande vers un autre jour (menu ⋯), mais pas la modifier ni y déplacer une commande.</li><li>La règle est appliquée par la base : un enregistrement refusé affiche « Journée clôturée : seul le centraliste peut la modifier ».</li></ul>`],
-  ['tous','Notifications sur le téléphone',`<p>Une fois l'application installée, le planning peut prévenir sur l'<b>écran de verrouillage</b>, même fermé.</p><ul><li>Badge du compte → Aide → <b>Notifications sur cet appareil…</b> → <b>Activer les notifications</b>, puis accepter.</li><li><b>Centraliste</b> : commande du commercial à valider, modification à valider, demandes, chat.</li><li><b>Commercial</b> : ses commandes validées, modifiées ou annulées par la centrale, réponses à ses demandes.</li><li><b>Rappel du matin</b> (6 h 45) : les bons de pompe pas encore faits pour le prochain jour travaillé (centraliste ; le commercial peut l'activer).</li><li>Touchez une ligne pour couper ou remettre un type de notification. <b>Envoyer une notification de test</b> pour vérifier.</li><li>Toucher une notification ouvre le planning sur la commande concernée.</li><li>iPhone : seulement dans l'application installée (Safari → Partager → Sur l'écran d'accueil), iOS 16.4 ou plus récent.</li></ul>`],
+  ['tous','Notifications sur le téléphone',`<p>Une fois l'application installée, le planning peut prévenir sur l'<b>écran de verrouillage</b>, même fermé.</p><ul><li>Badge du compte → Centrale → <b>Notifications sur cet appareil…</b> → <b>Activer les notifications</b>, puis accepter.</li><li><b>Centraliste</b> : commande du commercial à valider, modification à valider, demandes, chat.</li><li><b>Commercial</b> : ses commandes validées, modifiées ou annulées par la centrale, réponses à ses demandes.</li><li><b>Rappel du matin</b> (6 h 45) : les bons de pompe pas encore faits pour le prochain jour travaillé (centraliste ; le commercial peut l'activer).</li><li>Touchez une ligne pour couper ou remettre un type de notification. <b>Envoyer une notification de test</b> pour vérifier.</li><li>Toucher une notification ouvre le planning sur la commande concernée.</li><li>iPhone : seulement dans l'application installée (Safari → Partager → Sur l'écran d'accueil), iOS 16.4 ou plus récent.</li></ul>`],
   ['tous','Installer l\'application sur le téléphone',`<p>Le planning s'installe comme une application, sans magasin d'applications : une icône « <b>La Bocca</b> » sur l'écran d'accueil, en plein écran, mise à jour automatiquement.</p><ul><li><b>Android</b> : ouvrir le planning dans <b>Chrome</b> → menu <b>⋮</b> → <b>Installer l'application</b> (ou Ajouter à l'écran d'accueil).</li><li><b>iPhone</b> : ouvrir le planning dans <b>Safari</b> → bouton <b>Partager</b> → <b>Sur l'écran d'accueil</b> → Ajouter. Se connecter une fois avec Google dans l'application.</li><li>Raccourci : badge du compte → Aide → <b>Installer l'application sur cet appareil</b>.</li></ul>`],
   ['tous','Synchronisation et hors connexion',`<ul><li>Badge du compte <b>vert</b> = tout est synchronisé ; <b>rouge</b> = pas encore.</li><li>Sans réseau, on continue de travailler : les changements partent au retour du réseau.</li><li>Badge → <b>Forcer la synchronisation</b> en cas de doute.</li></ul>`],
   ['tous','Carte du chantier',`<p>Clic sur le nom du chantier : une petite fenêtre <b>Google Maps</b> s'ouvre (version en ligne), à déplacer par sa barre noire. <b>×</b> orange pour fermer, <b>Itinéraire ↗</b> pour ouvrir Google Maps.</p><ol><li><b>Placer le point exact</b> (en bas de la fenêtre).</li><li>Cliquer à l'endroit du chantier (zoom à la molette).</li><li><b>Valider ce point</b>. Il est gardé pour ce chantier, y compris quand on duplique la commande.</li></ol><p>Dans Claude, Google Maps s'ouvre dans un onglet.</p>`]]]
@@ -703,6 +708,30 @@ async function verrousInit(){
 }
 // journée clôturée : seul le centraliste la modifie (appliqué aussi par la base, 12_journee_cloturee.sql)
 function closedStop(d){if(!d||role()==='centraliste')return false;const c=(dayRO(d)||{}).cloture;if(!c)return false;toast(`Journée clôturée${c.by?' par '+c.by:''} : seul le centraliste peut la modifier`);return true}
+// ---------- comptant : paiements faits par le client (clic droit sur le paiement) ----------
+const PAY_MODES=[['carte','Carte'],['cb','CB'],['virement','Virement'],['attente','Attente']];
+const fmtE=n=>(Math.round(n*100)/100).toLocaleString('fr-FR',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+' €';
+const payTot=p=>(p&&p.lignes||[]).reduce((a,l)=>a+(+l.m||0),0);
+const payTxt=p=>(p&&p.lignes||[]).map(l=>`${fmtE(+l.m||0)} ${(PAY_MODES.find(x=>x[0]===l.mode)||['',''])[1]}${l.code?' ·'+l.code:''}`).join(' + ');
+function payPop(o,anchor){const id=o.id;const L=(o.pay.lignes&&o.pay.lignes.length?o.pay.lignes:[{m:'',mode:'cb',code:''}]).map(l=>({...l}));
+  const line=(l,k)=>`<div class="pay-l" data-k="${k}"><input class="pay-m" type="text" inputmode="decimal" placeholder="Montant" value="${l.m===''||l.m==null?'':esc(String(l.m).replace('.',','))}" aria-label="Montant en euros"><span class="pay-eur">€</span>
+    <select class="pay-mode" aria-label="Mode de paiement">${PAY_MODES.filter(([v])=>k===0||v!=='attente'||l.mode==='attente').map(([v,t])=>`<option value="${v}" ${l.mode===v?'selected':''}>${t}</option>`).join('')}</select>
+    <input class="pay-code" type="text" inputmode="numeric" maxlength="4" placeholder="4 chiffres CB" value="${esc(l.code||'')}" aria-label="4 derniers chiffres de la carte">
+    ${k?'<button type="button" class="pay-x" data-pa="del" title="Retirer cette ligne">×</button>':'<span></span>'}</div>`;
+  const body=()=>`<div class="pop-h">Paiements · ${esc(cl(o.cl).n)}</div><form data-pa="save" class="pay-f"><div class="pay-ls">${L.map(line).join('')}</div>
+    <div class="pay-foot"><button type="button" class="chip add pay-add" data-pa="add">+ Autre paiement</button><span class="pay-tot"></span></div>
+    <div class="pop-cf"><button class="btn primary" type="submit">Enregistrer</button><button type="button" class="btn" data-pa="no">Annuler</button></div></form>`;
+  const read=()=>[...popEl.querySelectorAll('.pay-l')].map(r=>({m:(v=>isNaN(v)?'':v)(num(r.querySelector('.pay-m').value)),mode:r.querySelector('.pay-mode').value,code:r.querySelector('.pay-code').value.replace(/\D/g,'').slice(0,4)}));
+  const tot=()=>{const ls=read(),t=ls.reduce((a,l)=>a+(l.m||0),0),el=popEl.querySelector('.pay-tot');if(el)el.innerHTML=ls.length>1?`Total <b>${esc(fmtE(t))}</b>`:''};
+  const h={add(){const ls=read();ls.forEach((l,k)=>Object.assign(L[k],l));L.push({m:'',mode:'cb',code:''});draw();setTimeout(()=>{const r=popEl.querySelectorAll('.pay-m');r[r.length-1].focus()});return 'keep'},
+    del(el){const k=+el.closest('.pay-l').dataset.k;const ls=read();ls.forEach((l,j)=>Object.assign(L[j],l));L.splice(k,1);draw();return 'keep'},
+    no(){return 'close'},
+    save(){const ls=read().filter(l=>l.m>0||l.mode==='attente');if(ls.some(l=>l.code&&l.code.length!==4)){toast('Le code CB fait 4 chiffres');return 'keep'}
+      const x=byId(id);x.pay.lignes=ls;const t=payTot(x.pay);x.pay.paye=ls.length>0&&t>0&&!ls.some(l=>l.mode==='attente');
+      jlog(x.date,`Paiement ${siteName(x)} : ${payTxt(x.pay)||'effacé'}`);toast(x.pay.paye?`Paiement enregistré : ${fmtE(t)}`:'Paiement enregistré (en attente)')}};
+  const draw=()=>{openPop(anchor,body(),h);popEl.querySelector('.pay-f').addEventListener('input',tot);tot()};
+  draw();
+}
 function lockStop(id){const who=id&&lockedBy(id);if(!who)return false;toast(`${who} modifie cette commande : elle se libère dès sa validation`);return true}
 // deux personnes au même instant : la première garde la main, l'autre est sortie
 function lockRace(){if(!myEdit)return;const riv=peers.find(p=>!p.sameTab&&p.presence&&p.presence.edit===myEdit&&(p.presence.editAt||0)<myEditAt);if(!riv)return;const n=riv.presence.nom||'Quelqu\'un';closePop();closeDrawer();toast(`${n} a la main sur cette commande : votre saisie n'a pas été enregistrée`)}
@@ -894,7 +923,7 @@ function sideHTML(){
   ${it.map(([k,l,ic],i)=>`${i===1?'<div class="nav-sep">// Centrale</div>':''}<button class="nav-b ${role()!=='centraliste'?'named':''} ${i===0?'main':''} ${(k==='chat'?chatOn():k==='plus'?navRest.some(x=>x[0]===view.tab||(x[0]==='chat'&&chatOn())):view.tab===k&&!(isPhone()&&chatOn()))?'on':''}" ${k==='chat'?'data-act="chat"':k==='plus'?'onclick="event.stopPropagation();navMore(this)"':`data-act="tab" data-v="${k}"`} title="${l}" style="--c:${NAV_C[k]}"><span class="sq" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><i>${pad(i+1)}</i></span><span class="ix">${pad(i+1)}</span><span class="nt">${l}</span>${k==='demandes'&&nd2?`<span class="n">${nd2}</span>`:''}${k==='chat'&&nChat?`<span class="n">${nChat}</span>`:''}</button>`).join('')}
   </div><div class="side-rz" title="Glisser pour élargir ou réduire le menu · double-clic : carrés / normal" aria-hidden="true"></div>
   <div class="grow"></div>
-  <div class="mini"><span class="lbl">// Données</span><span>Partagées en direct</span></div>`;
+`;
 }
 let lastDec='',decId=0;
 function decodeDate(dl){
@@ -913,7 +942,8 @@ function renderChrome(){
   decodeDate(dl);
   document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.v===view.mode));
 
-  const sd=document.getElementById('side');sd.innerHTML=sideHTML();applySide();navMotion(sd);
+  // menu de gauche : reconstruit seulement s'il a changé (sinon le repère orange de l'onglet clignotait à chaque mise à jour)
+  {const sd=document.getElementById('side'),sh=sideHTML();if(sd.dataset.h!==sh||!sd.firstChild){sd.innerHTML=sh;sd.dataset.h=sh;navMotion(sd)}applySide()}
   document.getElementById('who').innerHTML=whoHTML();
   const u=prefs.user;const me=document.getElementById('me');me.className='me '+(u?'r-'+u.role:'');me.textContent=u?u.nom.slice(0,2).toUpperCase():'?';me.title=u?`${author()} · réglages`:'Réglages';
   renderSync();
@@ -946,6 +976,25 @@ function confirmPop(anchor,title,detail,okLabel,fn,danger){
   openPop(anchor,html,h);setTimeout(()=>{const b=popEl.querySelector('[data-pa=cfok]');if(b)b.focus()},20);return 'keep';
 }
 const ordLbl=o=>`${cl(o.cl).n} · ${siteName(o)} · ${dayShort(o.date)}`;
+// modification du commercial à valider : ce qui a changé depuis la version validée
+const modSnap=o=>({date:o.date,h:o.h,m3:total(o),f:o.f,sap:o.sap||'',cl:o.cl,ch:o.ch,tel:o.tel||'',cam:o.cam||'',ouv:o.ouv||'',
+  pompe:o.pompe?`${o.pompe.t==='BQA'?'BQA':o.pompe.t+' m'}${o.pompe.f?' · '+o.pompe.f:''}${o.pompe.beto?' · Betobag':''}`:'',pills:(o.pills||[]).map(p=>p.t)});
+function modDiff(a,o){if(!a)return [];const b=modSnap(o),r=[];
+  if(a.date!==b.date)r.push(['Jour',dayShort(a.date),dayShort(b.date)]);
+  if(a.h!==b.h)r.push(['Heure',hm(a.h),hm(b.h)]);
+  if(Math.abs((a.m3||0)-b.m3)>0.01)r.push(['Cubage',fmt(a.m3)+' m³',fmt(b.m3)+' m³']);
+  if(a.f!==b.f)r.push(['Formule',a.f||'—',b.f||'—']);
+  if(a.sap!==b.sap)r.push(['SAP',a.sap||'—',b.sap||'—']);
+  if(a.cl!==b.cl)r.push(['Client',cl(a.cl).n,cl(b.cl).n]);
+  if(a.ch!==b.ch){const ca=S.chantiers.find(x=>x.id===a.ch),cb=S.chantiers.find(x=>x.id===b.ch);r.push(['Chantier',ca?(ca.nom||ca.adr):'—',cb?(cb.nom||cb.adr):'—'])}
+  if(a.tel!==b.tel)r.push(['Contact',a.tel||'—',b.tel||'—']);
+  if(a.cam!==b.cam)r.push(['Camion',a.cam||'standard',b.cam||'standard']);
+  if(a.pompe!==b.pompe)r.push(['Pompe',a.pompe||'sans',b.pompe||'sans']);
+  if(a.ouv!==b.ouv)r.push(['Ce que fait le client',a.ouv||'—',b.ouv||'—']);
+  const add=b.pills.filter(t=>!a.pills.includes(t)),del=a.pills.filter(t=>!b.pills.includes(t));
+  if(add.length||del.length)r.push(['Infos',del.length?'retiré : '+del.join(', '):'',add.length?'ajouté : '+add.join(', '):'']);
+  return r}
+const modTxt=o=>{const d=modDiff(o.modv&&o.modv.base,o);return d.length?d.map(([k,a,b])=>k==='Infos'?`${k} : ${[a,b].filter(Boolean).join(' · ')}`:`${k} : ${a} → ${b}`).join(' · '):''};
 
 function fieldHTML(f,i){const id='pf'+i;
   if(f.type==='select')return `<label class="fl">${esc(f.label)}<select id="${id}">${f.opts.map(o=>{const v=Array.isArray(o)?o[0]:o,l=Array.isArray(o)?o[1]:o;return `<option value="${esc(v)}" ${String(f.val)===String(v)?'selected':''}>${esc(l)}</option>`}).join('')}</select></label>`;
@@ -1094,7 +1143,17 @@ function act(a,el,o,e){
     case 'pills-all':return plShow(el);
     case 'pills-edit':{const id=o.id;return setTimeout(()=>pillsPop(plAnchor&&document.body.contains(plAnchor)?plAnchor:document.querySelector(`#row-${id} .r-menu`)||el,id))}
     case 'addpill':{const id=o.id;setEditing(id);return listPop(el,'Ajouter une info sur la ligne',pPre(o),v=>{byId(id).pills.push({t:v,on:false,by:author()})},'Ou texte libre (retard, consigne…)')}
-    case 'formule':{const id=o.id;setEditing(id);if(window.FX){const nomC=cl(o.cl).n;
+    case 'flabo':{const id=o.id;if(role()==='labo')return act('formule',el,o,e);if(!o.fLabo)return;setEditing(id);
+      return confirmPop(el,'Appliquer la formule du labo ?',`${o.f||'—'}  →  ${o.fLabo.f}${o.fLabo.sap?' · SAP '+o.fLabo.sap:''} (proposée par ${o.fLabo.by||'le labo'})`,'Oui, appliquer',()=>{const x=byId(id);x.f=x.fLabo.f;if(x.fLabo.sap)x.sap=x.fLabo.sap;learnFormule(x.f,x.sap||'');jlog(x.date,`Formule du labo appliquée : ${siteName(x)} · ${x.f}`);delete x.fLabo;toast('Formule appliquée')})}
+    case 'formule':{const id=o.id;setEditing(id);
+      if(role()==='labo'){if(!attente(o.f)&&!o.fLabo){toast('Formule renseignée : seuls le centraliste et le commercial la modifient');return}
+        if(!window.FX)return;const nomC=cl(o.cl).n;
+        openPop(el,`<div class="pop-h">Proposer la formule · ${esc(nomC)}</div><p class="muted" style="margin:0 0 6px">Elle s'affichera comme une info du labo ; le centraliste ou le commercial l'appliquera à la commande.</p><form data-pa="save" class="pf-fx"><div class="fxw" id="pf-fx"></div><button class="btn primary" type="submit">Envoyer la proposition</button></form>`,
+          {save(){const q=document.getElementById('fx-q'),sp=document.getElementById('fx-sap');const f=FX.line(q?q.value:'').trim(),sap=(sp?sp.value:'').trim();
+            if(!f||attente(f)){toast('Indiquez la formule');return 'keep'}if(sap&&!/^\d{8}$/.test(sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}
+            const x=byId(id);const n=new Date();x.fLabo={f,sap,by:author(),at:`${dayShort(TODAY)} ${pad(n.getHours())}:${pad(n.getMinutes())}`};jlog(x.date,`Formule proposée par le labo : ${siteName(x)} · ${f}`);toast('Proposition envoyée')}});
+        FX.setCfg(fxCat());FX.mount(popEl.querySelector('#pf-fx'),{value:o.fLabo?o.fLabo.f:'',sap:o.fLabo?o.fLabo.sap||'':'',last:lastFormules(nomC)});placePop();return}
+      if(window.FX){const nomC=cl(o.cl).n;
       openPop(el,`<div class="pop-h">Formule · ${esc(nomC)}</div><form data-pa="save" class="pf-fx"><div class="fxw" id="pf-fx"></div><button class="btn primary" type="submit">Enregistrer</button></form>`,
         {save(){const q=document.getElementById('fx-q'),sp=document.getElementById('fx-sap');const f=FX.line(q?q.value:'').trim(),sap=(sp?sp.value:'').trim();
           if(!f){toast('Formule vide');return 'keep'}if(sap&&!/^\d{8}$/.test(sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}
@@ -1104,7 +1163,11 @@ function act(a,el,o,e){
       return formPop(el,'Formule',[{k:'f',label:'Formule (comme sur le papier)',val:o.f,list:S.formules.map(x=>x.f)},{k:'sap',label:'N° SAP (8 chiffres, facultatif)',val:sapOf(o),ph:'60012481'}],v=>{if(v.sap&&!/^\d{8}$/.test(v.sap)){toast('Le SAP doit faire 8 chiffres');return 'keep'}const x=byId(id);x.f=v.f;x.sap=v.sap;learnFormule(v.f,v.sap)})}
     case 'pompe':{const id=o.id,b=o.pompe.bon;setEditing(id);return confirmPop(el,b?'Remettre le bon de pompe à faire ?':'Confirmer : bon de pompe fait ?',ordLbl(o),b?'Oui, pas encore fait':'Oui, le bon est fait',()=>{byId(id).pompe.bon=!b;toast(b?'Bon de pompe à faire':'Bon de pompe fait')},b)}
     case 'pay':{const id=o.id,p=o.pay.paye;setEditing(id);return confirmPop(el,p?'Remettre le paiement en attente ?':'Confirmer : paiement reçu ?',ordLbl(o),p?'Oui, pas encore payé':'Oui, le client a payé',()=>{byId(id).pay.paye=!p;toast(p?'Paiement en attente':'Paiement validé')},p)}
-    case 'modv':{if(!peutValider()){toast('Le centraliste valide la modification');return}const id=o.id;setEditing(id);return confirmPop(el,'Valider la modification ?',ordLbl(o),'Oui, valider',()=>{delete byId(id).modv;toast('Modification validée')})}
+    case 'modv':{if(!peutValider()){toast('Le centraliste valide la modification');return}const id=o.id;setEditing(id);const dd=modDiff(o.modv&&o.modv.base,o);
+      return openPop(el,`<div class="pop-h">Valider la modification ?</div><p class="muted" style="margin:0 0 6px">${esc(ordLbl(o))} · modifiée par <b>${esc(o.modv.by||'?')}</b>${o.modv.at?' à '+esc(o.modv.at):''}</p>
+        ${dd.length?`<table class="mod-diff">${dd.map(([k,a,b])=>`<tr><th>${esc(k)}</th>${k==='Infos'?`<td colspan="3">${a?`<s>${esc(a)}</s> `:''}${b?`<b>${esc(b)}</b>`:''}</td>`:`<td><s>${esc(a)}</s></td><td>→</td><td><b>${esc(b)}</b></td>`}</tr>`).join('')}</table>`:'<p class="muted" style="margin:0">Détail non disponible (modification faite avant cette mise à jour).</p>'}
+        <div class="pop-cf"><button class="btn primary" data-pa="ok">Oui, valider</button><button class="btn" data-pa="edit">Voir la commande</button><button class="btn" data-pa="no">Annuler</button></div>`,
+        {ok(){const x=byId(id);delete x.modv;jlog(x.date,`Modification validée : ${siteName(x)}`);toast('Modification validée')},edit(){setTimeout(()=>openOrderForm(byId(id)));return 'close'},no(){return 'close'}})}
     case 'presa':{if(!peutValider()){toast('Le centraliste valide la réservation');return}const id=o.id;return openPop(el,`<div class="pop-h">Réservation pompe · ${esc(pompeLabel(o.pompe))}</div><p class="muted" style="margin:0">${esc(cl(o.cl).n)} · ${esc(siteName(o))} · ${esc(dayShort(o.date))}</p><div class="pop-cf"><button class="btn primary" data-pa="ok">Oui, pompe réservée</button><button class="btn" data-pa="no">Annuler</button></div>`,{no(){return 'close'},ok(){byId(id).pompe.resa='ok';toast('Pompe réservée')}})}
     case 'resa':{if(!peutValider()){toast('Le centraliste valide la réservation');return}const id=o.id;return openPop(el,`<div class="pop-h">Réservation ${esc(o.cam)}</div><p class="muted" style="margin:0">${esc(cl(o.cl).n)} · ${esc(siteName(o))} · ${esc(dayShort(o.date))}</p><div class="pop-cf"><button class="btn primary" data-pa="ok">Oui, c'est réservé</button><button class="btn" data-pa="no">Annuler</button></div>`,{no(){return 'close'},ok(){byId(id).resa='ok';toast('Réservation validée')}})}
     case 'statut':{const id=o.id;return listPop(el,'Statut',['Automatique','En attente','En cours','Terminée','Annulée'],v=>{const m={'Automatique':null,'En attente':'attente','En cours':'encours','Terminée':'terminee','Annulée':'annulee'};const x=byId(id);if(m[v]==='annulee'&&x.st!=='annulee')return confirmPop(null,'Annuler cette commande ?',ordLbl(x),'Oui, annuler la commande',()=>{byId(id).st='annulee';toast('Commande annulée')},true);x.st=m[v]})}
@@ -1221,6 +1284,7 @@ function pillEdit(o,i,anchor){const id=o.id;setEditing(id);const p=o.pills[i];
 }
 function longAct(el){const a=el.dataset.act,i=+el.dataset.i;const row=el.closest('[data-id]');
   if(row&&(closedStop((byId(row.dataset.id)||{}).date)||lockStop(row.dataset.id)))return;
+  if(a==='pay'&&row){const o=byId(row.dataset.id);if(o&&o.pay){setEditing(o.id);return payPop(o,el)}}
   if(a==='conv'){const d=el.dataset.d,p=el.dataset.p;return openPop(el,`<div class="pop-h">${esc(p)} · ${esc(dayShort(d))}</div><button class="pop-b" data-pa="mod">Modifier…</button><button class="pop-b danger" data-pa="del">Annuler l'absence</button>`,{mod(){setTimeout(()=>convPop(el,d,p));return 'close'},del(){const x=(S.convocs[d]||{})[p];delete S.convocs[d][p];if(x&&x.st==='abs')jlog(d,`Absence annulée : ${p}`);toast('Absence annulée')}})}
   if(a==='plus'&&row)return act('plus',el,byId(row.dataset.id),{});
   if(a==='tour'&&row)return tourPop(byId(row.dataset.id),i,el);
@@ -1363,9 +1427,9 @@ function settingsPop(anchor){
      ${lastWD?`<p class="ps-note">Dernier jour ouvré du mois : pensez à la clôture</p>`:''}
      <button class="pop-b ${lastWD?'strong':''}" data-pa="moisclot">Clôture de fin de mois : ${esc(moisN)} (PDF + .json)</button>
      <button class="pop-b" data-pa="archive">Consulter un mois archivé (.json)…</button></section>`:''}
-   ${ce||role()==='commercial'||isAdmin()?`<section class="ps"><div class="pop-l">Centrale</div><button class="pop-b" data-pa="cfg">Administration · catalogue de la centrale</button>${ce?layoutPopHTML():''}</section>`:''}
-   <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button>${isInstalled()?'':'<button class="pop-b" data-pa="install">Installer l\'application sur cet appareil</button>'}${MODE==='shared'?'<button class="pop-b" data-pa="notifs">Notifications sur cet appareil…</button>':''}</section>
-   <section class="ps"><div class="pop-l">Affichage</div><div class="pop-grid">${[['auto','Auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div></section>
+   <section class="ps"><div class="pop-l">Centrale</div>${ce||role()==='commercial'||isAdmin()?'<button class="pop-b" data-pa="cfg">Administration · catalogue de la centrale</button>':''}${MODE==='shared'?'<button class="pop-b" data-pa="notifs">Notifications sur cet appareil…</button>':''}
+     <div class="pop-grid">${[['auto','Thème auto'],['light','Clair'],['dark','Sombre']].map(([v,l])=>`<button class="pop-c txt ${prefs.theme===v?'on':''}" data-pa="theme" data-v="${v}">${l}</button>`).join('')}</div>${ce?layoutPopHTML():''}</section>
+   <section class="ps"><div class="pop-l">Aide</div><button class="pop-b" data-pa="aide">Mode d'emploi${prefs.aideOn?' (onglet ouvert)':''}</button>${isInstalled()?'':'<button class="pop-b" data-pa="install">Installer l\'application sur cet appareil</button>'}</section>
 
    <section class="ps"><div class="pop-l">Journal</div><button class="pop-b" data-pa="journal">Voir le journal du ${esc(dayShort(view.date).toLowerCase())}</button></section>
    <section class="ps ps-sync"><div class="pop-l">Synchronisation et état</div><div class="sync-box">${syncDetail()}</div><button class="pop-b" data-pa="force">Forcer la synchronisation</button></section>`,
@@ -1488,7 +1552,7 @@ function openOrderForm(o,opt){
         <div class="full"><span class="fl">Fournisseur</span><div class="radios">${CFG().fourn.map(t=>`<label><input type="radio" name="f-pf" value="${esc(t)}" ${p.f===t?'checked':''}><span>${esc(t)}</span></label>`).join('')}</div></div>
         <label class="fl">Précision : tuyaux (ML)<input id="f-pml" type="number" step="5" min="0" value="${esc(p.ml||'')}" placeholder="0"></label>
         <label class="ck"><input type="checkbox" id="f-pb" ${p.bon?'checked':''}> Bon de pompe envoyé</label>
-        <div class="full"><span class="fl">Sacs de lavage (chantier avec pompe)</span><div class="radios"><label><input type="checkbox" id="f-beto" ${p.beto?'checked':''}><span>Betobag</span></label><label><input type="checkbox" id="f-city" ${p.city?'checked':''}><span>Citybag</span></label></div></div>
+        <div class="full"><span class="fl">Sac de lavage de la pompe</span><div class="radios"><label><input type="checkbox" id="f-beto" ${p.beto?'checked':''}><span>Betobag</span></label></div></div>
         <div class="full"><span class="fl">Réservation de la pompe</span><div class="radios resa">
           <label><input type="radio" name="f-presa" value="ok" ${p.resa==='ok'||(base.pompe&&!p.resa)?'checked':''}><span class="r-ok">Réservé</span></label>
           <label><input type="radio" name="f-presa" value="todo" ${p.resa==='todo'||!base.pompe?'checked':''}><span class="r-todo">À réserver</span></label></div></div>
@@ -1512,7 +1576,7 @@ function openOrderForm(o,opt){
   const rv=n=>(f.querySelector(`input[name="${n}"]:checked`)||{}).value||'';
   const hint=()=>{const fv=f.querySelector('#f-f').value,pp=f.querySelector('#f-pp').checked,pt=rv('f-pt');const h=[];
     if(pp&&pt==='BQA'&&!/bqa/i.test(fv))h.push('Pompe à tuyaux : la formule doit être une BQA.');
-    const m=num(f.querySelector('#f-m3').value),cap=capOf(f.querySelector('#f-cam').value);if(m>0){const n=Math.floor(m/cap+1e-9),r=Math.round((m-n*cap)*10)/10;h.push(n?`${n} tour${n>1?'s':''} de ${fmt(cap)} m³${r>0.05?' + complément de '+fmt(r)+' m³':''}.`:`1 tour de ${fmt(r)} m³.`)}
+    const m=num(f.querySelector('#f-m3').value),cap=capOf(f.querySelector('#f-cam').value);if(m>0&&isBag({f:fv}))h.push(`Citybag : ${fmt(m)} m³ = ${nBags(m)} bags (1 bag = 0,5 m³), remplis à la centrale.`);if(m>0){const n=Math.floor(m/cap+1e-9),r=Math.round((m-n*cap)*10)/10;h.push(n?`${n} tour${n>1?'s':''} de ${fmt(cap)} m³${r>0.05?' + complément de '+fmt(r)+' m³':''}.`:`1 tour de ${fmt(r)} m³.`)}
     f.querySelector('#f-hint').innerHTML=h.map(x=>`<div class="hint">${esc(x)}</div>`).join('')};
   const syncCam=()=>{const d0=CFG().camions[0].t;const t=(f.querySelector('input[name="f-ct"]:checked')||{}).value||d0;const n=parseInt(f.querySelector('#f-nb').value)||'';
     f.querySelector('#f-cam').value=t===d0?'':(n?n:'')+t;f.querySelector('#f-nb-w').hidden=t===d0;f.querySelector('#f-resa-w').hidden=t===d0};
@@ -1567,22 +1631,23 @@ function saveOrderForm(f){
   const cam=g('f-cam').value.trim();const cap=capOf(cam);
   const pills=peValues(f);
   const rv=n=>(f.querySelector(`input[name="${n}"]:checked`)||{}).value||'';
-  const pompe=g('f-pp').checked?{t:rv('f-pt')||CFG().pompes[0],f:rv('f-pf')||CFG().fourn[0],ml:parseInt(g('f-pml').value)||0,bon:g('f-pb').checked,resa:rv('f-presa')||'todo',beto:g('f-beto').checked,city:g('f-city').checked}:null;
+  const pompe=g('f-pp').checked?{t:rv('f-pt')||CFG().pompes[0],f:rv('f-pf')||CFG().fourn[0],ml:parseInt(g('f-pml').value)||0,bon:g('f-pb').checked,resa:rv('f-presa')||'todo',beto:g('f-beto').checked}:null;
   const R=prefs.user?prefs.user.role:'centraliste';const isNewO=!formCtx.id;const ap=R!=='centraliste'&&isNewO;const val=g('f-val')&&g('f-val').checked;
   let o=formCtx.id?byId(formCtx.id):null;
   const src=formCtx.src?byId(formCtx.src):null;
   if(!o){o={id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),seq:Date.now(),by:author(),tours:[],pills:src?src.pills.filter(p=>!P_COMMENT.includes(p.t)).map(p=>({t:p.t,on:false,by:p.by})):[],kind:src&&src.kind==='pour'?'pour':'cmd',pour:src?src.pour:'',souhait:'',st:null};S.orders.push(o)}
   if(o.camNote){if(!o.pills.some(p=>p.t===o.camNote))o.pills.push({t:o.camNote,on:false,by:o.by||author()})}
-  const oldCap=o.tours.length?capOf(o.cam):cap;
+  const oldCap=o.tours.length?capOf(o.cam):cap;const modBase=o.modv&&o.modv.base?o.modv.base:(formCtx.id&&o.kind==='cmd'?modSnap(o):null);
   Object.assign(o,{date:g('f-d').value,h:g('f-h').value,cl:c.id,ch:ch.id,ouv:g('f-ouvx').value.trim(),f:fv,sap,cam,camNote:'',tel:g('f-tel').value.trim(),resa:cam?((f.querySelector('input[name="f-resa"]:checked')||{}).value||'todo'):null,pompe,am:g('f-am').checked,spec:g('f-spec').checked,plus:g('f-plus').checked});
   if(ap){o.kind='aplacer';o.souhait=(g('f-sh')||{value:''}).value.trim();o.cre=TODAY}
   if(val){o.kind='cmd';delete o.modv}
-  if(R!=='centraliste'&&!isNewO&&o.kind==='cmd'){o.modv={by:author(),at:new Date().toTimeString().slice(0,5)}}
+  const modPending=R!=='centraliste'&&!isNewO&&o.kind==='cmd';
   if(c.t==='comptant'&&!o.pay)o.pay={paye:false,note:''};if(c.t!=='comptant')o.pay=null;
   // infos cochées
   o.pills=mergePills(o.pills,pills);
   // tours : on régénère si la quantité ou la capacité change, en gardant les tours déjà chargés
   if(Math.abs(total(o)-m3)>0.01||oldCap!==cap||!o.tours.length){const nt=genTours(m3,cap);nt.forEach((t,i)=>{const old=o.tours[i];if(old&&!formCtx.src||old&&formCtx.id){t.s=old.s;if(old.p)t.p=old.p;if(old.c)t.c=old.c}});if(!formCtx.id)nt.forEach(t=>{t.s=0;delete t.c});o.tours=nt}
+  if(modPending){o.modv={by:author(),at:new Date().toTimeString().slice(0,5),base:modBase};if(modBase&&!modDiff(modBase,o).length)delete o.modv}   // revenu à la version validée : rien à valider
   learnFormule(fv,sap);
   commit();
   const placed=o.kind!=='aplacer'||role()==='centraliste'||true;

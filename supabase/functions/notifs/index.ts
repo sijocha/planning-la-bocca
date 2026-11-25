@@ -83,6 +83,16 @@ export const DEFAUTS: Record<string, Record<string, boolean>> = {
   lecture: { valider: false, modv: false, demandes: false, chat: false, mes: false },
 };
 
+/** Résumé court des changements du commercial (jour, heure, cubage, formule). */
+export function modResume(a: any, o: any) {
+  if (!a) return "";
+  const r: string[] = [];
+  if (a.date !== o.date) r.push(`${jour(a.date)} → ${jour(o.date)}`);
+  if (a.h !== o.h) r.push(`${String(a.h || "").slice(0, 5)} → ${String(o.h || "").slice(0, 5)}`);
+  if (Math.abs((a.m3 || 0) - vol(o)) > 0.01) r.push(`${fmt(a.m3 || 0)} → ${fmt(vol(o))} m³`);
+  if (a.f !== o.f) r.push(`formule → ${o.f}`);
+  return r.join(" · ") || "infos modifiées";
+}
 type Ev = { cat: string; role?: string[]; nom?: string; title: string; body: string; tag: string; url: string };
 /** Compare l'ancien et le nouveau document et renvoie les notifications à envoyer. */
 export function events(collection: string, id: string, oldD: any, newD: any, lbl: (o: any) => string): Ev[] {
@@ -96,7 +106,12 @@ export function events(collection: string, id: string, oldD: any, newD: any, lbl
       out.push({ cat: "valider", role: ["centraliste"], title: "Commande à valider", body: `${base}${o.by ? " · " + o.by : ""}`, tag: "val-" + id, url });
     const modv = !!o.modv && JSON.stringify(o.modv) !== JSON.stringify(p.modv || null);
     if (modv)
-      out.push({ cat: "modv", role: ["centraliste"], title: "Modification à valider", body: `${base} · ${o.modv.by || ""}`, tag: "modv-" + id, url });
+      out.push({ cat: "modv", role: ["centraliste"], title: `Modification à valider · ${o.modv.by || ""}`, body: `${lbl(o)} · ${modResume(o.modv.base, o) || quand}`, tag: "modv-" + id, url });
+    if (o.fLabo?.f && JSON.stringify(o.fLabo) !== JSON.stringify(p.fLabo || null)) {
+      const b2 = `${lbl(o)} · ${quand} · ${o.fLabo.f}`;
+      out.push({ cat: "demandes", role: ["centraliste"], title: `Formule proposée par ${o.fLabo.by || "le labo"}`, body: b2, tag: "flabo-" + id, url });
+      if (o.by) out.push({ cat: "mes", nom: o.by, title: `Formule proposée par ${o.fLabo.by || "le labo"}`, body: b2, tag: "flabo-" + id, url });
+    }
     if (oldD && o.by) {
       if (p.kind === "aplacer" && o.kind === "cmd")
         out.push({ cat: "mes", nom: o.by, title: "Commande validée", body: base, tag: "mes-" + id, url });
