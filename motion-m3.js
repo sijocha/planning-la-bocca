@@ -74,11 +74,31 @@
 
   // 3. Tiroir (closeDrawer) : la feuille repart vers la droite (vers le bas sur téléphone)
   if (typeof window.closeDrawer === 'function') {
-    var _closeDrawer = window.closeDrawer;
+    var _closeDrawer = window.closeDrawer, drawerClosing = null;
     window.closeDrawer = function () {
       var el = document.getElementById('drawer');
-      leave(el, 220, function () { _closeDrawer(); });
+      if (drawerClosing) return;
+      var tok = {}; drawerClosing = tok;
+      leave(el, 220, function () {
+        if (drawerClosing !== tok) return;       // déjà terminée par une nouvelle ouverture
+        drawerClosing = null; _closeDrawer();
+      });
     };
+    // une nouvelle ouverture pendant la sortie : on termine la fermeture tout de suite (verrou rendu),
+    // sinon la fin de l'animation viderait le nouveau tiroir
+    ['openOrderForm', 'openConfig', 'archiveView'].forEach(function (name) {
+      var fn = window[name];
+      if (typeof fn !== 'function') return;
+      window[name] = function () {
+        if (drawerClosing) {
+          drawerClosing = null;
+          var el = document.getElementById('drawer');
+          if (el) el.classList.remove('is-leaving');
+          _closeDrawer();
+        }
+        return fn.apply(this, arguments);
+      };
+    });
   }
 
   // 4. Fenêtre de chat (créée à la première ouverture) : rejoue une sortie quand elle passe à hidden

@@ -454,8 +454,8 @@ function demandesHTML(){
   const done=S.demandes.map((r,i)=>({r,i})).filter(x=>x.r.done&&x.r.doneAt&&Date.now()-x.r.doneAt<864e5&&fdem(x.r)).sort((a,b)=>(b.r.le||'').localeCompare(a.r.le||'')).slice(0,30);
   const n=cats.reduce((a,c)=>a+c.rows.length,0);
   const fb=(v,l)=>`<button class="chip ${f===v?'on':''}" data-act="dfilter" data-v="${v}">${l}</button>`;
-  return `<div class="sec-h"><h2>À traiter <b class="cnt">${n}</b></h2><p>Rangé par thème, du plus urgent en haut au moins urgent en bas. Une catégorie n'apparaît que si elle a quelque chose à traiter.</p></div>
-  <div class="filters" style="margin-bottom:10px">${fb('tous','Tout')}${fb('moi','Pour moi')}${fb('envoyees','Envoyées')}<button class="chip add" data-act="dem-add">+ Demande</button></div>
+  return `<div class="sec-h dem-h"><h2>À traiter <b class="cnt">${n}</b></h2>${ME&&ME.role==='lecture'?'':'<button class="btn primary dem-new" data-act="dem-add">+ Nouvelle demande</button>'}<p>Rangé par thème, du plus urgent en haut au moins urgent en bas. Une catégorie n'apparaît que si elle a quelque chose à traiter.</p></div>
+  <div class="filters" style="margin-bottom:10px">${fb('tous','Tout')}${fb('moi','Pour moi')}${fb('envoyees','Envoyées')}</div>
   <div class="dl-h"><span>Date</span><span>Type</span><span>Pour</span><span>Détail</span><span>De</span><span></span></div>
   ${cats.length?cats.map(c=>`<h3 class="dcat">${esc(c.label)} <b>${c.rows.length}</b></h3>${c.rows.join('')}`).join(''):'<p class="empty">Rien à traiter. Tout est à jour.</p>'}
   ${done.length?`<h3 class="dcat done">Traitées <b>${done.length}</b></h3><div class="dl-done">${done.map(x=>dline(x)).join('')}</div>`:''}`;
@@ -570,7 +570,8 @@ const AIDE=[
   ['tous','Imprimer, PDF et journal',`<ul><li><b>Imprimer</b> : badge du compte → Journée → <b>Imprimer / PDF</b> : jour ou plusieurs jours, A4 ou A3.</li><li><b>Journal</b> : toutes les modifications du jour, avec l'heure et l'auteur.</li><li>Dans Claude, le téléchargement demande d'être connecté à un compte Claude ; la version en ligne télécharge directement.</li></ul>`],
   ['tous','Ouverture exceptionnelle et nuit',`<ul><li><b>Samedi ou dimanche</b> : aller sur le jour → <b>Créer une journée planning ce jour</b>. Le jour s'ajoute au planning, à la navigation et à l'onglet <b>Agrégats</b>.</li><li><b>Nuit</b> : saisir le chantier sur le jour où il <b>commence</b> (ex. mercredi 22 h 00). À partir de 19 h, il s'affiche dans une section <b>☾ Nuit</b>.</li><li>Le lendemain, le planning reprend ces chantiers tout en haut, dans <b>☾ Nuit précédente</b> (fond bleuté) : celui qui prend le poste le matin voit les tours chargés et ceux qui restent, et peut continuer à remplir les bulles.</li><li>Vendredi soir (ou veille d'un jour fermé) : le <b>samedi s'affiche tout seul</b> avec la fin de la nuit, sans ouvrir de journée ; bouton <b>Créer une journée planning ce jour</b> si on travaille aussi le samedi.</li></ul>`],
   ['tous','Une commande ouverte par quelqu\'un d\'autre (verrou)',`<ul><li>Quand quelqu'un ouvre une commande pour la modifier, sa ligne s'affiche <b>grisée</b> avec « <b>Verrouillée · nom modifie</b> » chez tous les autres.</li><li>Tant qu'elle est verrouillée, on ne peut ni l'ouvrir ni cliquer sur ses boutons (tours, pompe, paiement, formule…) : un message dit qui la modifie.</li><li>Le verrou se libère dès que la personne <b>valide ou ferme</b> la commande, ou après <b>5 minutes sans action</b> (rien n'est enregistré dans ce cas).</li><li>Le verrou est <b>tenu par la base</b> : même si l'affichage en direct d'un téléphone est en retard, la base refuse l'enregistrement d'une commande ouverte par quelqu'un d'autre (message « … modifie cette commande : votre changement n'a pas été enregistré »).</li><li>Si deux personnes ouvrent la même commande au même instant, la première garde la main ; l'autre voit un message et sa fenêtre se ferme.</li><li>Téléphone mis en veille avec une commande ouverte : au-delà de 5 minutes, la commande est libérée. Si quelqu'un d'autre l'a ouverte entre-temps, c'est lui qui garde la main.</li></ul>`],
-  ['tous','Notifications sur le téléphone',`<p>Une fois l'application installée, le planning peut prévenir sur l'<b>écran de verrouillage</b>, même fermé.</p><ul><li>Badge du compte → Aide → <b>Notifications sur cet appareil…</b> → <b>Activer les notifications</b>, puis accepter.</li><li><b>Centraliste</b> : commande du commercial à valider, modification à valider, demandes, chat.</li><li><b>Commercial</b> : ses commandes validées, modifiées ou annulées par la centrale, réponses à ses demandes.</li><li>Touchez une ligne pour couper ou remettre un type de notification. <b>Envoyer une notification de test</b> pour vérifier.</li><li>Toucher une notification ouvre le planning sur la commande concernée.</li><li>iPhone : seulement dans l'application installée (Safari → Partager → Sur l'écran d'accueil), iOS 16.4 ou plus récent.</li></ul>`],
+  ['tous','Journée clôturée',`<ul><li>Une fois la journée clôturée par le centraliste, <b>seul le centraliste</b> peut encore la modifier (commandes, agrégats, liants).</li><li>Le commercial et le labo voient la journée, peuvent ouvrir la carte et <b>dupliquer</b> une commande vers un autre jour (menu ⋯), mais pas la modifier ni y déplacer une commande.</li><li>La règle est appliquée par la base : un enregistrement refusé affiche « Journée clôturée : seul le centraliste peut la modifier ».</li></ul>`],
+  ['tous','Notifications sur le téléphone',`<p>Une fois l'application installée, le planning peut prévenir sur l'<b>écran de verrouillage</b>, même fermé.</p><ul><li>Badge du compte → Aide → <b>Notifications sur cet appareil…</b> → <b>Activer les notifications</b>, puis accepter.</li><li><b>Centraliste</b> : commande du commercial à valider, modification à valider, demandes, chat.</li><li><b>Commercial</b> : ses commandes validées, modifiées ou annulées par la centrale, réponses à ses demandes.</li><li><b>Rappel du matin</b> (6 h 45) : les bons de pompe pas encore faits pour le prochain jour travaillé (centraliste ; le commercial peut l'activer).</li><li>Touchez une ligne pour couper ou remettre un type de notification. <b>Envoyer une notification de test</b> pour vérifier.</li><li>Toucher une notification ouvre le planning sur la commande concernée.</li><li>iPhone : seulement dans l'application installée (Safari → Partager → Sur l'écran d'accueil), iOS 16.4 ou plus récent.</li></ul>`],
   ['tous','Installer l\'application sur le téléphone',`<p>Le planning s'installe comme une application, sans magasin d'applications : une icône « <b>La Bocca</b> » sur l'écran d'accueil, en plein écran, mise à jour automatiquement.</p><ul><li><b>Android</b> : ouvrir le planning dans <b>Chrome</b> → menu <b>⋮</b> → <b>Installer l'application</b> (ou Ajouter à l'écran d'accueil).</li><li><b>iPhone</b> : ouvrir le planning dans <b>Safari</b> → bouton <b>Partager</b> → <b>Sur l'écran d'accueil</b> → Ajouter. Se connecter une fois avec Google dans l'application.</li><li>Raccourci : badge du compte → Aide → <b>Installer l'application sur cet appareil</b>.</li></ul>`],
   ['tous','Synchronisation et hors connexion',`<ul><li>Badge du compte <b>vert</b> = tout est synchronisé ; <b>rouge</b> = pas encore.</li><li>Sans réseau, on continue de travailler : les changements partent au retour du réseau.</li><li>Badge → <b>Forcer la synchronisation</b> en cas de doute.</li></ul>`],
   ['tous','Carte du chantier',`<p>Clic sur le nom du chantier : une petite fenêtre <b>Google Maps</b> s'ouvre (version en ligne), à déplacer par sa barre noire. <b>×</b> orange pour fermer, <b>Itinéraire ↗</b> pour ouvrir Google Maps.</p><ol><li><b>Placer le point exact</b> (en bas de la fenêtre).</li><li>Cliquer à l'endroit du chantier (zoom à la molette).</li><li><b>Valider ce point</b>. Il est gardé pour ce chantier, y compris quand on duplique la commande.</li></ol><p>Dans Claude, Google Maps s'ouvre dans un onglet.</p>`]]]
@@ -700,6 +701,8 @@ async function verrousInit(){
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load().then(ok=>{if(ok)redraw()})});
   window.addEventListener('pagehide',()=>{if(myDbLock)try{SB.rpc('rendre_verrou',{p_commande:myDbLock})}catch(e){}});
 }
+// journée clôturée : seul le centraliste la modifie (appliqué aussi par la base, 12_journee_cloturee.sql)
+function closedStop(d){if(!d||role()==='centraliste')return false;const c=(dayRO(d)||{}).cloture;if(!c)return false;toast(`Journée clôturée${c.by?' par '+c.by:''} : seul le centraliste peut la modifier`);return true}
 function lockStop(id){const who=id&&lockedBy(id);if(!who)return false;toast(`${who} modifie cette commande : elle se libère dès sa validation`);return true}
 // deux personnes au même instant : la première garde la main, l'autre est sortie
 function lockRace(){if(!myEdit)return;const riv=peers.find(p=>!p.sameTab&&p.presence&&p.presence.edit===myEdit&&(p.presence.editAt||0)<myEditAt);if(!riv)return;const n=riv.presence.nom||'Quelqu\'un';closePop();closeDrawer();toast(`${n} a la main sur cette commande : votre saisie n'a pas été enregistrée`)}
@@ -1032,6 +1035,8 @@ function demPop(anchor,oid,typeDef,pourDef){
 }
 
 function act(a,el,o,e){
+  if(o&&!['focus','pills-all','map','menu'].includes(a)&&closedStop(o.date))return;
+  if(!o&&/^(semi|cim|s-)/.test(a||'')){const dd=el.closest&&el.closest('[data-day]');if(dd&&closedStop(dd.dataset.day))return}
   if(o&&a!=='focus'&&a!=='pills-all'&&lockStop(o.id))return;
   const D_=view.date;const i=+el.dataset.i;
   switch(a){
@@ -1188,7 +1193,7 @@ function pillEdit(o,i,anchor){const id=o.id;setEditing(id);const p=o.pills[i];
   setTimeout(()=>{const inp=popEl.querySelector('#pe-t');if(inp){inp.focus();inp.select()}},20);
 }
 function longAct(el){const a=el.dataset.act,i=+el.dataset.i;const row=el.closest('[data-id]');
-  if(row&&lockStop(row.dataset.id))return;
+  if(row&&(closedStop((byId(row.dataset.id)||{}).date)||lockStop(row.dataset.id)))return;
   if(a==='conv'){const d=el.dataset.d,p=el.dataset.p;return openPop(el,`<div class="pop-h">${esc(p)} · ${esc(dayShort(d))}</div><button class="pop-b" data-pa="mod">Modifier…</button><button class="pop-b danger" data-pa="del">Annuler l'absence</button>`,{mod(){setTimeout(()=>convPop(el,d,p));return 'close'},del(){const x=(S.convocs[d]||{})[p];delete S.convocs[d][p];if(x&&x.st==='abs')jlog(d,`Absence annulée : ${p}`);toast('Absence annulée')}})}
   if(a==='plus'&&row)return act('plus',el,byId(row.dataset.id),{});
   if(a==='tour'&&row)return tourPop(byId(row.dataset.id),i,el);
@@ -1278,8 +1283,8 @@ if('serviceWorker' in navigator&&location.protocol==='https:')window.addEventLis
 
 /* ---------- notifications sur le téléphone (supabase/10_notifications.sql + fonction notifs) ---------- */
 const NOTIF_CATS=[['valider','Commande du commercial à valider',['centraliste']],['modv','Modification d\'une commande à valider',['centraliste']],
-  ['mes','Mes commandes : validée, modifiée ou annulée par la centrale',['commercial','labo','centraliste']],['demandes','Demandes et réponses',['centraliste','commercial','labo']],['chat','Messages du chat',['centraliste','commercial','labo']]];
-const NOTIF_DEF={centraliste:{valider:1,modv:1,demandes:1,chat:1,mes:1},commercial:{demandes:1,mes:1},labo:{demandes:1,mes:1}};
+  ['mes','Mes commandes : validée, modifiée ou annulée par la centrale',['commercial','labo','centraliste']],['pompe','Rappel du matin : bons de pompe à faire pour le lendemain',['centraliste','commercial']],['demandes','Demandes et réponses',['centraliste','commercial','labo']],['chat','Messages du chat',['centraliste','commercial','labo']]];
+const NOTIF_DEF={centraliste:{valider:1,modv:1,demandes:1,chat:1,mes:1,pompe:1},commercial:{demandes:1,mes:1},labo:{demandes:1,mes:1}};
 const b64uBytes=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const r=atob(s);return Uint8Array.from(r,c=>c.charCodeAt(0))};
 async function notifSub(){if(!('serviceWorker' in navigator)||!('PushManager' in window))return null;const reg=await navigator.serviceWorker.getRegistration();return reg?await reg.pushManager.getSubscription():null}
 async function notifSave(sub,extra){const j=sub.toJSON();const row=Object.assign({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,role:(prefs.user&&prefs.user.role)||null,nom:author(),appareil:(navigator.userAgent.match(/iPhone|iPad|Android|Windows|Macintosh|Linux/)||['?'])[0]},extra||{});
@@ -1407,7 +1412,7 @@ function applyTheme(){const r=document.documentElement;if(prefs.theme==='auto')r
    ===================================================================== */
 let formCtx=null;
 function openOrderForm(o,opt){
-  if(o&&o.id&&!(opt&&opt.dup)&&lockStop(o.id))return;
+  if(o&&o.id&&!(opt&&opt.dup)&&(closedStop(o.date)||lockStop(o.id)))return;
   if(o&&o.id&&MODE==='shared'&&room&&room.live&&!room.live())toast('Direct interrompu : les autres ne voient pas que vous modifiez cette commande. Reconnexion en cours…');
   opt=opt||{};const isNew=!o||opt.dup;
   const base=o?clone(o):{date:view.mode==='jour'&&view.tab==='planning'?view.date:TODAY,h:'07:00',cl:'',ch:'',ouv:'',f:'',m3:'',cam:'',camNote:'',pompe:null,am:false,spec:false,pills:[]};
@@ -1469,7 +1474,7 @@ function openOrderForm(o,opt){
     </div></div>
    </div>
    <p class="f-warn" id="f-closed" role="alert" hidden></p>
-   <div class="dr-f"><button type="button" class="btn" data-act="dr-close">Annuler</button><button type="submit" class="btn primary">${opt.dup?'Valider la copie':'Enregistrer'}</button></div>
+   <div class="dr-f"><div class="dr-sum" id="f-sum" aria-live="polite"></div><button type="button" class="btn" data-act="dr-close">Annuler</button><button type="submit" class="btn primary">${opt.dup?'Valider la copie':'Enregistrer'}</button></div>
    <datalist id="dl-cl">${S.clients.map(c=>`<option value="${esc(c.n)}">`).join('')}</datalist>
    <datalist id="dl-ch">${S.chantiers.filter(c=>c.nom&&!c.ot).map(c=>`<option value="${esc(c.nom)}">`).join('')}</datalist>
    <datalist id="dl-adr">${S.chantiers.filter(c=>c.adr&&!c.ot).map(c=>`<option value="${esc(c.adr)}">`).join('')}</datalist>
@@ -1492,10 +1497,16 @@ function openOrderForm(o,opt){
     if(e.target.id==='f-cl'&&window.FX)FX.setLast(lastFormules(e.target.value));
     hint()});
   hint();
+  // résumé fixe au-dessus d'Enregistrer (téléphone) : jour · heure · client · m³ · formule, ce qui manque en orange
+  const sumUpd=()=>{const el=f.querySelector('#f-sum');if(!el)return;const v=k=>((f.querySelector('#'+k)||{}).value||'').trim();
+    const miss=t=>`<i>${t} ?</i>`;const d=v('f-d'),h=v('f-h'),c=v('f-cl'),m=v('f-m3'),fo=v('f-f');
+    el.innerHTML=[d?esc(dayShort(d)):miss('jour'),h?esc(h):miss('heure'),c?`<b>${esc(c)}</b>`:miss('client'),m?esc(String(m).replace('.',','))+' m³':miss('m³'),fo?esc(fo):miss('formule')].join(' · ')};
+  f.addEventListener('input',sumUpd);f.addEventListener('change',sumUpd);
   // saisie de la formule : module formules.js (saisie rapide + cases), réglé par le catalogue de la centrale
   let fxc=null;
-  if(window.FX){FX.setCfg(fxCat());const sync=()=>{const q=document.getElementById('fx-q');if(!q)return;f.querySelector('#f-f').value=FX.line(q.value);f.querySelector('#f-sap').value=(document.getElementById('fx-sap')||{}).value||'';hint()};
+  if(window.FX){FX.setCfg(fxCat());const sync=()=>{const q=document.getElementById('fx-q');if(!q)return;f.querySelector('#f-f').value=FX.line(q.value);f.querySelector('#f-sap').value=(document.getElementById('fx-sap')||{}).value||'';hint();sumUpd()};
     fxc=FX.mount(f.querySelector('#f-fx'),{value:base.f||'',sap:o?o.sap||'':'',last:lastFormules(c?c.n:''),onChange:sync});f.querySelector('#f-f').value=base.f||'';}
+  sumUpd();
   f.dataset.init=JSON.stringify(serF(f));
   setTimeout(()=>{const first=f.querySelector(o?'#f-m3':'#f-cl');if(first)first.focus()},30);
 }
@@ -1797,7 +1808,8 @@ function flush(){
       if(res.merged){applyDoc(path,pending[path]?pending[path].body:sent);saveMirror();render();toast('Modification fusionnée avec celle d\'un collègue')}
     }).catch(err=>{
       const c=err&&err.code;
-      if(c==='locked'){delete pending[path];const who=String(err.message||'').replace(/^.*verrouillée par\s*/i,'')||'Un collègue';toast(`${who} modifie cette commande : votre changement n'a pas été enregistré`);clearTimeout(flush.t);flush.t=setTimeout(()=>forceSync(true),300)}
+      if(c==='closed'){delete pending[path];toast(String(err.message||'Journée clôturée : seul le centraliste peut la modifier'));clearTimeout(flush.t);flush.t=setTimeout(()=>forceSync(true),300)}
+      else if(c==='locked'){delete pending[path];const who=String(err.message||'').replace(/^.*verrouillée par\s*/i,'')||'Un collègue';toast(`${who} modifie cette commande : votre changement n'a pas été enregistré`);clearTimeout(flush.t);flush.t=setTimeout(()=>forceSync(true),300)}
       else if(c==='not_granted'||c==='permission_denied'){delete pending[path];if(ME&&ME.role==='lecture')sync.err='Lecture seule : ce compte ne peut pas modifier le planning.';else{toast('Action refusée : réservée au centraliste');clearTimeout(flush.t);flush.t=setTimeout(()=>forceSync(true),300)}}
       else sync.online=false;
     }).finally(()=>{delete inflight[path];lsSet(LS_PEND,pending);renderSync();if(pending[path]&&pending[path]!==P&&sync.online)flush()});
@@ -2055,7 +2067,7 @@ let SB=null,ME=null;
 const ROLE_UI={admin:'centraliste',centraliste:'centraliste',commercial:'commercial',labo:'labo',lecture:'commercial'};
 const ROLE_NOM={admin:'Admin',centraliste:'Centraliste',commercial:'Commercial',labo:'Tech labo',lecture:'Lecture seule'};
 const isAdmin=()=>!!(ME&&ME.actif&&ME.role==='admin');
-function supaErr(e){const msg=(e&&e.message)||'';if(e&&e.code==='55P03')return {code:'locked',message:msg};const denied=(e&&e.code==='42501')||/row-level security|permission denied/i.test(msg);return {code:denied?'permission_denied':'unavailable',message:msg}}
+function supaErr(e){const msg=(e&&e.message)||'';if(e&&e.code==='55P03')return {code:'locked',message:msg};if(e&&e.code==='PLB01')return {code:'closed',message:msg};const denied=(e&&e.code==='42501')||/row-level security|permission denied/i.test(msg);return {code:denied?'permission_denied':'unavailable',message:msg}}
 
 // Même interface que la base précédente : collection(n).onSnapshot(cb) et doc(chemin).set()/delete()
 function supaDb(sb){

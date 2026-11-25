@@ -77,8 +77,8 @@ const fmt = (n: number) => String(Math.round(n * 10) / 10).replace(".", ",");
 const vol = (o: any) => (o?.tours || []).reduce((a: number, t: any) => a + (+t.v || 0), 0);
 // défauts par rôle : le centraliste reçoit ce qui est à valider, le commercial ce qui touche ses commandes
 export const DEFAUTS: Record<string, Record<string, boolean>> = {
-  centraliste: { valider: true, modv: true, demandes: true, chat: true, mes: true },
-  commercial: { valider: false, modv: false, demandes: true, chat: false, mes: true },
+  centraliste: { valider: true, modv: true, demandes: true, chat: true, mes: true, pompe: true },
+  commercial: { valider: false, modv: false, demandes: true, chat: false, mes: true, pompe: false },
   labo: { valider: false, modv: false, demandes: true, chat: false, mes: true },
   lecture: { valider: false, modv: false, demandes: false, chat: false, mes: false },
 };
@@ -133,6 +133,28 @@ export function events(collection: string, id: string, oldD: any, newD: any, lbl
   return out;
 }
 
+// ---------- rappel du matin : bons de pompe du prochain jour ouvré ----------
+const addDays = (iso: string, n: number) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+/** Heure de Paris (gère l'heure d'été). */
+export function paris(now = new Date()) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: false }).formatToParts(now).map((x) => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, h: +p.hour };
+}
+/** Prochain jour travaillé après « today » : le week-end compte seulement s'il est ouvert ou a des commandes. */
+export function prochainJour(today: string, ouverts: Set<string>) {
+  let d = today;
+  for (let i = 0; i < 7; i++) { d = addDays(d, 1); const w = new Date(d + "T12:00:00Z").getUTCDay(); if ((w !== 0 && w !== 6) || ouverts.has(d)) return d; }
+  return addDays(today, 1);
+}
+export function rappelPompes(cible: string, orders: any[], lbl: (o: any) => string): Ev | null {
+  const l = orders.filter((o) => o?.pompe && !o.pompe.bon && o.date === cible && o.kind !== "aplacer" && o.st !== "annulee")
+    .sort((a, b) => String(a.h).localeCompare(String(b.h)));
+  if (!l.length) return null;
+  const lignes = l.map((o) => `${String(o.h || "").slice(0, 5)} ${lbl(o)} (${o.pompe.t === "BQA" ? "BQA" : o.pompe.t + " m"})`);
+  return { cat: "pompe", role: ["centraliste", "commercial"], title: `${l.length} bon${l.length > 1 ? "s" : ""} de pompe à faire pour ${jour(cible)}`,
+    body: lignes.slice(0, 4).join(" · ") + (l.length > 4 ? ` · +${l.length - 4}` : ""), tag: "pompe-" + cible, url: `./?d=${cible}` };
+}
+
 /** Les abonnés qui reçoivent un évènement (jamais l'auteur du changement). */
 export function destinataires(ev: Ev, subs: any[], auteur: string | null) {
   return subs.filter((s) => {
@@ -183,6 +205,29 @@ async function handle(req: Request): Promise<Response> {
       } catch (_) { /* appareil injoignable */ }
     }
     return new Response(`${n} notification(s) de test`);
+  }
+  if (msg.rappel === "pompes") {   // planifié chaque matin (11_rappel_pompes.sql) : n'agit qu'à 6 h, heure de Paris
+    const now = paris();
+    if (!msg.force && now.h !== 6) return new Response("pas l'heure");
+    const jours = await db(`documents?collection=eq.days&id=gt.${now.date}&id=lte.${addDays(now.date, 7)}&select=id,data`);
+    const ouverts = new Set<string>(jours.filter((j: any) => j.data?.ouvert).map((j: any) => j.id));
+    const cible = prochainJour(now.date, ouverts);
+    const orders = (await db(`documents?collection=eq.orders&data->>date=eq.${cible}&select=data`)).map((r: any) => r.data);
+    const rows = await db("documents?collection=eq.ref&id=in.(clients,chantiers)&select=id,data");
+    const cl: Record<string, string> = {}, ch: Record<string, string> = {};
+    for (const r of rows) for (const x of (r.data?.v || [])) (r.id === "clients" ? cl : ch)[x.id] = r.id === "clients" ? x.n : (x.nom || x.adr || "");
+    const ev = rappelPompes(cible, orders, (o) => cl[o.cl] || "Client");
+    if (!ev) return new Response(`aucun bon de pompe à faire pour ${cible}`);
+    const subs = await db("push_abonnements?select=endpoint,p256dh,auth,par,role,nom,prefs");
+    let n = 0;
+    for (const s of destinataires(ev, subs, null)) {
+      try {
+        const r = await sendPush(s, { title: ev.title, body: ev.body, tag: ev.tag, url: ev.url }, { pub: c.vapid_public, priv: c.vapid_private });
+        if (r.status === 404 || r.status === 410) await db(`push_abonnements?endpoint=eq.${encodeURIComponent(s.endpoint)}`, { method: "DELETE" });
+        else if (r.ok) n++;
+      } catch (_) { /* appareil injoignable */ }
+    }
+    return new Response(`rappel pompes ${cible} : ${n} notification(s)`);
   }
   const { collection, id, old: oldD, new: newD, auteur } = msg;
   let refs: { cl: Record<string, string>; ch: Record<string, string> } | null = null;

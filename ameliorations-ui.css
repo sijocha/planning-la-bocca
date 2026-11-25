@@ -380,3 +380,18 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 .row.veille { background-color: color-mix(in srgb, #3b4cc0 6%, var(--panel)) !important; }
 .row.veille { box-shadow: inset 3px 0 0 #3b4cc0; }
 .we-panel.we-nuit { margin-top: 14px; padding: 14px 16px; min-height: 0; }
+
+/* Demandes : bouton « Nouvelle demande » bien visible */
+.sec-h.dem-h { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.sec-h.dem-h > p { flex-basis: 100%; margin: 0; }
+.sec-h.dem-h .dem-new { margin-left: auto; }
+@media (max-width: 640px) { .sec-h.dem-h .dem-new { width: 100%; margin-left: 0; order: 3; } }
+
+/* Formulaire de commande : résumé fixe au-dessus d'Enregistrer (téléphone) */
+.dr-sum { display: none; }
+@media (max-width: 760px) {
+  .dr-f { flex-wrap: wrap; }
+  .dr-sum { display: block; flex-basis: 100%; font-size: 13.5px; line-height: 1.35; color: var(--ink); padding: 0 2px 4px; }
+  .dr-sum i { font-style: normal; color: var(--orange); font-weight: 600; }
+  .dr-f > .btn { flex: 1; }
+}
