@@ -78,6 +78,10 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - « 01 Aujourd'hui » ne clignote plus dans le menu (il était redessiné à chaque mise à jour).
 - Texte « Données · Partagées en direct » retiré ; bouton « + Nouvelle demande » à gauche sur ordinateur.
 
+### Mode d'emploi à jour
+- Nouvelles rubriques : **Ce que chaque rôle peut faire**, **Compte en lecture seule**, **Formule en attente : proposition du labo**.
+- Mises à jour : connexion (badge et prénom imposés, personnes connectées, déconnexion automatique), paiements en plusieurs lignes, compléments (« Non, c'est le dernier » = Terminée), statut Terminée, validation des modifications (avant → après), agrégats et liants ([+ Semi], [+ Liant], stabilo), section Nuit, charge de la semaine, résumé sur téléphone, rappel des bons de pompe, Betobag, journée clôturée, réglages ouverts au commercial, thème dans Centrale, encadrés repliés.
+
 ### En coulisses
 - Une seule feuille de styles (`styles.css`) au lieu de deux : 362 réglages jamais appliqués retirés, affichage vérifié identique sur 15 écrans.
 - README à jour (fichiers de la page, scripts SQL 01 à 13).

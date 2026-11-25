@@ -164,3 +164,13 @@ def test_prise_de_poste_prenom_et_role_imposes(ouvrir):
     assert pg.evaluate("()=>[...document.querySelectorAll('#gate input[name=g-role]')].every(i=>i.disabled)")
     pg.evaluate("()=>gateSubmit(document.getElementById('gateform'))")
     assert pg.evaluate("()=>prefs.user") == {"nom": "Morgan", "role": "commercial"}
+
+
+# ---------- mode d'emploi ----------
+def test_mode_d_emploi(ouvrir):
+    pg = ouvrir()
+    pg.evaluate("()=>{prefs.aideOn=true;view.tab='aide';render(true)}"); pg.wait_for_timeout(200)
+    txt = pg.evaluate("()=>document.getElementById('main').textContent")
+    for t in ("Ce que chaque rôle peut faire", "Compte en lecture seule", "proposition du labo", "Paiements comptant", "Journée clôturée"):
+        assert t in txt, t
+    assert pg.errs == []
