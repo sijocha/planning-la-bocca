@@ -312,7 +312,7 @@ function rowHTML(o,editors){
     <div class="r-pom">${pom}</div>
     <div class="r-pills" ${o.pills.length>1?'data-more="1"':''}>${o.pompe&&o.pompe.beto?'<span class="mo bag" title="Betobag à prévoir (chantier avec pompe)">Betobag</span>':''}${pillsRow(o)}</div>
     <button class="r-menu" data-act="menu" aria-label="Actions sur la commande" title="Statut, modifier, dupliquer…">⋯</button>
-    ${PH?phT:SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" data-long="1" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Complément non prévu : charger un tour de plus, ou noter un complément prévu" aria-label="Ajouter un complément">+</button></div>`}
+    ${PH?phT:SIM?`<div class="r-tours r-st"><span class="st-dot ${st}"></span>${STATUTS[st]} · ${nC}/${nT} tours${o.plus?(role()==='centraliste'?' <button class="mo t-plus" data-act="plus">+1T à confirmer</button>':' <span class="mo t-plus" title="Complément prévu, à confirmer par le centraliste">+1T à confirmer</span>'):''}</div>`:`<div class="r-tours">${tours}${o.plus?`<button class="t t-plus ${DET2?'t2':''}" data-act="plus" data-long="1" title="Complément à confirmer : 1 tour, quantité inconnue · clic : confirmer ou retirer">${DET2?'<b>?</b><small>+1T</small>':'+?'}</button>`:''}<button class="t-add" data-act="addtour" title="Complément non prévu : charger un tour de plus, ou noter un complément prévu" aria-label="Ajouter un complément">+</button></div>`}
     ${prefs.vue==='detail'||OPEN?detLine(o,c,ch,sap):''}
   </article>`;
 }
@@ -1115,7 +1115,10 @@ function demPop(anchor,oid,typeDef,pourDef){
   v=>{if(!v.t)return 'keep';S.demandes.push({id:'r'+Date.now().toString(36),type:v.type,pour:v.pour,t:v.t,oid:oid||null,de:author(),deRole:role(),le:TODAY,done:false,rep:[]});toast('Demande envoyée')});
 }
 
+// tours et compléments : réservés au centraliste (le commercial et le labo voient, sans pouvoir ajouter ni charger)
+const TOUR_ACTS=['plus','addtour','cpl-add','tour'];
 function act(a,el,o,e){
+  if(o&&TOUR_ACTS.includes(a)&&role()!=='centraliste'){toast('Tours et compléments : réservés au centraliste');return}
   if(o&&!['focus','pills-all','map','menu'].includes(a)&&closedStop(o.date))return;
   if(!o&&/^(semi|cim|s-)/.test(a||'')){const dd=el.closest&&el.closest('[data-day]');if(dd&&closedStop(dd.dataset.day))return}
   if(o&&a!=='focus'&&a!=='pills-all'&&lockStop(o.id))return;
@@ -1288,6 +1291,7 @@ function pillEdit(o,i,anchor){const id=o.id;setEditing(id);const p=o.pills[i];
   setTimeout(()=>{const inp=popEl.querySelector('#pe-t');if(inp){inp.focus();inp.select()}},20);
 }
 function longAct(el){const a=el.dataset.act,i=+el.dataset.i;const row=el.closest('[data-id]');
+  if(row&&TOUR_ACTS.includes(a)&&role()!=='centraliste'){toast('Tours et compléments : réservés au centraliste');return}
   if(row&&(closedStop((byId(row.dataset.id)||{}).date)||lockStop(row.dataset.id)))return;
   if(a==='pay'&&row){const o=byId(row.dataset.id);if(o&&o.pay){setEditing(o.id);return payPop(o,el)}}
   if(a==='conv'){const d=el.dataset.d,p=el.dataset.p;return openPop(el,`<div class="pop-h">${esc(p)} · ${esc(dayShort(d))}</div><button class="pop-b" data-pa="mod">Modifier…</button><button class="pop-b danger" data-pa="del">Annuler l'absence</button>`,{mod(){setTimeout(()=>convPop(el,d,p));return 'close'},del(){const x=(S.convocs[d]||{})[p];delete S.convocs[d][p];if(x&&x.st==='abs')jlog(d,`Absence annulée : ${p}`);toast('Absence annulée')}})}
@@ -1564,7 +1568,7 @@ function openOrderForm(o,opt){
       <div class="fl full">Formule<div class="fxw" id="f-fx"></div><input type="hidden" id="f-f" value="${esc(base.f)}"><input type="hidden" id="f-sap" value="${esc(o?o.sap||'':'')}"></div>
     </div></div>
     <div class="q"><div class="ql">Combien<small>Quantité</small></div><div class="fields">
-      <div class="fl">Quantité (m³)<div class="qplus"><input id="f-m3" type="text" value="${esc(m3==null?'':String(m3).replace('.',','))}" required inputmode="decimal" autocomplete="off" aria-label="Quantité en m³"><label class="plus-t" title="Le client prendra sans doute un complément : 1 tour de plus, quantité à confirmer"><input type="checkbox" id="f-plus" ${base.plus?'checked':''}><span>[+]</span></label></div><small class="plus-h">[+] = et plus : 1 tour à confirmer</small></div>
+      <div class="fl">Quantité (m³)<div class="qplus"><input id="f-m3" type="text" value="${esc(m3==null?'':String(m3).replace('.',','))}" required inputmode="decimal" autocomplete="off" aria-label="Quantité en m³">${(prefs.user?prefs.user.role:'centraliste')==='centraliste'||((prefs.user||{}).role==='commercial'&&!o)?`<label class="plus-t" title="Le client prendra sans doute un complément : 1 tour de plus, quantité à confirmer"><input type="checkbox" id="f-plus" ${base.plus?'checked':''}><span>[+]</span></label>`:''}</div><small class="plus-h">[+] = et plus : 1 tour à confirmer</small></div>
       <div class="full" id="f-hint"></div>
     </div></div>
     <div class="q"><div class="ql">Où<small>Chantier</small></div><div class="fields">
@@ -1677,7 +1681,7 @@ function saveOrderForm(f){
   if(!o){o={id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),seq:Date.now(),by:author(),tours:[],pills:src?src.pills.filter(p=>!P_COMMENT.includes(p.t)).map(p=>({t:p.t,on:false,by:p.by})):[],kind:src&&src.kind==='pour'?'pour':'cmd',pour:src?src.pour:'',souhait:'',st:null};S.orders.push(o)}
   if(o.camNote){if(!o.pills.some(p=>p.t===o.camNote))o.pills.push({t:o.camNote,on:false,by:o.by||author()})}
   const oldCap=o.tours.length?capOf(o.cam):cap;const modBase=o.modv&&o.modv.base?o.modv.base:(formCtx.id&&o.kind==='cmd'?modSnap(o):null);
-  Object.assign(o,{date:g('f-d').value,h:g('f-h').value,cl:c.id,ch:ch.id,ouv:g('f-ouvx').value.trim(),f:fv,sap,cam,camNote:'',tel:g('f-tel').value.trim(),resa:cam?((f.querySelector('input[name="f-resa"]:checked')||{}).value||'todo'):null,pompe,am:g('f-am').checked,spec:g('f-spec').checked,plus:g('f-plus').checked});
+  Object.assign(o,{date:g('f-d').value,h:g('f-h').value,cl:c.id,ch:ch.id,ouv:g('f-ouvx').value.trim(),f:fv,sap,cam,camNote:'',tel:g('f-tel').value.trim(),resa:cam?((f.querySelector('input[name="f-resa"]:checked')||{}).value||'todo'):null,pompe,am:g('f-am').checked,spec:g('f-spec').checked,plus:g('f-plus')?g('f-plus').checked:!!o.plus});
   if(ap){o.kind='aplacer';o.souhait=(g('f-sh')||{value:''}).value.trim();o.cre=TODAY}
   if(val){o.kind='cmd';delete o.modv}
   const modPending=R!=='centraliste'&&!isNewO&&o.kind==='cmd';

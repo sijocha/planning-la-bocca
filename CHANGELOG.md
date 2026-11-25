@@ -36,6 +36,9 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 - Pompe : seul le **Betobag** (sac de lavage) est proposé.
 - **Citybag** = produit BAG rempli à la centrale : le planning compte les sacs (1 bag = 0,5 m³), sous le cubage et dans chaque bulle.
 
+### Tours et compléments réservés au centraliste
+- Le commercial et le labo voient les tours et la bulle « +1T à confirmer », mais ne peuvent plus ajouter de tour, de complément ni charger une bulle. Le commercial peut toujours cocher [+] en passant une nouvelle commande.
+
 ### Accès gérés depuis le planning
 - Administration → **Accès** (comptes admin) : ajouter une personne (adresse Google, prénom, rôle), changer son rôle, la désactiver ou la retirer, voir si elle s'est déjà connectée. Plus besoin de passer par le SQL de Supabase.
 - Garde-fous : votre propre accès et le dernier admin actif ne sont pas modifiables.
