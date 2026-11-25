@@ -1703,3 +1703,7 @@ input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
 
 /* Citybag : nombre de sacs (1 bag = 0,5 m³) */
 .r-vol .bags { margin-left: 6px; font: 600 11px var(--mono); color: var(--muted); letter-spacing: .02em; }
+/* fenêtre « Valider la modification » assez large pour le tableau et les trois boutons */
+#pop:has(.mod-diff) { width: min(640px, 94vw) !important; max-width: min(640px, 94vw) !important; }
+#pop:has(.mod-diff) .pop-cf { flex-wrap: wrap; }
+.mod-diff td:nth-child(3) { width: 24px; text-align: center; color: var(--muted); }

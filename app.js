@@ -986,7 +986,7 @@ function modDiff(a,o){if(!a)return [];const b=modSnap(o),r=[];
   if(a.f!==b.f)r.push(['Formule',a.f||'—',b.f||'—']);
   if(a.sap!==b.sap)r.push(['SAP',a.sap||'—',b.sap||'—']);
   if(a.cl!==b.cl)r.push(['Client',cl(a.cl).n,cl(b.cl).n]);
-  if(a.ch!==b.ch){const ca=S.chantiers.find(x=>x.id===a.ch),cb=S.chantiers.find(x=>x.id===b.ch);r.push(['Chantier',ca?(ca.nom||ca.adr):'—',cb?(cb.nom||cb.adr):'—'])}
+  if(a.ch!==b.ch){const lab=id=>{const c=S.chantiers.find(x=>x.id===id);return c?[c.nom,c.adr].filter(Boolean).join(' · '):''};const la=lab(a.ch),lb=lab(b.ch);if(la!==lb)r.push(['Chantier',la||'—',lb||'—'])}   // même chantier recréé à l'identique : rien à signaler
   if(a.tel!==b.tel)r.push(['Contact',a.tel||'—',b.tel||'—']);
   if(a.cam!==b.cam)r.push(['Camion',a.cam||'standard',b.cam||'standard']);
   if(a.pompe!==b.pompe)r.push(['Pompe',a.pompe||'sans',b.pompe||'sans']);
@@ -1164,7 +1164,7 @@ function act(a,el,o,e){
     case 'pompe':{const id=o.id,b=o.pompe.bon;setEditing(id);return confirmPop(el,b?'Remettre le bon de pompe à faire ?':'Confirmer : bon de pompe fait ?',ordLbl(o),b?'Oui, pas encore fait':'Oui, le bon est fait',()=>{byId(id).pompe.bon=!b;toast(b?'Bon de pompe à faire':'Bon de pompe fait')},b)}
     case 'pay':{const id=o.id,p=o.pay.paye;setEditing(id);return confirmPop(el,p?'Remettre le paiement en attente ?':'Confirmer : paiement reçu ?',ordLbl(o),p?'Oui, pas encore payé':'Oui, le client a payé',()=>{byId(id).pay.paye=!p;toast(p?'Paiement en attente':'Paiement validé')},p)}
     case 'modv':{if(!peutValider()){toast('Le centraliste valide la modification');return}const id=o.id;setEditing(id);const dd=modDiff(o.modv&&o.modv.base,o);
-      return openPop(el,`<div class="pop-h">Valider la modification ?</div><p class="muted" style="margin:0 0 6px">${esc(ordLbl(o))} · modifiée par <b>${esc(o.modv.by||'?')}</b>${o.modv.at?' à '+esc(o.modv.at):''}</p>
+      return openPop(el,`<div class="pop-h">Valider la modification ?</div><p class="muted" style="margin:0 0 6px">${esc([cl(o.cl).n,siteName(o),dayShort(o.date)].filter(Boolean).join(' · '))} · modifiée par <b>${esc(o.modv.by||'?')}</b>${o.modv.at?' à '+esc(o.modv.at):''}</p>
         ${dd.length?`<table class="mod-diff">${dd.map(([k,a,b])=>`<tr><th>${esc(k)}</th>${k==='Infos'?`<td colspan="3">${a?`<s>${esc(a)}</s> `:''}${b?`<b>${esc(b)}</b>`:''}</td>`:`<td><s>${esc(a)}</s></td><td>→</td><td><b>${esc(b)}</b></td>`}</tr>`).join('')}</table>`:'<p class="muted" style="margin:0">Détail non disponible (modification faite avant cette mise à jour).</p>'}
         <div class="pop-cf"><button class="btn primary" data-pa="ok">Oui, valider</button><button class="btn" data-pa="edit">Voir la commande</button><button class="btn" data-pa="no">Annuler</button></div>`,
         {ok(){const x=byId(id);delete x.modv;jlog(x.date,`Modification validée : ${siteName(x)}`);toast('Modification validée')},edit(){setTimeout(()=>openOrderForm(byId(id)));return 'close'},no(){return 'close'}})}
@@ -1626,6 +1626,7 @@ function saveOrderForm(f){
   let ch=null;
   if(chn&&!ot)ch=S.chantiers.find(x=>!x.ot&&x.nom.toLowerCase()===chn.toLowerCase());
   if(!ch&&!chn&&cha&&!ot)ch=S.chantiers.find(x=>!x.ot&&!x.nom&&x.adr===cha);
+  if(!ch&&formCtx.id){const cur=chan((byId(formCtx.id)||{}).ch);if(cur&&(cur.nom||'')===chn&&(cur.adr||'')===cha&&!!cur.ot===!!ot)ch=cur}   // même chantier qu'avant : on le garde (plus de doublon vide)
   if(ch){if(cha&&ch.adr!==cha){ch.adr=cha;delete ch.geo}}
   else{ch={id:'h'+Date.now().toString(36),nom:chn,adr:cha,cl:c.id,ot};const tw=S.chantiers.find(x=>x.geo&&cha&&x.adr===cha);if(tw)ch.geo=tw.geo.slice();S.chantiers.push(ch)}
   const cam=g('f-cam').value.trim();const cap=capOf(cam);
