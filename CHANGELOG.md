@@ -58,6 +58,10 @@ Pour en profiter : recharger le planning (Ctrl + F5 sur ordinateur ; fermer et r
 ### Vue semaine : charge par jour
 - Chaque jour affiche une barre de charge (m³ du matin, de l'après-midi et de la nuit, comparés au jour le plus chargé de la semaine), le nombre de tours, de pompes et de commandes à valider.
 
+### Fin de chantier
+- Statut passé à la main en **Terminée** (ou Annulée) : le complément prévu est retiré et plus aucun complément n'est proposé sur la ligne.
+- Après un complément chargé, répondre **« Non, c'est le dernier »** passe la commande en **Terminée**.
+
 ### Tours et compléments réservés au centraliste
 - Le commercial et le labo voient les tours et la bulle « +1T à confirmer », mais ne peuvent plus ajouter de tour, de complément ni charger une bulle. Le commercial peut toujours cocher [+] en passant une nouvelle commande.
 
