@@ -17,11 +17,19 @@ Planning des livraisons de béton de la centrale de Cannes La Bocca.
 
 Scripts SQL qui ont créé la base, dans l'ordre : structure, rôles et règles d'accès, stockage des données de la page. Ils servent de référence et de reprise en cas de besoin ; ils ne contiennent ni données ni adresses e-mail.
 
-## Style et animations
+## Fichiers de la page
 
-- `ameliorations-ui.css` : couche de style chargée après le style de la page (couleurs unifiées clair / sombre, angles droits, formule affichée en entier, pastilles d'état, intercalaire de l'après-midi, animations d'entrée façon Material 3). Retirer la ligne `<link … ameliorations-ui.css>` suffit pour revenir à l'ancien rendu.
+- `index.html` : squelette de la page (en-tête, emplacements, chargement des fichiers ci-dessous).
+- `styles.css` : toute la mise en forme (une seule feuille ; la partie « Retouches » en fin de fichier contient les ajustements récents).
+- `app.js` : le programme du planning (synchronisation, verrou, rendu, formulaires, mode d'emploi).
+- `formules.js` / `formules.css` : saisie rapide des formules béton et catalogue de la centrale.
 - `motion-m3.js` : animations de fermeture des menus, du tiroir, du chat et des messages, sans toucher à la logique.
-- `supabase/06_prenoms_poste.sql` : prénoms des personnes autorisées pour l'écran « Qui prend le poste ? » (à exécuter une fois dans Supabase).
+- `sw.js`, `manifest.webmanifest`, `icons/` : application installable et notifications.
+- `vendor/leaflet/` : carte pour placer le point exact d'un chantier (chargée seulement à la demande).
+
+## Dossier `supabase/`, scripts à exécuter dans l'ordre (SQL Editor)
+
+01 à 06 : structure, rôles, droits, concurrence, prénoms du poste · 07 : catalogue des formules (commercial) · 08 : temps réel réservé aux membres · 09 : verrou des commandes · 10 : notifications · 11 : rappel des bons de pompe · 12 : journée clôturée réservée au centraliste. La fonction `functions/notifs/index.ts` se déploie dans Edge Functions (nom `notifs`, « Verify JWT » désactivé).
 
 ## Dossier `vendor/`
 
