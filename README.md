@@ -32,7 +32,7 @@ Scripts SQL qui ont créé la base, dans l'ordre : structure, rôles et règles 
 
 ## Dossier `supabase/`, scripts à exécuter dans l'ordre (SQL Editor)
 
-01 à 06 : structure, rôles, droits, concurrence, prénoms du poste · 07 : catalogue des formules (commercial) · 08 : temps réel réservé aux membres · 09 : verrou des commandes · 10 : notifications · 11 : rappel des bons de pompe · 12 : journée clôturée réservée au centraliste · 13 : réglages de la centrale ouverts au commercial. La fonction `functions/notifs/index.ts` se déploie dans Edge Functions (nom `notifs`, « Verify JWT » désactivé).
+01 à 06 : structure, rôles, droits, concurrence, prénoms du poste · 07 : catalogue des formules (commercial) · 08 : temps réel réservé aux membres · 09 : verrou des commandes · 10 : notifications · 11 : rappel des bons de pompe · 12 : journée clôturée réservée au centraliste · 13 : réglages de la centrale ouverts au commercial · 14 : état de la base (le planning signale aux admins les scripts pas encore exécutés). La fonction `functions/notifs/index.ts` se déploie dans Edge Functions (nom `notifs`, « Verify JWT » désactivé).
 
 ## Dossier `vendor/`
 

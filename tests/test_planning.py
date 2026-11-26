@@ -227,3 +227,23 @@ def test_chape_jamais_chargee_au_maximum(ouvrir):
     # formule changée en chape : les tours pas encore chargés sont recalculés, le tour chargé reste
     r = pg.evaluate("()=>{const o=byId('o19');o.tours.forEach(t=>t.s=0);o.tours[0].s=1;const m=total(o),v0=o.tours[0].v;const f0=o.f;o.f='Cemexa C16';reCap(o,f0);return [total(o)===m,o.tours[0].v===v0&&o.tours[0].s===1,o.tours.slice(1).every(t=>t.v<=7)]}")
     assert r == [True, True, True]
+
+
+# ---------- état de la base Supabase ----------
+def test_etat_de_la_base(ouvrir):
+    import pathlib, re
+    sql = sorted(p.name for p in (pathlib.Path(__file__).parent.parent / "supabase").glob("[0-9]*.sql"))
+    pg = ouvrir()
+    # le planning connaît tous les scripts, et attend le dernier
+    assert pg.evaluate("()=>Object.values(BASE_F).sort()") == sql
+    assert pg.evaluate("()=>BASE_V") == int(sql[-1][:2])
+    cas = {"ok": "{data:{version:BASE_V,manque:[]}}", "13": "{data:{version:BASE_V,manque:['13']}}", "absent": "{error:{code:'PGRST202'}}"}
+    res = {}
+    for k, r in cas.items():
+        res[k] = pg.evaluate(f"""async()=>{{ME={{email:'a@x',nom:'A',role:'admin',actif:true}};SB={{rpc:async()=>({r})}};BASE_ETAT=null;await baseCheck();
+            return [BASE_ETAT.manque,baseHTML().replace(/<[^>]*>/g,'')]}}""")
+    assert res["ok"][0] == [] and "à jour" in res["ok"][1]
+    assert res["13"][0] == ["13"] and "13_reglages_commercial.sql" in res["13"][1]
+    assert res["absent"][0] == ["14"] and "14_etat_base.sql" in res["absent"][1]
+    # pas d'appel pour un compte non admin
+    assert pg.evaluate("async()=>{ME={email:'c@x',nom:'C',role:'centraliste',actif:true};let n=0;SB={rpc:async()=>{n++;return {data:null}}};await baseCheck();return n}") == 0

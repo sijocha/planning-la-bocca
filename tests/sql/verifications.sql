@@ -73,3 +73,19 @@ select pg_temp.verifier((select bool_and(headers->>'x-secret'=(select secret fro
 
 -- ---------- 11 : rappel des pompes programmé ----------
 select pg_temp.verifier((select count(*) from cron.job where jobname like 'rappel-pompes-%')=2, 'deux horaires du rappel (hiver, été)');
+
+-- ---------- 14 : état de la base (ici, seul 08 manque : le temps réel n'existe que chez Supabase) ----------
+set role authenticated;
+set test.uid='00000000-0000-0000-0000-0000000000a1';
+select pg_temp.verifier(public.etat_base() is null, 'état de la base réservé aux admins');
+reset role;
+insert into public.autorisations(email,nom,role) values ('adm@x','Admin','admin');
+insert into auth.users(id,email) values ('00000000-0000-0000-0000-0000000000e1','adm@x');
+set role authenticated;
+set test.uid='00000000-0000-0000-0000-0000000000e1';
+select pg_temp.verifier((public.etat_base()->'manque') = '["08"]'::jsonb, 'état de la base : seul 08 absent (reçu '||(public.etat_base())::text||')');
+reset role;
+drop trigger documents_cloture on public.documents;
+set role authenticated;
+select pg_temp.verifier((public.etat_base()->'manque') = '["08","12"]'::jsonb, 'état de la base : 12 retiré détecté');
+reset role;

@@ -1845,3 +1845,7 @@ body.aide-pick .aide-hl{outline:2px dashed var(--orange)!important;outline-offse
 .verif-t th{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--bg,transparent)}
 .verif-a{display:flex;gap:8px;justify-content:flex-end}
 @media (max-width:760px){.verif-t{font-size:12px}.verif-t th,.verif-t td{padding:4px 5px}}
+.base-etat{margin:10px 0 0;padding:8px 10px;font-size:13px;border:1px solid var(--line)}
+.base-etat.ok{border-color:#1E9E4A;color:#1E7A3C}
+.base-etat.warn{border-color:var(--orange);background:color-mix(in srgb,var(--orange) 10%,var(--panel))}
+.base-etat code{font:600 12px var(--mono)}

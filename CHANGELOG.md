@@ -10,6 +10,11 @@ Les nouveautés du Planning La Bocca, session par session (la plus récente en h
 - Tests automatiques de restauration (complète, mois seul, vérification) ajoutés sur GitHub.
 - Mode d'emploi : rubrique « Sauvegardes : vérifier et restaurer ».
 
+### État de la base de données
+- Nouveau script **14_etat_base.sql** : le planning vérifie, pour les comptes admin, que chaque script Supabase est bien passé (verrou, notifications, rappel des pompes, journée clôturée, réglages du commercial, temps réel).
+- S'il en manque un : avertissement à l'ouverture et détail dans Administration → Accès, avec le nom du fichier à exécuter. Sinon : « ✓ Base de données à jour ».
+- Testé sur une base PostgreSQL (détection d'un script retiré) et dans le planning.
+
 ### Formule rapide
 - **c16, c20, c30…** tapés seuls donnent toujours une **résistance** (C16/20, C20/25, C30/37…), plus jamais une chape.
 - Chape Cemexa : taper **cem16** ou **cem20** (ou « cemexa c20 », « cem 16 »).
