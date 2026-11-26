@@ -4,6 +4,12 @@ Les nouveautés du Planning La Bocca, session par session (la plus récente en h
 
 ## 26 novembre 2026
 
+### Sauvegardes : test de restauration
+- La sauvegarde de la nuit a été restaurée pour de vrai sur un banc d'essai (hors ligne) : lisible, complète, chaque jour du mois s'affiche ; la restauration d'un mois seul laisse les autres mois intacts.
+- Nouveau : **Vérifier une sauvegarde (sans rien changer)** (badge du compte → Sauvegarde) : rapport mois par mois (identiques, modifiées depuis, ajoutées depuis, absentes du planning), listes, puis consultation de la sauvegarde comme un planning. Aucune écriture.
+- Tests automatiques de restauration (complète, mois seul, vérification) ajoutés sur GitHub.
+- Mode d'emploi : rubrique « Sauvegardes : vérifier et restaurer ».
+
 ### Formule rapide
 - **c16, c20, c30…** tapés seuls donnent toujours une **résistance** (C16/20, C20/25, C30/37…), plus jamais une chape.
 - Chape Cemexa : taper **cem16** ou **cem20** (ou « cemexa c20 », « cem 16 »).

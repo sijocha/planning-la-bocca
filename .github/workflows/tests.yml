@@ -21,7 +21,7 @@ jobs:
           python-version: "3.12"
       - run: pip install pytest playwright
       - run: python -m playwright install --with-deps chromium
-      - run: python -m pytest tests/test_planning.py -q
+      - run: python -m pytest tests/test_planning.py tests/test_sauvegarde.py -q
 
   notifications:
     name: Notifications

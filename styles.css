@@ -1835,3 +1835,13 @@ body.aide-pick .aide-hl{outline:2px dashed var(--orange)!important;outline-offse
 .an-go.an-nudge{animation:anNudge .35s}
 @keyframes anNudge{20%,60%{transform:translateX(-3px)}40%,80%{transform:translateX(3px)}}
 @media (prefers-reduced-motion:reduce){.an.man .an-go{animation:none}}
+/* Vérification d'une sauvegarde */
+.verif-b{padding:14px 18px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.verif-ok{margin:0;padding:10px 12px;border:1px solid #1E9E4A;background:color-mix(in srgb,#1E9E4A 10%,var(--panel));font-weight:700}
+.verif-ok.warn{border-color:var(--orange);background:color-mix(in srgb,var(--orange) 12%,var(--panel))}
+.verif-t{border-collapse:collapse;font-size:13px;width:100%}
+.verif-t th,.verif-t td{border:1px solid var(--line);padding:5px 8px;text-align:right}
+.verif-t th:first-child,.verif-t td:first-child{text-align:left}
+.verif-t th{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--bg,transparent)}
+.verif-a{display:flex;gap:8px;justify-content:flex-end}
+@media (max-width:760px){.verif-t{font-size:12px}.verif-t th,.verif-t td{padding:4px 5px}}
