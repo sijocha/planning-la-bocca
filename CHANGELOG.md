@@ -15,6 +15,12 @@ Les nouveautés du Planning La Bocca, session par session (la plus récente en h
 - S'il en manque un : avertissement à l'ouverture et détail dans Administration → Accès, avec le nom du fichier à exécuter. Sinon : « ✓ Base de données à jour ».
 - Testé sur une base PostgreSQL (détection d'un script retiré) et dans le planning.
 
+### Cubage, écrans 1080p, téléphone
+- **Clic droit sur le cubage** (appui long sur téléphone, centraliste) : cubage demandé et « Et plus » (complément à confirmer). Affichage 0/22,5+ avec complément, 0/22,5 sans. Les tours chargés ne bougent pas, les autres sont recalculés ; impossible de descendre sous le déjà chargé.
+- **Encadrés du haut** : trois encadrés de même largeur. Agrégats : boutons + Semi / + Liant dans le titre, la ligne de semi passe sur deux lignes au lieu d'être coupée, carrière masquée quand la place manque. En dessous de 1180 px de large : camions et journal sur une ligne, agrégats en dessous sur toute la largeur.
+- **Lignes de commande** : camion, réservation, pompe et bon de pompe se resserrent au lieu de disparaître ; le survol de la case affiche tout. Tout texte coupé (client, chantier, commentaire) s'affiche en entier au survol. Titres de colonnes qui ne se chevauchent plus.
+- **Téléphone** : la fenêtre de la formule (et les autres) défile de nouveau au doigt après avoir ouvert le compte depuis « Plus ».
+
 ### Erreurs du planning chez les utilisateurs
 - Nouveau script **15_erreurs.sql** : quand le planning plante chez quelqu'un, le message technique est enregistré dans Supabase (prénom, rôle, heure, version, écran, appareil ; aucune donnée de commande ni de client). Hors connexion, il attend sur l'appareil.
 - Administration → **Erreurs** (comptes admin) : erreurs regroupées, nombre de fois, qui ; détail technique ; « Copier pour Claude » ; « Tout effacer ». Message à l'ouverture s'il y a du nouveau.

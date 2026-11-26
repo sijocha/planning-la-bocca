@@ -86,6 +86,18 @@ function flTxt(cam){const k=capType(cam),fl=Math.min(k.cap,capFl(k));const big=/
   return `Chargement réduit (produit fluide) : jamais au maximum. ${big?'8x4 : 6 à 7 m³ selon la route':k.t+(/sp4/i.test(k.t)?' (4x2, 19 t) : 3 à 3,5 m³':'')}, tours prévus à ${fmt(fl)} m³ maximum.`}
 // formule changée : si la capacité change (béton ↔ chape), les tours pas encore chargés sont recalculés
 function reCap(o,oldF){const a=capOf(o.cam,oldF),b=capOf(o.cam,o.f);if(a===b||!o.tours.length)return;const keep=o.tours.filter(t=>t.s||t.mv);const rest=Math.round((total(o)-keep.filter(t=>!t.mv).reduce((x,t)=>x+num(t.v),0))*10)/10;o.tours=rest>0.05?keep.concat(genTours(rest,b)):keep;}
+// clic droit sur le cubage : cubage demandé et complément (+). Les tours déjà chargés ne bougent pas.
+function volPop(o,el){if(!o)return;const id=o.id;setEditing(id);const L=livre(o);
+  formPop(el,'Cubage demandé',[{k:'m',label:'Cubage demandé (m³)',val:fmt(total(o))},{k:'plus',label:'Et plus : complément à confirmer par le client (+)',type:'check',val:!!o.plus}],v=>{
+    const x=byId(id);if(!x)return;const m=Math.round(num(v.m)*10)/10;
+    if(!(m>0)){toast('Indiquez un cubage');return 'keep'}
+    if(m<L-0.01){toast(`Déjà chargé : ${fmt(L)} m³. Le cubage ne peut pas être plus petit.`);return 'keep'}
+    const avant=`${fmt(total(x))}${x.plus?'+':''}`;
+    if(Math.abs(m-total(x))>0.01){const keep=x.tours.filter(t=>t.s||t.mv);const rest=Math.round((m-L)*10)/10;x.tours=rest>0.05?keep.concat(genTours(rest,capOf(x.cam,x.f))):keep}
+    x.plus=!!v.plus;if(x.plus&&statut(x)==='terminee'&&x.st==='terminee')delete x.st;
+    const apres=`${fmt(total(x))}${x.plus?'+':''}`;if(avant!==apres)jlog(x.date,`Cubage ${cl(x.cl).n} : ${avant} → ${apres} m³`);
+    commit();render();return 'close'});
+  const f=popEl.querySelector('#pf0');if(f){f.setAttribute('inputmode','decimal');setTimeout(()=>{f.focus();f.select()},30)}}
 function genTours(m3,cap){const n=Math.floor(m3/cap+1e-9);const t=[];for(let i=0;i<n;i++)t.push({v:cap,s:0});const r=Math.round((m3-n*cap)*10)/10;if(r>0.05)t.push({v:r,s:0});return t}
 const TR=o=>o.tours.filter(t=>!t.mv);
 const total=o=>TR(o).reduce((a,t)=>a+t.v,0);
@@ -184,7 +196,8 @@ function convChips(iso,kind){const cv=S.convocs[iso]||{};return Object.keys(cv).
     if(kind==='ailleurs'&&x.st!=='abs'&&x.dep&&x.dep!==CENTRALE)return `<button class="chip info" data-act="conv" data-d="${iso}" data-p="${esc(p)}" title="Convoqué à ${esc(x.dep)} à ${esc(hm(x.h))}${x.aff?' · '+esc(x.aff):''} · clic : modifier"><b>${esc(p)}</b> → ${esc(x.dep)} <small>${esc(hm(x.h))}</small></button>`;
     return ''}).join('')}
 /* ---- disposition des encadrés : défaut de la centrale (partagé) + choix de chaque centraliste (sur son poste) ---- */
-const BOXES={ech:.9,vie:1.25,agg:1.6},BOX_N={ech:'Planning camions',vie:'Journal de bord',agg:'Agrégats · ciments'};
+const HEAD_2L=1180;   // en dessous : deux lignes (camions + journal, puis agrégats sur toute la largeur)
+const BOXES={ech:1,vie:1,agg:1},BOX_N={ech:'Planning camions',vie:'Journal de bord',agg:'Agrégats · ciments'};
 const meKey=()=>((prefs.user||{}).nom||'').trim().toLowerCase();
 function normL(L){const o=((L&&L.order)||[]).filter(k=>BOXES[k]);Object.keys(BOXES).forEach(k=>{if(!o.includes(k))o.push(k)});return {order:o,pos:L&&L.pos==='bottom'?'bottom':'top'}}
 function layoutGet(){const u=(prefs.layouts||{})[meKey()];const c=S&&S.config&&S.config.layout;return Object.assign(normL(u||c),{src:u?'perso':c?'centrale':'defaut'})}
@@ -193,7 +206,7 @@ function applyLayout(L){const hd=document.getElementById('head'),m=document.getE
   hd.classList.toggle('at-bottom',L.pos==='bottom');
   const vide=k=>{const w=hd.querySelector(`.hb-w[data-box="${k}"]`);return !!(w&&w.classList.contains('hb-vide'))};const tout=Object.keys(BOXES).every(vide);
   hd.classList.toggle('tout-vide',tout);
-  hd.style.gridTemplateColumns=innerWidth>900?L.order.map(k=>`minmax(0,${!tout&&vide(k)?0.6:BOXES[k]}fr)`).join(' '):'';
+  hd.style.gridTemplateColumns=innerWidth>HEAD_2L?L.order.map(()=>'minmax(0,1fr)').join(' '):'';   // trois encadrés de même largeur
   hd.querySelectorAll('.hb-w[data-box]').forEach(w=>{w.style.order=L.order.indexOf(w.dataset.box)})}
 function saveMyLayout(L){prefs.layouts=prefs.layouts||{};prefs.layouts[meKey()]={order:L.order.slice(),pos:L.pos};savePrefs()}
 let hbDrag=null,hbSwallow=0;
@@ -318,7 +331,7 @@ function rowHTML(o,editors){
     ${ed?`<span class="editby">Verrouillée · ${esc(ed)} modifie</span>`:''}
     <div class="r-time">${esc(o.h)}</div>
     <div class="c r-cl"><button class="r-client" data-act="edit" title="${esc(ouv+(c.note||(c.t==='comptant'?'Client comptant':'Client en compte')))} · modifier">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" data-long="1" title="Client comptant · clic : payé / en attente · clic droit : paiements du client${payTxt(o.pay)?' · '+esc(payTxt(o.pay)):''}">${o.pay.paye?'PAYÉ':'€ ATTENTE'}${payTot(o.pay)?' '+esc(fmtE(payTot(o.pay))):''}</button>`:''}${o.spec?'<span class="tag spec" title="Mise en avant par le commercial">SPÉCIALE</span>':''}${o.modv?`<button class="tag modv" data-act="modv" title="Modifiée par ${esc(o.modv.by)} à ${esc(o.modv.at)}${role()==='centraliste'?' · clic : valider':''}">MODIF. À VALIDER</button>`:''}</div>
-    <div class="r-vol ${liv>tot+0.01?'over':''}" title="${nC}/${nT} tours${o.plus?' · + 1 tour à confirmer':''}"><b>${fmt(liv)}</b>/${fmt(tot)}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}${isBag(o)?`<small class="bags" title="Citybag : 1 bag = 0,5 m³">${nBags(liv)}/${nBags(tot)} bags</small>`:''}</div>
+    <div class="r-vol ${liv>tot+0.01?'over':''}" data-act="vol" data-long="1" title="${nC}/${nT} tours${o.plus?' · + 1 tour à confirmer':''} · clic droit : modifier le cubage demandé"><b>${fmt(liv)}</b>/${fmt(tot)}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}${isBag(o)?`<small class="bags" title="Citybag : 1 bag = 0,5 m³">${nBags(liv)}/${nBags(tot)} bags</small>`:''}</div>
     <div class="c r-ch">${o.kind==='pour'?`<span class="tag pour" style="margin:0 5px 0 0">POUR ${esc(o.pour.toUpperCase())}</span>`:''}${ch?`<a class="r-site ${ch.nom?'':'adr'}" data-act="map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQ+' 06')}" target="_blank" rel="noopener" title="${esc(siteTitle)}">${esc(siteTxt)}</a>`:''}${ch&&ch.ot?'<span class="tag" title="Adresse unique à ce coulage">OT</span>':''}${o.am?'<span class="tag" title="Déborde sur l\'après-midi">→ AM</span>':''}</div>
     <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule" title="${esc(o.f)}${sap?' · SAP '+sap:' · pas de SAP'}${known(o.f)?'':' · formule non répertoriée'}">${esc(o.f||'Formule ?')}</button>${fLaboTag(o)}</div>
     <div class="r-cam">${cam?`<span class="mo">${esc(cam)}</span>`:'<span class="faint">8x4</span>'}${resaBadge(o)}</div>
@@ -364,7 +377,7 @@ function rowCompact(o,editors){
     ${ed?`<span class="editby">Verrouillée · ${esc(ed)} modifie</span>`:''}
     <div class="r-time">${esc(o.h)}</div>
     <div class="c r-cl"><button class="r-client" data-act="edit">${esc(c.n)}</button>${o.pay?`<button class="tag pay ${o.pay.paye?'ok':''}" data-act="pay" title="${o.pay.paye?'Payé · clic : remettre en attente':'Client comptant · clic : paiement reçu'}">${o.pay.paye?'PAYÉ':'€'}</button>`:''}${o.spec?'<span class="tag spec">SPÉC.</span>':''}</div>
-    <div class="r-vol"><b>${fmt(livre(o))}</b>/${fmt(total(o))}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}</div>
+    <div class="r-vol" data-act="vol" data-long="1"><b>${fmt(livre(o))}</b>/${fmt(total(o))}${o.plus?'<i class="vplus" title="Et plus : 1 tour, quantité à confirmer">+</i>':''}</div>
     <div class="c r-ch">${o.kind==='pour'?`<span class="tag pour" style="margin:0 5px 0 0">${esc(o.pour.toUpperCase())}</span>`:''}${esc(siteName(o))}</div>
     <div class="c r-fo"><button class="r-form ${att?'att':'fam-'+fam}" data-act="formule">${esc(o.f||'?')}</button>${fLaboTag(o)}</div>
     <div class="r-prog" title="${k}/${n} tours chargés">${bar}<span class="mono">${k}/${n}</span>${o.pompe?`<button class="mo ${o.pompe.bon?'on':'warn'}" data-act="pompe" title="${o.pompe.bon?'Bon de pompe fait':'Clic : bon de pompe fait'}">${esc(o.pompe.t==='BQA'?'BQA':o.pompe.t+' m')}</button>`+pompeResa(o):''}${o.cam?`<span class="mo">${esc(o.cam)}</span>`+resaBadge(o):''}${o.plus?'<button class="mo t-plus" data-act="plus" data-long="1" title="Complément à confirmer">+1T ?</button>':''}${o.pills.length?`<button class="tag" data-act="pills-all" title="${esc(o.pills.map(p=>p.t).join(' · '))}">${o.pills.length} info${o.pills.length>1?'s':''}</button>`:''}</div>
@@ -569,7 +582,7 @@ const AIDE=[
   ['centraliste','Erreurs du planning',`<p>Si le planning plante chez quelqu'un (téléphone ou PC), le message technique est envoyé automatiquement : prénom, rôle, heure, version, écran, appareil. <b>Aucune donnée de commande ni de client.</b> Hors connexion, l'erreur attend sur l'appareil et part au retour du réseau.</p><ul><li>Comptes admin : badge du compte → Centrale → Administration → <b>Erreurs</b>. Une ligne par erreur différente, avec le nombre de fois et qui l'a eue ; clic pour le détail.</li><li>À l'ouverture du planning, un message prévient s'il y a de nouvelles erreurs.</li><li><b>Copier pour Claude</b> : copie le détail, à coller dans la conversation pour la correction. <b>Tout effacer</b> une fois corrigé.</li><li>Les erreurs de plus de 30 jours s'effacent toutes seules.</li></ul>`],
   ['centraliste','Sauvegardes : vérifier et restaurer',`<p>Chaque nuit, le planning est sauvegardé dans un dépôt GitHub privé : un fichier par mois (<b>planning-AAAA-MM.json</b>, réécrit chaque nuit) et <b>listes.json</b> (clients, chantiers, demandes, réglages, catalogue). Le journal de bord, le chat et la liste des accès n'y sont pas.</p><ul><li><b>Vérifier une sauvegarde (sans rien changer)</b> (badge du compte → Sauvegarde, comptes admin) : choisir les fichiers téléchargés depuis GitHub. Un rapport compare la sauvegarde au planning actuel, mois par mois (identiques, modifiées depuis, ajoutées depuis, absentes), puis <b>Consulter la sauvegarde</b> pour la voir comme un planning. Rien n'est modifié.</li><li><b>Restaurer une sauvegarde</b> : le ou les fichiers d'un mois seuls → seuls ces mois sont remis, le reste ne bouge pas. Les fichiers des mois + listes.json → tout le planning est remplacé. Une confirmation est demandée.</li><li>Les changements faits depuis la sauvegarde de la nuit sont perdus pour les mois remis : vérifier d'abord.</li></ul>`],
   ['tous','Administration · catalogue de la centrale',`<p>Menu du compte (ou <b>Plus</b> sur téléphone) → <b>Centrale</b> → <b>Administration</b>. Ouvert au centraliste et au commercial.</p><ul><li><b>Formules</b> : gravillons de la centrale (le Dmax proposé en découle), résistances, consistances, chlorures (désactivés par défaut), expositions et couvertures (calculées depuis le tableau NA.F.1), liants (chacun Base, PM ou SR PM), liant imposé par exposition, fibres, produits spéciaux (gamme, variantes, options permises, gravillons permis, Dmax ou Dmin/Dmax, température, temps de retard, lien vers la fiche ; ⧉ pour dupliquer).</li><li><b>Camions et pompes</b>, <b>Fournisseurs</b>, <b>Agence</b>, <b>Raccourcis</b> : centraliste et commercial. <b>Accès</b> : comptes admin. Le labo et la lecture seule consultent sans modifier.</li><li>Les changements valent pour tous les postes.</li></ul>`],
-  ['tous','Modifier, dupliquer, annuler une commande',`<ul><li>Menu <b>⋯</b> au bout de la ligne : <b>Modifier la commande</b>, <b>Dupliquer…</b> sur d'autres dates, statut (automatique, en attente, en cours, terminée, annulée), supprimer.</li><li>Statut passé à la main en <b>Terminée</b> ou <b>Annulée</b> : le complément prévu est retiré et plus aucun complément n'est proposé.</li><li>Clic sur la <b>formule</b> pour la changer : la nouvelle formule est <b>confirmée</b> avant d'être appliquée. Le code SAP s'affiche au survol.</li><li>Annuler ou supprimer demande une <b>confirmation</b>. Les commandes annulées ne se voient qu'en vue Détaillé.</li><li>Tours et compléments (ajouter, charger une bulle) : <b>centraliste uniquement</b>. Le commercial et le labo les voient.</li></ul>`],
+  ['tous','Modifier, dupliquer, annuler une commande',`<ul><li>Menu <b>⋯</b> au bout de la ligne : <b>Modifier la commande</b>, <b>Dupliquer…</b> sur d'autres dates, statut (automatique, en attente, en cours, terminée, annulée), supprimer.</li><li>Statut passé à la main en <b>Terminée</b> ou <b>Annulée</b> : le complément prévu est retiré et plus aucun complément n'est proposé.</li><li><b>Clic droit sur le cubage</b> (appui long sur téléphone, centraliste) : changer le cubage demandé et cocher « Et plus » si le client veut un complément. Affichage <b>7,5/7,5+</b> avec complément, <b>7,5/7,5</b> sans. Les tours déjà chargés ne bougent pas, les autres sont recalculés.</li><li>Clic sur la <b>formule</b> pour la changer : la nouvelle formule est <b>confirmée</b> avant d'être appliquée. Le code SAP s'affiche au survol.</li><li>Annuler ou supprimer demande une <b>confirmation</b>. Les commandes annulées ne se voient qu'en vue Détaillé.</li><li>Tours et compléments (ajouter, charger une bulle) : <b>centraliste uniquement</b>. Le commercial et le labo les voient.</li></ul>`],
   ['centraliste','Valider une commande du commercial',`<p>Les commandes du commercial arrivent dans la bande rouge <b>« À valider »</b> en haut du jour, et dans la ligne À surveiller.</p><ol><li>Les modifier si besoin.</li><li><b>Valider</b> → confirmation → la commande prend sa place au planning.</li></ol><p>Une modification faite ensuite par le commercial est marquée <b>« Modif. à valider »</b> : la fenêtre de validation montre <b>ce qui a changé</b> (avant → après : jour, heure, cubage, formule, chantier, camion, pompe…). Si le commercial revient à la version validée, il n'y a plus rien à valider.</p>`],
   ['tous','Formule en attente : proposition du labo',`<ul><li>Une commande dont la formule est <b>en attente</b> (labo ou commercial) apparaît dans la page À traiter.</li><li>Le <b>labo</b> clique sur la formule et <b>propose</b> la sienne : elle s'affiche à côté, avec le badge <b>LABO</b>. La formule de la commande ne change pas.</li><li>Le <b>centraliste</b> ou le <b>commercial</b> clique sur le badge LABO → <b>appliquer</b> en un clic (avec confirmation). Ils sont prévenus par notification.</li></ul>`],
   ['tous','Paiements comptant',`<ul><li>L'étiquette <b>€ attente</b> sur la ligne : paiement non reçu. Clic dessus → <b>« Confirmer : paiement reçu ? »</b> → Oui.</li><li><b>Clic droit</b> (appui long sur téléphone) : le détail, <b>une ligne par paiement</b> du client : montant, mode (Carte, CB, Virement, Attente) et 4 chiffres CB. <b>+ Autre paiement</b> pour un client qui paie en plusieurs fois ; le total s'affiche.</li><li>Le paiement passe à « Payé » quand plus rien n'est en attente. Tant que ce n'est pas payé, l'alerte « Paiement · client » reste dans la ligne À surveiller.</li></ul>`],
@@ -946,6 +959,12 @@ document.addEventListener('pointerdown',ev=>{const h=ev.target.closest&&ev.targe
   document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up)});
 document.addEventListener('dblclick',ev=>{if(!ev.target.closest||!ev.target.closest('.side-rz'))return;prefs.sideW=(prefs.sideW||176)<SIDE_SQ?176:SIDE_MIN;savePrefs();applySide();navTop=null;navMotion(document.getElementById('side'))});
 addEventListener('resize',()=>applySide());
+// texte coupé faute de place : le survol affiche tout (bulle du navigateur)
+document.addEventListener('mouseover',e=>{const el=e.target;if(!el||!el.closest||!el.closest('.row,.hb,.cols'))return;
+  for(const x of [el,el.parentElement]){if(!x||x.hasAttribute('title')&&!x.dataset.autoT)continue;
+    const coupe=x.scrollWidth>x.clientWidth+1||x.scrollHeight>x.clientHeight+2;const t=(x.innerText||'').trim().replace(/\s+/g,' ');
+    if(coupe&&t){x.title=t;x.dataset.autoT='1'}else if(x.dataset.autoT&&!coupe){x.removeAttribute('title');delete x.dataset.autoT}}},true);
+let _hlT;addEventListener('resize',()=>{clearTimeout(_hlT);_hlT=setTimeout(()=>applyLayout(),120)});
 function navMotion(sd){
   const wrap=sd.querySelector('.nav-wrap');if(!wrap)return;const ind=wrap.querySelector('.nav-ind'),hov=wrap.querySelector('.nav-hov');const on=wrap.querySelector('.nav-b.on');
   const place=(el,b)=>{el.style.transform=`translateY(${b.offsetTop}px)`;el.style.height=b.offsetHeight+'px'};
@@ -1014,7 +1033,7 @@ function navMore(el){
     <button class="sheet-me" data-me="1"><i class="sheet-av">${esc(String(who||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase())}</i><span><b>${esc(who||'Mon compte')}</b><small>${esc(ROLE_NOM[(ME&&ME.role)||'']||'')} · compte et réglages</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 6l6 6-6 6"/></svg></button>
     <div class="sheet-list" ${navRest.length?'':'hidden'}>${navRest.map(([k,l])=>`<button class="sheet-it ${k===view.tab?'on':''}" data-v="${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${NAV_IC[k]||''}</svg><span>${esc(l)}</span>${k==='chat'&&nChat?`<i class="n">${nChat}</i>`:''}<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 6l6 6-6 6"/></svg></button>`).join('')}</div></div>`;
   document.body.appendChild(sc);el.classList.add('open');
-  sc.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('[data-me]')){closeSheet();setTimeout(()=>{settingsPop(el);popEl.classList.add('as-sheet','sheet-scroll');popEl.insertAdjacentHTML('afterbegin','<div class="sheet-grab" role="button" aria-label="Fermer"></div>');popEl.scrollTop=0;document.documentElement.classList.add('sheet-open');sheetDrag(popEl,popEl,closePop);popEl.querySelector('.sheet-grab').onclick=()=>closePop()},200);return}const it=e.target.closest('.sheet-it');if(it){const v=it.dataset.v;closeSheet();setTimeout(()=>act(v==='chat'?'chat':'tab',{dataset:{v}},null,{}),60);return}if(e.target===sc)closeSheet()});
+  sc.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('[data-me]')){closeSheet();setTimeout(()=>{settingsPop(el);popEl.classList.add('as-sheet','sheet-scroll');popEl.insertAdjacentHTML('afterbegin','<div class="sheet-grab" role="button" aria-label="Fermer"></div>');popEl.scrollTop=0;document.documentElement.classList.add('sheet-open');if(!popEl._drag){popEl._drag=1;sheetDrag(popEl,popEl,closePop,()=>popEl.classList.contains('as-sheet'))}popEl.querySelector('.sheet-grab').onclick=()=>closePop()},200);return}const it=e.target.closest('.sheet-it');if(it){const v=it.dataset.v;closeSheet();setTimeout(()=>act(v==='chat'?'chat':'tab',{dataset:{v}},null,{}),60);return}if(e.target===sc)closeSheet()});
   // glisser vers le bas pour fermer (sans déclencher l'actualisation de la page)
   const sh=sc.querySelector('.sheet');sheetDrag(sh,sh,closeSheet);
   sc.addEventListener('touchmove',e=>{if(e.target===sc)e.preventDefault()},{passive:false});
@@ -1023,9 +1042,10 @@ function navMore(el){
 }
 /* Glisser une feuille vers le bas pour la fermer. Le geste est capté (preventDefault) pour que le navigateur
    n'actualise pas la page (« tirer pour actualiser »). Au-delà de 70 px ou d'un geste rapide : fermeture. */
-function sheetDrag(sheet,zone,onClose){
+function sheetDrag(sheet,zone,onClose,actif){
+  // actif() : la fenêtre flottante (#pop) sert aussi aux autres menus ; le glisser ne vaut que quand elle est en feuille
   let y0=null,t0=0,dy=0,scroller=null;
-  zone.addEventListener('touchstart',e=>{
+  zone.addEventListener('touchstart',e=>{if(actif&&!actif()){y0=null;return}
     scroller=e.target.closest('.sheet-scroll');
     if(scroller&&scroller.scrollTop>0&&!e.target.closest('.sheet-grab')){y0=null;return}
     y0=e.touches[0].clientY;t0=Date.now();dy=0;sheet.style.transition='none';sheet.classList.add('dragging')},{passive:true});
@@ -1282,6 +1302,7 @@ function act(a,el,o,e){
     case 'addpill':{const id=o.id;setEditing(id);return listPop(el,'Ajouter une info sur la ligne',pPre(o),v=>{byId(id).pills.push({t:v,on:false,by:author()})},'Ou texte libre (retard, consigne…)')}
     case 'flabo':{const id=o.id;if(role()==='labo')return act('formule',el,o,e);if(!o.fLabo)return;setEditing(id);
       return confirmPop(el,'Appliquer la formule du labo ?',`${o.f||'—'}  →  ${o.fLabo.f}${o.fLabo.sap?' · SAP '+o.fLabo.sap:''} (proposée par ${o.fLabo.by||'le labo'})`,'Oui, appliquer',()=>{const x=byId(id);const f0=x.f;x.f=x.fLabo.f;reCap(x,f0);if(x.fLabo.sap)x.sap=x.fLabo.sap;learnFormule(x.f,x.sap||'');jlog(x.date,`Formule du labo appliquée : ${siteName(x)} · ${x.f}`);delete x.fLabo;toast('Formule appliquée')})}
+    case 'vol':return;   // clic simple : rien (clic droit = volPop)
     case 'formule':{const id=o.id;setEditing(id);
       if(role()==='labo'){if(!attente(o.f)&&!o.fLabo){toast('Formule renseignée : seuls le centraliste et le commercial la modifient');return}
         if(!window.FX)return;const nomC=cl(o.cl).n;
@@ -1428,6 +1449,7 @@ function longAct(el){const a=el.dataset.act,i=+el.dataset.i;const row=el.closest
   if(a==='pay'&&row){const o=byId(row.dataset.id);if(o&&o.pay){setEditing(o.id);return payPop(o,el)}}
   if(a==='conv'){const d=el.dataset.d,p=el.dataset.p;return openPop(el,`<div class="pop-h">${esc(p)} · ${esc(dayShort(d))}</div><button class="pop-b" data-pa="mod">Modifier…</button><button class="pop-b danger" data-pa="del">Annuler l'absence</button>`,{mod(){setTimeout(()=>convPop(el,d,p));return 'close'},del(){const x=(S.convocs[d]||{})[p];delete S.convocs[d][p];if(x&&x.st==='abs')jlog(d,`Absence annulée : ${p}`);toast('Absence annulée')}})}
   if(a==='plus'&&row)return act('plus',el,byId(row.dataset.id),{});
+  if(a==='vol'&&row){if(role()!=='centraliste'){toast('Cubage : clic droit réservé au centraliste (le commercial passe par Modifier la commande)');return}return volPop(byId(row.dataset.id),el)}
   if(a==='tour'&&row)return tourPop(byId(row.dataset.id),i,el);
   if(a==='pill'&&row)return pillEdit(byId(row.dataset.id),i,el);
   if(a==='semi-t')return semiTourPop(el,dayOf(el),i,+el.dataset.k);

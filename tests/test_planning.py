@@ -285,3 +285,55 @@ def test_erreurs_dans_l_administration(ouvrir):
     vide = pg.evaluate("async()=>{SB={from:()=>({select:()=>({order:()=>({limit:async()=>({data:[]})})})})};await errLoadImpl();return document.getElementById('err-box').textContent}")
     assert "Aucune erreur" in vide
     assert pg.errs == []
+
+
+# ---------- téléphone : la fenêtre de formule défile au doigt ----------
+def test_formule_defile_au_doigt_apres_le_menu_plus(ouvrir):
+    pg = ouvrir(tel=True)
+    # ouvrir le compte depuis « Plus » (fenêtre en feuille), puis la refermer
+    pg.evaluate("()=>{view.date='2026-11-04';render(true);navMore(document.querySelector('.side .nav-b')||document.body)}"); pg.wait_for_timeout(500)
+    pg.evaluate("()=>document.querySelector('.sheet-scrim [data-me]').click()"); pg.wait_for_timeout(700)
+    assert pg.evaluate("()=>popEl.classList.contains('as-sheet')")
+    pg.evaluate("()=>closePop()"); pg.wait_for_timeout(500)
+    pg.evaluate("()=>act('formule',document.querySelector('#row-o19')||document.body,byId('o19'),{})"); pg.wait_for_timeout(600)
+    bloque = pg.evaluate("""()=>{const p=popEl,t=p.querySelector('.pf-fx')||p;const r=t.getBoundingClientRect();
+      const tc=y=>new Touch({identifier:1,target:t,clientX:r.left+20,clientY:y});
+      t.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,cancelable:true,touches:[tc(r.top+200)],changedTouches:[tc(r.top+200)]}));
+      const m=new TouchEvent('touchmove',{bubbles:true,cancelable:true,touches:[tc(r.top+120)],changedTouches:[tc(r.top+120)]});t.dispatchEvent(m);
+      const m2=new TouchEvent('touchmove',{bubbles:true,cancelable:true,touches:[tc(r.top+260)],changedTouches:[tc(r.top+260)]});t.dispatchEvent(m2);
+      t.dispatchEvent(new TouchEvent('touchend',{bubbles:true,cancelable:true,touches:[],changedTouches:[tc(r.top+260)]}));
+      return [m.defaultPrevented,m2.defaultPrevented,p.hidden,getComputedStyle(p).overflowY]}""")
+    assert bloque == [False, False, False, "auto"]
+
+
+# ---------- clic droit sur le cubage ----------
+def test_clic_droit_cubage(ouvrir):
+    pg = ouvrir()
+    pg.evaluate("()=>{view.date='2026-11-04';const o=byId('o19');o.tours.forEach(t=>{t.s=0;delete t.p});o.tours[0].s=1;o.tours[0].p='AA';o.plus=false;render(true)}")
+    pg.click("#row-o19 .r-vol", button="right"); pg.wait_for_timeout(300)
+    pg.fill("#pf0", "22,5"); pg.check("#pf1"); pg.evaluate("()=>popEl.querySelector('form').requestSubmit()"); pg.wait_for_timeout(300)
+    r = pg.evaluate("()=>{const o=byId('o19');return [total(o),o.plus,o.tours[0].s,o.tours[0].p,document.querySelector('#row-o19 .r-vol').textContent.replace(/\\s/g,'')]}")
+    assert r[0] == 22.5 and r[1] is True and r[2] == 1 and r[3] == "AA" and r[4].endswith("/22,5+")
+    # plus petit que le déjà chargé : refusé
+    v0 = pg.evaluate("()=>byId('o19').tours[0].v")
+    pg.click("#row-o19 .r-vol", button="right"); pg.wait_for_timeout(300)
+    pg.fill("#pf0", "1"); pg.uncheck("#pf1"); pg.evaluate("()=>popEl.querySelector('form').requestSubmit()"); pg.wait_for_timeout(300)
+    assert pg.evaluate("()=>total(byId('o19'))") == 22.5
+    pg.fill("#pf0", str(v0).replace('.', ',')); pg.evaluate("()=>popEl.querySelector('form').requestSubmit()"); pg.wait_for_timeout(300)
+    assert pg.evaluate("()=>[total(byId('o19')),byId('o19').plus,document.querySelector('#row-o19 .r-vol').textContent.includes('+')]") == [v0, False, False]
+    # réservé au centraliste
+    pg2 = ouvrir("commercial"); pg2.evaluate("()=>{view.date='2026-11-04';render(true)}")
+    pg2.click("#row-o19 .r-vol", button="right"); pg2.wait_for_timeout(300)
+    assert pg2.evaluate("()=>popEl.hidden")
+    assert pg.errs == [] and pg2.errs == []
+
+
+# ---------- encadrés du haut : même largeur, deux lignes sur écran moyen ----------
+def test_encadres_du_haut(ouvrir):
+    for w, deux_lignes in ((1920, False), (1366, False), (1100, True)):
+        pg = ouvrir(w=w, h=900)
+        L = pg.evaluate("()=>[...document.querySelectorAll('#head .hb-w')].map(e=>{const r=e.getBoundingClientRect();return [Math.round(r.width),Math.round(r.top)]})")
+        if deux_lignes:
+            assert L[0][1] == L[1][1] and L[2][1] > L[0][1], (w, L)
+        else:
+            assert max(x[0] for x in L) - min(x[0] for x in L) <= 2, (w, L)
