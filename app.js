@@ -2360,7 +2360,7 @@ async function baseCheck(){if(!isAdmin()||!SB)return;
   const b=document.getElementById('base-etat');if(b)b.outerHTML=baseHTML()}
 function baseHTML(){const e=BASE_ETAT;
   if(!e)return `<p id="base-etat" class="base-etat muted">Base de données : vérification…</p>`;
-  if(!e.manque.length)return `<p id="base-etat" class="base-etat ok">✓ Base de données à jour (scripts 01 à ${BASE_V}).</p>`;
+  if(!e.manque.length)return `<p id="base-etat" class="base-etat ok" title="Tous les scripts supabase/ du dépôt GitHub (01 à ${BASE_V}) sont passés dans Supabase">✓ Base de données à jour (Supabase + GitHub)</p>`;
   return `<div id="base-etat" class="base-etat warn"><b>⚠ Base de données pas à jour.</b> À exécuter dans Supabase → SQL Editor, dans l'ordre : ${e.manque.map(n=>`<code>${esc(BASE_F[n]||n)}</code>`).join(', ')}${e.inconnu?' (puis rechargez : les scripts précédents seront vérifiés à leur tour)':''}. Chaque script se relance sans risque.</div>`}
 function supaErr(e){const msg=(e&&e.message)||'';if(e&&e.code==='55P03')return {code:'locked',message:msg};if(e&&e.code==='PLB01')return {code:'closed',message:msg};const denied=(e&&e.code==='42501')||/row-level security|permission denied/i.test(msg);return {code:denied?'permission_denied':'unavailable',message:msg}}
 
