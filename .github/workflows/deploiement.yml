@@ -1,0 +1,40 @@
+name: Mise en ligne
+
+# Le site n'est mis en ligne que si tous les tests sont verts.
+on:
+  workflow_run:
+    workflows: [Tests]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Fichiers du site uniquement (sans tests ni scripts SQL)
+        run: |
+          mkdir _site
+          cp -r index.html app.js styles.css formules.js formules.css motion-m3.js sw.js manifest.webmanifest .nojekyll icons vendor _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - id: pages
+        uses: actions/deploy-pages@v4

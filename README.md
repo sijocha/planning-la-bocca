@@ -72,3 +72,5 @@ Les autres tables créées par `01_structure.sql` (commandes, clients, chantiers
 
 Coche verte : tout passe. Croix rouge : un comportement a changé, le détail est dans l'onglet Actions.
 
+**Mise en ligne** (`.github/workflows/deploiement.yml`) : le site n'est publié sur GitHub Pages que si les trois séries de tests sont vertes, et seulement les fichiers du site (sans `tests/` ni `supabase/`). Réglage du dépôt : Settings → Pages → Source : **GitHub Actions**.
+
