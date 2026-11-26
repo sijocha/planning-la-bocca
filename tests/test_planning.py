@@ -221,6 +221,9 @@ def test_chape_jamais_chargee_au_maximum(ouvrir):
     pg = ouvrir()
     assert pg.evaluate("()=>[capOf('','Cemexa C16'),capOf('2SP4','Cemexa C20'),capOf('','C25/30 D20 S4 XC1'),capOf('SP4','C25/30 D20 S4')]") == [7, 3.5, 7.5, 4]
     assert pg.evaluate("()=>genTours(20,capOf('','Cemexa C16')).map(t=>t.v)") == [7, 7, 6]
+    # Agilia : plein par défaut, réduit si on le règle dans Administration → Formules
+    assert pg.evaluate("()=>[capOf('','Agilia MI Dallage SF2'),capOf('','Agilia Chape Nivel')]") == [7.5, 7]
+    assert pg.evaluate("()=>{const c=FX.defaults();c.prods.find(p=>p.n==='Agilia').chg='fluide';S.formcat=c;return capOf('','Agilia MI Dallage SF2')}") == 7
     # formule changée en chape : les tours pas encore chargés sont recalculés, le tour chargé reste
     r = pg.evaluate("()=>{const o=byId('o19');o.tours.forEach(t=>t.s=0);o.tours[0].s=1;const m=total(o),v0=o.tours[0].v;const f0=o.f;o.f='Cemexa C16';reCap(o,f0);return [total(o)===m,o.tours[0].v===v0&&o.tours[0].s===1,o.tours.slice(1).every(t=>t.v<=7)]}")
     assert r == [True, True, True]

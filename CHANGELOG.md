@@ -8,11 +8,12 @@ Les nouveautés du Planning La Bocca, session par session (la plus récente en h
 - **c16, c20, c30…** tapés seuls donnent toujours une **résistance** (C16/20, C20/25, C30/37…), plus jamais une chape.
 - Chape Cemexa : taper **cem16** ou **cem20** (ou « cemexa c20 », « cem 16 »).
 
-### Chapes et produits très fluides
-- Une chape, un autoplaçant ou un S5 n'est **jamais chargé au maximum du camion** : tours prévus à **7 m³ maxi en 8x4** (6 à 7 selon la route) et **3,5 m³ en 4x2 19 t** (SP4).
+### Chapes et produits fluides
+- Les chapes ne sont **jamais chargées au maximum du camion** : tours prévus à **7 m³ maxi en 8x4** (6 à 7 selon la route) et **3,5 m³ en 4x2 19 t** (SP4).
+- Réglable **par produit spécial** (Administration → Formules) : « Chargement plein » ou « Chargement réduit (fluide) ». Chapes en réduit par défaut, Agilia en plein (7,5 m³) par défaut ; on peut changer chaque produit selon le contexte.
 - Rappel sous la quantité dans la commande et dans la bulle du tour.
 - Formule changée pour une chape (ou l'inverse) : les tours pas encore chargés sont recalculés ; un tour déjà chargé ne bouge pas.
-- Réglages → Camions : m³ maxi « fluide » par type de camion, réglable.
+- Administration → Camions et pompes : m³ maxi en chargement réduit par type de camion, réglable.
 - Mode d'emploi à jour (saisie rapide, commande).
 
 ## 25 novembre 2026
