@@ -206,3 +206,21 @@ def test_mode_d_emploi_relie_a_l_ecran(ouvrir):
     pg.keyboard.press("?"); assert pg.evaluate("()=>aidePick") is True
     pg.keyboard.press("Escape"); assert pg.evaluate("()=>[aidePick,!!document.getElementById('aidepickbar')]") == [False, False]
     assert pg.errs == []
+
+
+# ---------- formule rapide et chapes ----------
+def test_formule_rapide_resistance_et_chape(ouvrir):
+    pg = ouvrir()
+    attendu = {"c16 d20 s3": "C16/20 D20 S3", "c20 d20 s4": "C20/25 D20 S4", "25 d20 s4 c1": "C25/30 D20 S4 XC1",
+               "cem16": "Cemexa C16", "cem20": "Cemexa C20", "cemexa c20": "Cemexa C20"}
+    for q, f in attendu.items():
+        assert pg.evaluate(f"()=>FX.line({q!r})") == f, q
+
+
+def test_chape_jamais_chargee_au_maximum(ouvrir):
+    pg = ouvrir()
+    assert pg.evaluate("()=>[capOf('','Cemexa C16'),capOf('2SP4','Cemexa C20'),capOf('','C25/30 D20 S4 XC1'),capOf('SP4','C25/30 D20 S4')]") == [7, 3.5, 7.5, 4]
+    assert pg.evaluate("()=>genTours(20,capOf('','Cemexa C16')).map(t=>t.v)") == [7, 7, 6]
+    # formule changée en chape : les tours pas encore chargés sont recalculés, le tour chargé reste
+    r = pg.evaluate("()=>{const o=byId('o19');o.tours.forEach(t=>t.s=0);o.tours[0].s=1;const m=total(o),v0=o.tours[0].v;const f0=o.f;o.f='Cemexa C16';reCap(o,f0);return [total(o)===m,o.tours[0].v===v0&&o.tours[0].s===1,o.tours.slice(1).every(t=>t.v<=7)]}")
+    assert r == [True, True, True]

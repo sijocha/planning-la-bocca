@@ -288,10 +288,12 @@ const autoK=n=>{const w=norm(n).split(/\s+/);return [...new Set([w.map(x=>x.slic
 function vScore(v,w){const vw=norm(v).split(/\s+/);if(norm(v).replace(/\s+/g,'')===w)return 2;return vw.some(x=>x===w||(/\d/.test(x)&&/^\d+$/.test(w)&&x.replace(/\D/g,'')===w)||(w.length>=3&&!/^\d/.test(w)&&x.startsWith(w)))?1:0}
 function parse(txt){
   const f={att:false,color:'',mix:[],expW:{},cl:'',rt:'',dmin:'',spec:false,prod:'',variant:'',popt:[],temp:'',res:'',dmax:'',frac:'',cons:'',exp:[],opts:[],cim:'',sap:'',unk:[],toks:[],dflt:{}};
-  const words=norm(String(txt).replace(/(^|\s)à(?=\s)/g,' ')).replace(/(-?\d{1,2})\s*°\s*c?/g,' t$1 ').replace(/[·,;]/g,' ').split(/\s+/).filter(w=>w&&w!=='à');
+  const words=norm(String(txt).replace(/(^|\s)à(?=\s)/g,' ')).replace(/(-?\d{1,2})\s*°\s*c?/g,' t$1 ').replace(/[·,;]/g,' ').split(/\s+/).filter(w=>w&&w!=='à')
+    .flatMap(w=>{const m=/^([a-z]{3,})(\d{1,2})$/.exec(w);return m&&CFG.prods.some(p=>pWords(p).includes(m[1]))?[m[1],m[2]]:[w]});
   // 1. produit spécial : celui dont le plus de mots sont tapés (« agilia chape » > « agilia »), sinon une variante tapée seule (« nivel »)
   let P=null,best=0;for(const p of CFG.prods){const s=new Set(words.filter(w=>pWords(p).includes(w))).size;if(s>best){best=s;P=p}}
-  if(!P){const hits=CFG.prods.filter(p=>splitL(p.v).some(v=>words.some(w=>(w.length>=2&&!/^\d/.test(w)&&norm(v).replace(/\s+/g,'')===w)||(w.length>=4&&!/^\d/.test(w)&&norm(v).split(/\s+/).some(x=>x.startsWith(w))))));if(hits.length===1)P=hits[0]}
+  const isRes=w=>/^c\d{1,2}(\/\d{1,2})?$/.test(w);
+  if(!P){const hits=CFG.prods.filter(p=>splitL(p.v).some(v=>words.some(w=>!isRes(w)&&((w.length>=2&&!/^\d/.test(w)&&norm(v).replace(/\s+/g,'')===w)||(w.length>=4&&!/^\d/.test(w)&&norm(v).split(/\s+/).some(x=>x.startsWith(w)))))));if(hits.length===1)P=hits[0]}
   const used=new Set();
   if(P){f.spec=true;f.prod=P.n;words.forEach((w,i)=>{if(pWords(P).includes(w))used.add(i)});
     // 2. variante : celle qui reprend le plus de mots tapés ; égalité = on ne choisit pas
