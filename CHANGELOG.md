@@ -15,6 +15,13 @@ Les nouveautés du Planning La Bocca, session par session (la plus récente en h
 - S'il en manque un : avertissement à l'ouverture et détail dans Administration → Accès, avec le nom du fichier à exécuter. Sinon : « ✓ Base de données à jour ».
 - Testé sur une base PostgreSQL (détection d'un script retiré) et dans le planning.
 
+### Administration sur téléphone
+- **Accès** : chaque personne sur deux lignes (prénom · rôle · retirer, puis adresse · connexion · actif) au lieu de quatre.
+- **Produits spéciaux** : gamme, nom, Dmax, classe et chargement regroupés ; variantes et options sur toute la largeur, temps de retard et gravillons côte à côte. Moins de lignes par produit.
+- **Camions, pompes, agence, carrières, fournisseurs** : intitulé au-dessus, cases d'ajout sur toute la largeur (on voit à nouveau « Type », « m³ », « fluide m³ »…).
+- **Raccourcis** : l'ajout est un bloc « Nouveau raccourci : nom, adresse, thème » (nom et thème sur une ligne, adresse en dessous).
+- Descriptions des titres plus lisibles (blanc cassé sur noir au lieu de gris).
+
 ### Cubage, écrans 1080p, téléphone
 - **Clic droit sur le cubage** (appui long sur téléphone, centraliste) : cubage demandé et « Et plus » (complément à confirmer). Affichage 0/22,5+ avec complément, 0/22,5 sans. Les tours chargés ne bougent pas, les autres sont recalculés ; impossible de descendre sous le déjà chargé.
 - **Encadrés du haut** : trois encadrés de même largeur. Agrégats : boutons + Semi / + Liant dans le titre, la ligne de semi passe sur deux lignes au lieu d'être coupée, carrière masquée quand la place manque. En dessous de 1180 px de large : camions et journal sur une ligne, agrégats en dessous sur toute la largeur.

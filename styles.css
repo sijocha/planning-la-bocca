@@ -1899,3 +1899,51 @@ body.aide-pick .aide-hl{outline:2px dashed var(--orange)!important;outline-offse
   .cols>*{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 .lh>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===================== Administration : lisibilité ===================== */
+.adm-g small{opacity:1;color:color-mix(in srgb,var(--panel) 78%,var(--ink))}
+.cfg-lf-t{grid-column:1/-1;font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cfg-lf{padding:8px;border:1px dashed var(--line-strong);border-radius:8px}
+@media (max-width:760px){
+  /* intitulé au-dessus, cases sur toute la largeur */
+  .drawer .q,.drawer.wide .q{grid-template-columns:minmax(0,1fr)!important;gap:6px}
+  .drawer .q>.ql{padding-top:0}
+  .drawer .q>.ql small{display:inline;margin:0 0 0 6px;letter-spacing:.04em;text-transform:none;font-size:11px;color:var(--muted)}
+  .drawer .inline-f{flex-wrap:wrap}
+  .drawer .inline-f input{flex:1 1 90px;max-width:none!important}
+  .drawer .inline-f .btn{flex:none}
+  .drawer .inline-f[data-cfgform="camions"] #cf-ct{flex:2 1 110px}
+  /* raccourci : nom + thème sur une ligne, adresse en dessous, bouton */
+  .cfg-lf{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+  .cfg-lf #cf-lu{grid-column:1/-1;order:3}
+  .cfg-lf #cf-lc{order:2}
+  .cfg-lf .btn{grid-column:1/-1;order:4}
+  /* accès : prénom · rôle · ×  /  adresse · connexion · actif */
+  .acc-t tr{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px!important;grid-template-areas:"nom role del" "em date act";align-items:center;gap:4px 8px!important}
+  .acc-t td:nth-child(1){grid-area:nom}.acc-t td:nth-child(2){grid-area:em;grid-column:auto!important;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .acc-t td:nth-child(3){grid-area:role}.acc-t td:nth-child(4){grid-area:act;justify-self:center}.acc-t td:nth-child(5){grid-area:date;font-size:11px}.acc-t td:nth-child(6){grid-area:del;justify-self:center}
+  .acc-t td input.acc-nom,.acc-t td select{width:100%;min-width:0}
+}
+/* produits spéciaux sur téléphone : moins de lignes, cases resserrées */
+@media (max-width:760px){
+  .fxw .pcfg{padding:8px;gap:5px}
+  .fxw .pcfg .pl1:not(.pl3){display:grid;grid-template-columns:22px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:5px}
+  .fxw .pcfg .pl1:not(.pl3)>*{width:auto!important;min-width:0!important;max-width:none}
+  .fxw .pcfg .pl1:not(.pl3)>.pnum{grid-column:1}
+  .fxw .pcfg .pl1:not(.pl3)>[data-f="g"]{grid-column:2}
+  .fxw .pcfg .pl1:not(.pl3)>[data-f="n"]{grid-column:3/5}
+  .fxw .pcfg .pl1:not(.pl3)>[data-f="gm"]{grid-column:1/3}
+  .fxw .pcfg .pl1:not(.pl3)>[data-f="norm"]{grid-column:3/5}
+  .fxw .pcfg .pl1:not(.pl3)>[data-f="chg"]{grid-column:1/4}
+  .fxw .pcfg .pl1:not(.pl3)>.pacts{grid-column:4;margin-left:0;justify-content:flex-end;flex-wrap:nowrap;gap:3px}
+  .fxw .pcfg .pacts .x{width:26px}
+  .fxw .pcfg .pacts a.lbl{display:none}
+  .drawer .fxw .pcfg .pl2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px}
+  .fxw .pcfg .pl2 .inp{min-width:0!important}
+  .drawer .fxw .pcfg .pl2 [data-f="v"],.drawer .fxw .pcfg .pl2 [data-f="o"],.drawer .fxw .pcfg .pl2 [data-f="url"]{grid-column:1/-1}
+  .fxw .pcfg select.inp{font-size:12px;padding:0 4px}
+  .fxw .pcfg .pl3{gap:4px}
+  .fxw .pcfg .pl3 .cb{font-size:11.5px;padding:2px 6px}
+}
+@media (max-width:760px){.drawer .inline-f[data-cfgform="camions"] #cf-cc{flex:0 0 52px}.drawer .inline-f[data-cfgform="camions"] #cf-cf{flex:0 0 82px}.drawer .inline-f[data-cfgform="camions"] #cf-ct{flex:1 1 80px}}
+@media (max-width:760px){.drawer .fxw .pcfg .pl3 .cb{padding:1px 5px;font-size:11px;gap:4px}.drawer .fxw .pcfg .pl3{row-gap:4px;column-gap:4px}}
