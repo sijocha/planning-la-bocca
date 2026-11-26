@@ -88,4 +88,22 @@ reset role;
 drop trigger documents_cloture on public.documents;
 set role authenticated;
 select pg_temp.verifier((public.etat_base()->'manque') = '["08","12"]'::jsonb, 'état de la base : 12 retiré détecté');
+select pg_temp.verifier((public.etat_base()->>'version') = '15', 'état de la base : version 15');
+
+-- ---------- 15 : erreurs du planning ----------
+set test.uid='00000000-0000-0000-0000-0000000000a1';
+select public.erreur_log('{"msg":"TypeError: x is undefined","nom":"Morgan","version":"app 31","vue":"planning"}');
+select public.erreur_log('{"msg":"TypeError: x is undefined","nom":"Morgan"}');
+select public.erreur_log(jsonb_build_object('msg', repeat('a', 900)));
+select pg_temp.verifier((select count(*) from public.erreurs) = 0, 'le commercial ne voit pas les erreurs');
+select pg_temp.doit_echouer($$insert into public.erreurs(msg) values ('x')$$, '42501', 'écrire directement dans la table des erreurs');
+set test.uid='00000000-0000-0000-0000-0000000000d1';
+select public.erreur_log('{"msg":"lecture seule"}');
+set test.uid='00000000-0000-0000-0000-0000000000e1';
+select pg_temp.verifier((select count(*) from public.erreurs) = 3, 'l''admin voit les erreurs (même erreur regroupée)');
+select pg_temp.verifier((select n from public.erreurs where msg like 'TypeError%') = 2 and (select role from public.erreurs where msg like 'TypeError%') = 'commercial', 'erreur répétée comptée, rôle pris dans le compte');
+select pg_temp.verifier((select max(length(msg)) from public.erreurs) = 300, 'message tronqué à 300 caractères');
+delete from public.erreurs where msg like 'a%';
+select pg_temp.verifier((select count(*) from public.erreurs) = 2, 'l''admin efface');
 reset role;
+select pg_temp.verifier(exists(select 1 from cron.job where jobname='erreurs-menage'), 'ménage des erreurs programmé');

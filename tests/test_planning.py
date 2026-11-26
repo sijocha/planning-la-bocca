@@ -244,6 +244,44 @@ def test_etat_de_la_base(ouvrir):
             return [BASE_ETAT.manque,baseHTML().replace(/<[^>]*>/g,'')]}}""")
     assert res["ok"][0] == [] and "à jour" in res["ok"][1]
     assert res["13"][0] == ["13"] and "13_reglages_commercial.sql" in res["13"][1]
-    assert res["absent"][0] == ["14"] and "14_etat_base.sql" in res["absent"][1]
+    assert res["absent"][0] == ["15"] and "15_erreurs.sql" in res["absent"][1]
     # pas d'appel pour un compte non admin
     assert pg.evaluate("async()=>{ME={email:'c@x',nom:'C',role:'centraliste',actif:true};let n=0;SB={rpc:async()=>{n++;return {data:null}}};await baseCheck();return n}") == 0
+
+
+# ---------- erreurs du planning ----------
+def test_erreurs_envoyees_aux_admins(ouvrir):
+    pg = ouvrir()
+    pg.evaluate("""()=>{window._env=[];ME={email:'m@x',nom:'Morgan',role:'commercial',actif:true};
+      SB={rpc:async(f,a)=>{_env.push([f,a.p]);return {data:null}}};localStorage.removeItem('plb-erreurs')}""")
+    for _ in range(3):
+        pg.evaluate("()=>setTimeout(()=>{throw new Error('boum dans le planning')})")
+    pg.evaluate("()=>setTimeout(()=>{throw new Error('ResizeObserver loop limit exceeded')})")
+    pg.evaluate("()=>{Promise.reject(new Error('promesse ratée'))}")
+    pg.wait_for_timeout(400)
+    env = pg.evaluate("()=>_env")
+    msgs = [p["msg"] for f, p in env]
+    assert all(f == "erreur_log" for f, _ in env)
+    assert msgs.count("Error: boum dans le planning") == 1 and "Error: promesse ratée" in msgs   # une seule fois, rejets de promesse aussi
+    assert not any("ResizeObserver" in m for m in msgs)                              # bruit ignoré
+    p = env[0][1]
+    assert p["nom"] == "JO" and p["version"].startswith("app") and p["vue"].startswith("planning") and "boum" in p["pile"]
+    assert set(p) <= {"msg", "src", "pile", "vue", "version", "appareil", "nom", "at"}  # rien d'autre (pas de commande)
+    # hors connexion : gardée sur l'appareil, envoyée au retour
+    pg.evaluate("()=>{SB=null;setTimeout(()=>{throw new Error('erreur hors ligne')})}"); pg.wait_for_timeout(200)
+    assert pg.evaluate("()=>errQueue().map(e=>e.msg)") == ["Error: erreur hors ligne"]
+    pg.evaluate("()=>{SB={rpc:async(f,a)=>{_env.push([f,a.p]);return {data:null}}}}")
+    pg.evaluate("async()=>{await errFlush()}")
+    assert pg.evaluate("()=>[errQueue().length,_env.some(([,p])=>p.msg==='Error: erreur hors ligne')]") == [0, True]
+
+
+def test_erreurs_dans_l_administration(ouvrir):
+    pg = ouvrir()
+    html = pg.evaluate("""async()=>{const d=document.createElement('div');d.id='err-box';document.body.appendChild(d);
+      const rows=[{at:new Date().toISOString(),nom:'Morgan',role:'commercial',msg:'TypeError: x is undefined',src:'/app.js:1:2',pile:'at f (app.js:1:2)',vue:'planning/jour',version:'app 31',appareil:'Mozilla',n:3},
+                  {at:new Date().toISOString(),nom:'Léa',role:'labo',msg:'TypeError: x is undefined',n:1},{at:new Date().toISOString(),nom:'Paul',role:'lecture',msg:'Autre',n:1}];
+      SB={from:()=>({select:()=>({order:()=>({limit:async()=>({data:rows})})})})};await errLoadImpl();return d.textContent}""")
+    assert "5 erreurs ces 7 derniers jours" in html and "2 différentes" in html and "4×" in html and "Morgan, Léa" in html
+    vide = pg.evaluate("async()=>{SB={from:()=>({select:()=>({order:()=>({limit:async()=>({data:[]})})})})};await errLoadImpl();return document.getElementById('err-box').textContent}")
+    assert "Aucune erreur" in vide
+    assert pg.errs == []

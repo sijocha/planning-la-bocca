@@ -15,6 +15,11 @@ Les nouveautés du Planning La Bocca, session par session (la plus récente en h
 - S'il en manque un : avertissement à l'ouverture et détail dans Administration → Accès, avec le nom du fichier à exécuter. Sinon : « ✓ Base de données à jour ».
 - Testé sur une base PostgreSQL (détection d'un script retiré) et dans le planning.
 
+### Erreurs du planning chez les utilisateurs
+- Nouveau script **15_erreurs.sql** : quand le planning plante chez quelqu'un, le message technique est enregistré dans Supabase (prénom, rôle, heure, version, écran, appareil ; aucune donnée de commande ni de client). Hors connexion, il attend sur l'appareil.
+- Administration → **Erreurs** (comptes admin) : erreurs regroupées, nombre de fois, qui ; détail technique ; « Copier pour Claude » ; « Tout effacer ». Message à l'ouverture s'il y a du nouveau.
+- Protections : même erreur comptée une seule fois par heure, 50 erreurs maxi par personne et par heure, bruit du navigateur ignoré, effacement automatique après 30 jours.
+
 ### Mise en ligne protégée par les tests
 - Le site n'est publié que si les tests sont verts (planning, notifications, base de données). Une modification qui casse quelque chose n'arrive jamais chez les utilisateurs : le site reste sur la dernière bonne version.
 - Seuls les fichiers de la page sont publiés (plus les dossiers de tests ni les scripts SQL).

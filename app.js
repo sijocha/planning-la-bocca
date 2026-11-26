@@ -566,6 +566,7 @@ const AIDE=[
  ['Commandes',[
   ['tous','Saisir une commande',`<ol><li><b>+ Commande</b> en haut à droite (ou la touche <b>N</b>).</li><li>Remplir dans l'ordre : <b>Qui</b> (client, contact sur place : nom et téléphone, paiement), <b>Quoi</b> (formule : saisie rapide ou cases, code SAP), <b>Combien</b> (m³), <b>Où</b> (chantier, adresse), <b>Quand</b> (date, heure), <b>Comment</b> (camion, pompe), <b>Pourquoi</b> (ouvrage, infos sur la ligne). « Commande spéciale » se coche à côté du titre.</li><li><b>Enregistrer</b>. Les tours sont créés selon le volume.</li></ol><p>Une note libre (« Prendre 1 journée ») va en commentaire. Si la centrale est fermée sur l'heure choisie, une alerte rouge s'affiche : un second clic sur Enregistrer place quand même la commande.</p><p><b>Chargement réduit</b> (chapes, et tout produit spécial réglé « Chargement réduit (fluide) » dans Administration → Formules) : jamais chargé au maximum. Les tours sont prévus à <b>7 m³ maxi en 8x4</b> (6 à 7 selon la route) et <b>3,5 m³ en 4x2 19 t</b> (SP4) ; un rappel s'affiche sous la quantité. Changer la formule pour une chape recalcule les tours pas encore chargés. Le maxi de chaque type de camion se règle dans Administration → Camions et pompes (case « fluide m³ »). Les Agilia sont en chargement plein par défaut (7,5 m³) : on peut les passer en réduit, ou baisser le cubage d'une bulle au cas par cas.</p><p><b>Sur téléphone</b> : un résumé reste affiché au-dessus d'« Enregistrer » (jour · heure · client · m³ · formule) ; ce qui manque est en orange.</p>`],
   ['tous','Saisir la formule (saisie rapide)',`<p>Section <b>Quoi</b> de la commande : une case <b>Formule</b> (large) et une case <b>Code SAP</b> (8 chiffres, facultatif).</p><ul><li>Taper comme dit le client : <b>25 20 s4 c1</b> = C25/30 D20 S4 XC1. Ce qui n'est pas dit prend la valeur de la centrale (D20, S4).</li><li><b>c16, c20, c30…</b> = toujours une <b>résistance</b> (C16/20, C20/25, C30/37). Chape Cemexa : <b>cem16</b> ou <b>cem20</b> (ou « cemexa c20 »).</li><li>Expositions sans le X : c1 = XC1, f1 = XF1, d2 = XD2, a1 = XA1 ; <b>xs1</b> pour XS (s1 = consistance). Une seule classe par formule : celle qui couvre les autres (XF1 couvre XC1 à XC4 et XD1).</li><li>Options : <b>ret</b> retardé, <b>acc</b> accéléré, <b>hm</b> hydrofuge, <b>fpp</b> fibres, <b>col pp152</b> colorant (référence tapée à chaque fois), <b>pm</b> liant PM.</li><li>Produits spéciaux : nom ou 3 lettres, puis variante (<b>agi mi plancher sf2</b>, <b>chr 15 10°</b>, <b>nivel</b>, <b>bag mortier ret 6 12°</b>, <b>des</b> désactivé, <b>hydro 4/6</b>, <b>bc3 f1</b>, <b>proj</b>…).</li><li><b>att</b> : produit en attente (badge ATT sur la ligne).</li><li><b>Tab</b> reprend une formule déjà commandée par le client.</li><li>On peut aussi composer avec les <b>cases</b> sous la saisie : Produit spécial, Produit en att., résistance, Dmax, consistance, exposition, liant, options. La saisie se réécrit toute seule.</li><li>Le liant <b>PM / SR PM</b> se met tout seul quand l'exposition l'impose (XS, XA…). Alertes non bloquantes en jaune (résistance trop faible ou bien au-dessus du minimum de l'exposition, Dmax hors centrale…). Rappel orange <b>entraîneur d'air</b> pour XF2 à XF4.</li><li>Un mot non reconnu : la formule est gardée telle quelle.</li></ul>`],
+  ['centraliste','Erreurs du planning',`<p>Si le planning plante chez quelqu'un (téléphone ou PC), le message technique est envoyé automatiquement : prénom, rôle, heure, version, écran, appareil. <b>Aucune donnée de commande ni de client.</b> Hors connexion, l'erreur attend sur l'appareil et part au retour du réseau.</p><ul><li>Comptes admin : badge du compte → Centrale → Administration → <b>Erreurs</b>. Une ligne par erreur différente, avec le nombre de fois et qui l'a eue ; clic pour le détail.</li><li>À l'ouverture du planning, un message prévient s'il y a de nouvelles erreurs.</li><li><b>Copier pour Claude</b> : copie le détail, à coller dans la conversation pour la correction. <b>Tout effacer</b> une fois corrigé.</li><li>Les erreurs de plus de 30 jours s'effacent toutes seules.</li></ul>`],
   ['centraliste','Sauvegardes : vérifier et restaurer',`<p>Chaque nuit, le planning est sauvegardé dans un dépôt GitHub privé : un fichier par mois (<b>planning-AAAA-MM.json</b>, réécrit chaque nuit) et <b>listes.json</b> (clients, chantiers, demandes, réglages, catalogue). Le journal de bord, le chat et la liste des accès n'y sont pas.</p><ul><li><b>Vérifier une sauvegarde (sans rien changer)</b> (badge du compte → Sauvegarde, comptes admin) : choisir les fichiers téléchargés depuis GitHub. Un rapport compare la sauvegarde au planning actuel, mois par mois (identiques, modifiées depuis, ajoutées depuis, absentes), puis <b>Consulter la sauvegarde</b> pour la voir comme un planning. Rien n'est modifié.</li><li><b>Restaurer une sauvegarde</b> : le ou les fichiers d'un mois seuls → seuls ces mois sont remis, le reste ne bouge pas. Les fichiers des mois + listes.json → tout le planning est remplacé. Une confirmation est demandée.</li><li>Les changements faits depuis la sauvegarde de la nuit sont perdus pour les mois remis : vérifier d'abord.</li></ul>`],
   ['tous','Administration · catalogue de la centrale',`<p>Menu du compte (ou <b>Plus</b> sur téléphone) → <b>Centrale</b> → <b>Administration</b>. Ouvert au centraliste et au commercial.</p><ul><li><b>Formules</b> : gravillons de la centrale (le Dmax proposé en découle), résistances, consistances, chlorures (désactivés par défaut), expositions et couvertures (calculées depuis le tableau NA.F.1), liants (chacun Base, PM ou SR PM), liant imposé par exposition, fibres, produits spéciaux (gamme, variantes, options permises, gravillons permis, Dmax ou Dmin/Dmax, température, temps de retard, lien vers la fiche ; ⧉ pour dupliquer).</li><li><b>Camions et pompes</b>, <b>Fournisseurs</b>, <b>Agence</b>, <b>Raccourcis</b> : centraliste et commercial. <b>Accès</b> : comptes admin. Le labo et la lecture seule consultent sans modifier.</li><li>Les changements valent pour tous les postes.</li></ul>`],
   ['tous','Modifier, dupliquer, annuler une commande',`<ul><li>Menu <b>⋯</b> au bout de la ligne : <b>Modifier la commande</b>, <b>Dupliquer…</b> sur d'autres dates, statut (automatique, en attente, en cours, terminée, annulée), supprimer.</li><li>Statut passé à la main en <b>Terminée</b> ou <b>Annulée</b> : le complément prévu est retiré et plus aucun complément n'est proposé.</li><li>Clic sur la <b>formule</b> pour la changer : la nouvelle formule est <b>confirmée</b> avant d'être appliquée. Le code SAP s'affiche au survol.</li><li>Annuler ou supprimer demande une <b>confirmation</b>. Les commandes annulées ne se voient qu'en vue Détaillé.</li><li>Tours et compléments (ajouter, charger une bulle) : <b>centraliste uniquement</b>. Le commercial et le labo les voient.</li></ul>`],
@@ -1607,19 +1608,19 @@ function openConfig(focus,opt){const ro=!!(opt&&opt.ro)||RO();
 `;
   const ce=ro||role()==='centraliste'||role()==='commercial'||isAdmin();   // réglages de la centrale ; lecture seule : consultation
   const adm=!ro&&isAdmin()&&MODE==='shared'&&SB;
-  const navH=[...(adm?[['adm-acces','Accès']]:[]),...(ro?[]:[['adm-formules','Formules']]),...(ce?[['adm-camions','Camions et pompes'],['adm-agence','Agence'],['adm-liens','Raccourcis']]:[])].map(([h,t])=>`<a href="#${h}" data-adm="${h}">${t}</a>`).join('');
+  const navH=[...(adm?[['adm-acces','Accès'],['adm-erreurs','Erreurs']]:[]),...(ro?[]:[['adm-formules','Formules']]),...(ce?[['adm-camions','Camions et pompes'],['adm-agence','Agence'],['adm-liens','Raccourcis']]:[])].map(([h,t])=>`<a href="#${h}" data-adm="${h}">${t}</a>`).join('');
   drawerEl.innerHTML=`<div class="scrim" data-act="dr-close-bg"><div class="drawer wide ${ro?'cfg-ro':''}" role="dialog" aria-label="Administration · catalogue de la centrale">
     <div class="dr-h"><h2>${ro?'Réglages de la centrale <span class="adm-h">· consultation</span>':'Administration <span class="adm-h">· catalogue de la centrale</span>'}</h2><button type="button" class="ib" data-act="dr-close" aria-label="Fermer">×</button></div>
     <div class="dr-b">
       <p class="muted adm-intro">Réglages propres à la centrale de ${CENTRALE}. Ils servent à la prise de commande, à la saisie des formules et au calcul des tours.</p>
       <nav class="adm-nav" aria-label="Sections">${navH}</nav>
-      ${adm?`<h3 class="adm-g" id="adm-acces"><span>Accès</span><small>Qui peut se connecter au planning, et avec quel rôle</small></h3><div id="acces-box" class="acces-box"><p class="muted">Chargement…</p></div>${baseHTML()}`:''}
+      ${adm?`<h3 class="adm-g" id="adm-acces"><span>Accès</span><small>Qui peut se connecter au planning, et avec quel rôle</small></h3><div id="acces-box" class="acces-box"><p class="muted">Chargement…</p></div>${baseHTML()}<h3 class="adm-g" id="adm-erreurs"><span>Erreurs</span><small>Plantages du planning chez les utilisateurs (30 derniers jours)</small></h3><div id="err-box" class="err-box"><p class="muted">Chargement…</p></div>`:''}
       ${ro?'':`<h3 class="adm-g" id="adm-formules"><span>Formules</span><small>Commun au centraliste et au commercial</small></h3>
       <div class="q" id="cfg-formules"><div class="ql">Catalogue<small>Formules béton</small></div><div><p class="muted" style="font-size:12.5px;margin:0 0 8px">Ce que la saisie des formules propose à ${CENTRALE} (expositions, gravillons, liants, options, produits spéciaux), avec les contrôles de la NF EN 206+A2/CN. Les changements valent pour tous les postes.</p><div class="fxw fxadm" id="fx-adm"></div></div></div>
       `}${ce?centraleH():'<p class="muted adm-note">Camions, pompes, agence et raccourcis : réglés par le centraliste.</p>'}
     </div></div></div>`;
   drawerEl.hidden=false;
-  if(adm)accesLoad();
+  if(adm){accesLoad();errLoad()}
   if(ro)drawerEl.querySelectorAll('.cfg-ro input,.cfg-ro select,.cfg-ro textarea').forEach(i=>{i.disabled=true});
   {const el=drawerEl.querySelector('#fx-adm');if(el&&window.FX){FX.setCfg(fxCat());FX.admin(el,{onSave:cf=>{S.formcat=cf;commit()}})}}
   drawerEl.querySelectorAll('[data-adm]').forEach(a=>a.onclick=e=>{e.preventDefault();const t=drawerEl.querySelector('#'+a.dataset.adm);if(t)t.scrollIntoView({block:'start',behavior:'smooth'})});
@@ -1627,6 +1628,21 @@ function openConfig(focus,opt){const ro=!!(opt&&opt.ro)||RO();
 }
 /* ---------- Accès : liste des personnes autorisées (table autorisations, réservée à l'admin par la base) ---------- */
 const ACC_ROLES=[['centraliste','Centraliste'],['commercial','Commercial'],['labo','Tech labo'],['lecture','Lecture seule'],['admin','Admin']];
+async function errLoad(){errLoadImpl()}
+async function errLoadImpl(){const box=document.getElementById('err-box');if(!box||!SB)return;
+  const {data,error}=await SB.from('erreurs').select('at,nom,role,msg,src,pile,vue,version,appareil,n').order('at',{ascending:false}).limit(200);
+  if(error){box.innerHTML=`<p class="muted">${/erreurs|42P01|PGRST/.test(error.message+error.code)?'Script <code>15_erreurs.sql</code> pas encore exécuté dans Supabase.':'Lecture impossible : '+esc(error.message)}</p>`;return}
+  prefs.errVu=Date.now();savePrefs();const L=data||[];const g=new Map();L.forEach(e=>{const k=e.msg;const x=g.get(k)||{msg:k,n:0,last:e.at,qui:new Set(),v:new Set(),ex:e};x.n+=e.n||1;x.qui.add(e.nom||e.role||'?');if(e.version)x.v.add(e.version);g.set(k,x)});
+  const tot=L.reduce((t,e)=>t+(e.n||1),0),sem=L.filter(e=>Date.now()-new Date(e.at)<7*864e5).reduce((t,e)=>t+(e.n||1),0);
+  const quand=t=>{const d=new Date(t);return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})};
+  box.innerHTML=!L.length?`<p class="base-etat ok">✓ Aucune erreur enregistrée.</p>`:`<p class="err-sum"><b>${sem}</b> erreur${sem>1?'s':''} ces 7 derniers jours · ${tot} sur 30 jours · ${g.size} différente${g.size>1?'s':''}</p>
+    <div class="err-l">${[...g.values()].map(x=>`<details class="err-d"><summary><span class="err-n">${x.n}×</span><span class="err-m">${esc(x.msg)}</span><small>${quand(x.last)} · ${esc([...x.qui].join(', '))}</small></summary>
+      <div class="err-x"><div><b>Version</b> ${esc([...x.v].join(', ')||'—')} · <b>Écran</b> ${esc(x.ex.vue||'—')}</div><div><b>Appareil</b> ${esc(x.ex.appareil||'—')}</div>${x.ex.src?`<div><b>Endroit</b> ${esc(x.ex.src)}</div>`:''}${x.ex.pile?`<pre>${esc(x.ex.pile)}</pre>`:''}</div></details>`).join('')}</div>
+    <div class="err-a"><button type="button" class="btn sm" id="err-copy">Copier pour Claude</button><button type="button" class="btn sm" id="err-clear">Tout effacer</button></div>`;
+  const c=box.querySelector('#err-copy');if(c)c.onclick=()=>{const t=[...g.values()].map(x=>`${x.n}× ${x.msg}\n  ${[...x.v].join(', ')} · ${x.ex.vue||''} · ${x.ex.appareil||''}\n  ${x.ex.src||''}\n${(x.ex.pile||'').split('\n').slice(0,6).map(l=>'    '+l).join('\n')}`).join('\n\n');
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copié : collez-le dans la conversation avec Claude'),()=>toast('Copie impossible'))};
+  const k=box.querySelector('#err-clear');if(k)k.onclick=()=>confirmPop(k,'Effacer toutes les erreurs ?','Elles ne seront plus visibles ici.','Oui, effacer',async()=>{const {error}=await SB.from('erreurs').delete().gt('id',0);toast(error?'Non effacé : '+error.message:'Erreurs effacées');errLoad()});
+}
 async function accesLoad(){const box=document.getElementById('acces-box');if(!box)return;
   const [a,p]=await Promise.all([SB.from('autorisations').select('email,nom,role,actif,cree_le').order('nom'),SB.from('profils').select('email,cree_le')]);
   if(a.error){box.innerHTML=`<p class="muted">Liste indisponible : ${esc(a.error.message)}</p>`;return}
@@ -2350,14 +2366,36 @@ let SB=null,ME=null;
 const ROLE_UI={admin:'centraliste',centraliste:'centraliste',commercial:'commercial',labo:'labo',lecture:'commercial'};
 const ROLE_NOM={admin:'Admin',centraliste:'Centraliste',commercial:'Commercial',labo:'Tech labo',lecture:'Lecture seule'};
 const isAdmin=()=>!!(ME&&ME.actif&&ME.role==='admin');
+/* Erreurs du planning : envoyées à Supabase (table erreurs, lisible par les admins). Aucune donnée de commande. */
+const APP_V=(()=>{try{const sc=[...document.scripts].find(x=>/app\.js/.test(x.src));const m=sc&&/v=(\d+)/.exec(sc.src);return 'app '+(m?m[1]:'?')}catch(e){return 'app ?'}})();
+const ERR_KEY='plb-erreurs';let errVues=new Set(),errNb=0;
+function errQueue(){try{return JSON.parse(localStorage.getItem(ERR_KEY)||'[]')}catch(e){return []}}
+function errSave(q){try{localStorage.setItem(ERR_KEY,JSON.stringify(q.slice(-20)))}catch(e){}}
+function errNote(msg,src,pile){msg=String(msg||'').slice(0,300);if(!msg)return;
+  if(/ResizeObserver loop|^Script error\.?$|Non-Error promise rejection|AbortError|The user aborted|Load failed$|Failed to fetch|NetworkError/i.test(msg))return;
+  if(/^(chrome|moz|safari)-extension:/.test(src||''))return;
+  if(errVues.has(msg)||errNb>=20)return;errVues.add(msg);errNb++;
+  const e={msg,src:String(src||'').replace(location.origin,'').slice(0,200),pile:String(pile||'').replace(new RegExp(location.origin.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'').slice(0,1500),
+    vue:(typeof view!=='undefined'&&view?view.tab+(view.mode?'/'+view.mode:''):'')+(document.getElementById('drawer')&&!document.getElementById('drawer').hidden?' · fenêtre':''),
+    version:APP_V,appareil:(navigator.userAgent||'').slice(0,160),nom:(prefs&&prefs.user&&prefs.user.nom)||'',at:Date.now()};
+  const q=errQueue();q.push(e);errSave(q);errFlush()}
+let errEnvoi=false;
+async function errFlush(){if(errEnvoi||!SB||!ME||!ME.actif||!navigator.onLine)return;const q=errQueue();if(!q.length)return;errEnvoi=true;
+  try{for(const e of q){const r=await SB.rpc('erreur_log',{p:e});if(r.error)break;const rest=errQueue().filter(x=>!(x.at===e.at&&x.msg===e.msg));errSave(rest)}}catch(_){}
+  errEnvoi=false}
+window.addEventListener('error',ev=>{if(ev.target&&ev.target!==window&&ev.target.tagName)return;errNote(ev.error&&ev.error.message?(ev.error.name||'Error')+': '+ev.error.message:String(ev.message||'').replace(/^Uncaught /,''),ev.filename?ev.filename+':'+ev.lineno+':'+ev.colno:'',ev.error&&ev.error.stack)});
+window.addEventListener('unhandledrejection',ev=>{const r=ev.reason;errNote(r&&r.message?(r.name||'Error')+': '+r.message:String(r),'',r&&r.stack)});
+window.addEventListener('online',()=>errFlush());
 /* État de la base Supabase (comptes admin) : scripts supabase/ pas encore exécutés → avertissement */
-const BASE_V=14;let BASE_ETAT=null;const BASE_F={"01": "01_structure.sql", "02": "02_roles.sql", "03": "03_documents.sql", "04": "04_droits.sql", "05": "05_concurrence.sql", "06": "06_prenoms_poste.sql", "07": "07_catalogue_formules.sql", "08": "08_temps_reel_prive.sql", "09": "09_verrous.sql", "10": "10_notifications.sql", "11": "11_rappel_pompes.sql", "12": "12_journee_cloturee.sql", "13": "13_reglages_commercial.sql", "14": "14_etat_base.sql"};
+const BASE_V=15;let BASE_ETAT=null;const BASE_F={"01": "01_structure.sql", "02": "02_roles.sql", "03": "03_documents.sql", "04": "04_droits.sql", "05": "05_concurrence.sql", "06": "06_prenoms_poste.sql", "07": "07_catalogue_formules.sql", "08": "08_temps_reel_prive.sql", "09": "09_verrous.sql", "10": "10_notifications.sql", "11": "11_rappel_pompes.sql", "12": "12_journee_cloturee.sql", "13": "13_reglages_commercial.sql", "14": "14_etat_base.sql", "15": "15_erreurs.sql"};
 async function baseCheck(){if(!isAdmin()||!SB)return;
   try{const r=await SB.rpc('etat_base');
     if(r.error){BASE_ETAT={manque:[String(BASE_V)],inconnu:true}}else if(r.data){BASE_ETAT={manque:(r.data.manque||[]).concat(r.data.version<BASE_V?[String(BASE_V)]:[])}}
   }catch(e){return}
   if(BASE_ETAT&&BASE_ETAT.manque.length)toast('Base Supabase pas à jour : script'+(BASE_ETAT.manque.length>1?'s ':' ')+BASE_ETAT.manque.join(', ')+' à exécuter (Administration → Accès)',8000);
-  const b=document.getElementById('base-etat');if(b)b.outerHTML=baseHTML()}
+  const b=document.getElementById('base-etat');if(b)b.outerHTML=baseHTML();
+  try{const {count}=await SB.from('erreurs').select('id',{count:'exact',head:true}).gt('at',new Date(prefs.errVu||Date.now()-7*864e5).toISOString());
+    if(count>0)setTimeout(()=>toast(count+' erreur'+(count>1?'s':'')+' du planning chez les utilisateurs : Administration → Erreurs',8000),BASE_ETAT&&BASE_ETAT.manque.length?8500:0)}catch(e){}}
 function baseHTML(){const e=BASE_ETAT;
   if(!e)return `<p id="base-etat" class="base-etat muted">Base de données : vérification…</p>`;
   if(!e.manque.length)return `<p id="base-etat" class="base-etat ok" title="Tous les scripts supabase/ du dépôt GitHub (01 à ${BASE_V}) sont passés dans Supabase">✓ Base de données à jour (Supabase + GitHub)</p>`;
@@ -2651,7 +2689,7 @@ async function supaBoot(){
   if(prefs.user&&ME&&ME.actif){const n=gAssigned(),r=isAdmin()?prefs.user.role:(ROLE_UI[ME.role]||'commercial');if((n&&prefs.user.nom!==n)||prefs.user.role!==r){prefs.user={nom:n||prefs.user.nom,role:r};savePrefs()}}   // prénom du compte pour tous ; rôle libre pour l'admin seulement
   if(!prefs.user||prefs.gate!==TODAY||prefs.email!==ME.email)showGate();
   startShared(supaDb(SB));setTimeout(histTrap,800);
-  room=supaRoom(SB);verrousInit();setTimeout(notifRefresh,3000);accesWatch();setTimeout(baseCheck,4000);if(location.search)navFromUrl(location.search);
+  room=supaRoom(SB);verrousInit();setTimeout(notifRefresh,3000);accesWatch();setTimeout(baseCheck,4000);setTimeout(errFlush,6000);if(location.search)navFromUrl(location.search);
   if(prefs.user)room.presence({nom:prefs.user.nom,role:prefs.user.role,edit:null}).catch(()=>{});
   room.onPeers(ch=>{peers=ch.peers.slice();lockRace();if(S){if(popEl.hidden&&drawerEl.hidden)render();else renderChrome()}});
   setTimeout(()=>loadPdf().catch(()=>{}),2500);
