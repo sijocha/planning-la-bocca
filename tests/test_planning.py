@@ -244,7 +244,7 @@ def test_etat_de_la_base(ouvrir):
             return [BASE_ETAT.manque,baseHTML().replace(/<[^>]*>/g,'')]}}""")
     assert res["ok"][0] == [] and "à jour" in res["ok"][1]
     assert res["13"][0] == ["13"] and "13_reglages_commercial.sql" in res["13"][1]
-    assert res["absent"][0] == ["15"] and "15_erreurs.sql" in res["absent"][1]
+    assert res["absent"][0] == ["16"] and "16_labo.sql" in res["absent"][1]
     # pas d'appel pour un compte non admin
     assert pg.evaluate("async()=>{ME={email:'c@x',nom:'C',role:'centraliste',actif:true};let n=0;SB={rpc:async()=>{n++;return {data:null}}};await baseCheck();return n}") == 0
 
@@ -332,8 +332,46 @@ def test_clic_droit_cubage(ouvrir):
 def test_encadres_du_haut(ouvrir):
     for w, deux_lignes in ((1920, False), (1366, False), (1100, True)):
         pg = ouvrir(w=w, h=900)
+        jour(pg)   # un jour de semaine (le week-end fermé, les encadrés sont masqués)
         L = pg.evaluate("()=>[...document.querySelectorAll('#head .hb-w')].map(e=>{const r=e.getBoundingClientRect();return [Math.round(r.width),Math.round(r.top)]})")
         if deux_lignes:
             assert L[0][1] == L[1][1] and L[2][1] > L[0][1], (w, L)
         else:
             assert max(x[0] for x in L) - min(x[0] for x in L) <= 2, (w, L)
+
+
+# ---------- tech labo : consulte, ajoute une info, demande ; ne modifie rien ----------
+def test_labo_ne_modifie_aucune_commande(ouvrir):
+    pg = ouvrir("labo")
+    oid = pg.evaluate("()=>{const o=S.orders.find(o=>o.pay&&!o.pay.paye);view.date=o.date;render(true);return o.id}")
+    avant = pg.evaluate(f"()=>stable(byId('{oid}'))")
+    pg.evaluate(f"()=>openOrderForm(byId('{oid}'))"); pg.wait_for_timeout(200)
+    assert pg.evaluate("()=>drawerEl.hidden")
+    for a in ("pay", "statut", "pompe", "resa", "tour", "plus", "pill"):
+        pg.evaluate(f"()=>{{try{{act('{a}',document.querySelector('#row-{oid}'),byId('{oid}'),{{}})}}catch(e){{}}}}"); pg.wait_for_timeout(80)
+    pg.click(f"#row-{oid} [data-act=pay]", button="right"); pg.wait_for_timeout(200)
+    assert pg.evaluate(f"()=>stable(byId('{oid}'))") == avant
+    # menu ⋯ : demander au commercial / au centraliste, ajouter une info
+    pg.evaluate(f"()=>{{closePop();act('menu',document.querySelector('#row-{oid} [data-act=menu]')||document.body,byId('{oid}'),{{}})}}"); pg.wait_for_timeout(300)
+    menu = pg.evaluate("()=>[...popEl.querySelectorAll('.pop-b')].map(b=>b.textContent)")
+    assert menu == ["Demander au commercial…", "Demander au centraliste…", "Ajouter une info…"]
+    pg.evaluate("()=>closePop()"); pg.wait_for_timeout(200)
+    # info du labo
+    pg.evaluate(f"()=>act('addpill',document.querySelector('#row-{oid}'),byId('{oid}'),{{}})"); pg.wait_for_timeout(300)
+    pg.evaluate("()=>{const i=popEl.querySelector('input');i.value='Éprouvettes à prélever';i.form?i.form.requestSubmit():i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))}"); pg.wait_for_timeout(300)
+    p = pg.evaluate(f"()=>byId('{oid}').pills.slice(-1)[0]")
+    assert p["t"] == "Éprouvettes à prélever" and p["lab"] == 1
+    assert pg.evaluate(f"()=>!!document.querySelector('#row-{oid} .chip.lab .lab-b')")
+
+
+def test_info_labo_au_premier_chargement(ouvrir):
+    pg = ouvrir()
+    pg.evaluate("()=>{const o=byId('o19');view.date=o.date;o.tours.forEach(t=>{t.s=0;delete t.p});o.pills.push({t:'Éprouvettes à prélever',by:'Léa (labo)',lab:1});render(true)}")
+    pg.wait_for_timeout(700)
+    assert pg.evaluate("()=>popEl.hidden")                       # rien tant qu'aucun camion n'est chargé
+    pg.evaluate("()=>{const o=byId('o19');o.tours[0].s=1;o.tours[0].p='AA';render(true)}"); pg.wait_for_timeout(800)
+    assert "Éprouvettes à prélever" in pg.evaluate("()=>popEl.hidden?'':popEl.textContent")
+    pg.click("[data-pa=vu]"); pg.wait_for_timeout(300)
+    assert pg.evaluate("()=>byId('o19').pills.slice(-1)[0].vu") == 1
+    pg.evaluate("()=>{byId('o19').tours[1].s=1;render(true)}"); pg.wait_for_timeout(800)
+    assert pg.evaluate("()=>popEl.hidden")                       # une seule fois

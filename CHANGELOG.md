@@ -2,6 +2,14 @@
 
 Les nouveautés du Planning La Bocca, session par session (la plus récente en haut).
 
+## 28 novembre 2026
+
+### Tech labo : consultation seulement
+- Le labo ne modifie plus aucune commande : ni la commande, ni le paiement, ni la pompe, ni le bon de pompe, ni le statut, ni les tours, ni les infos existantes. Il ne crée ni ne supprime de commande.
+- Ce qu'il peut faire : **ajouter une info** (badge violet LABO) et **proposer une formule** pour une commande en attente. Menu ⋯ : « Demander au commercial… », « Demander au centraliste… », « Ajouter une info… ».
+- L'info du labo est **montrée au centraliste dès le premier camion chargé** de la commande (fenêtre « Info du labo », bouton Vu), une seule fois.
+- Nouveau script **16_labo.sql** : la base refuse aussi toute autre modification venant d'un compte labo. Le planning signale aux admins s'il n'est pas encore exécuté.
+
 ## 26 novembre 2026
 
 ### Sauvegardes : test de restauration

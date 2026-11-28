@@ -1947,3 +1947,10 @@ body.aide-pick .aide-hl{outline:2px dashed var(--orange)!important;outline-offse
 }
 @media (max-width:760px){.drawer .inline-f[data-cfgform="camions"] #cf-cc{flex:0 0 52px}.drawer .inline-f[data-cfgform="camions"] #cf-cf{flex:0 0 82px}.drawer .inline-f[data-cfgform="camions"] #cf-ct{flex:1 1 80px}}
 @media (max-width:760px){.drawer .fxw .pcfg .pl3 .cb{padding:1px 5px;font-size:11px;gap:4px}.drawer .fxw .pcfg .pl3{row-gap:4px;column-gap:4px}}
+/* Info du labo */
+.chip.lab{border-color:#7A5AF8!important;background:color-mix(in srgb,#7A5AF8 10%,var(--panel))}
+.chip .lab-b{font:700 9px var(--mono);letter-spacing:.06em;color:#fff;background:#7A5AF8;padding:1px 4px;margin-right:5px;border-radius:2px}
+.lab-h{color:#5B3FD6}
+.lab-l{margin:6px 0 8px;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.lab-l li{padding:8px 10px;border-left:4px solid #7A5AF8;background:color-mix(in srgb,#7A5AF8 8%,var(--panel));display:flex;flex-direction:column;gap:2px}
+.lab-l small{color:var(--muted)}

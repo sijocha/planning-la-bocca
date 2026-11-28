@@ -88,7 +88,7 @@ reset role;
 drop trigger documents_cloture on public.documents;
 set role authenticated;
 select pg_temp.verifier((public.etat_base()->'manque') = '["08","12"]'::jsonb, 'état de la base : 12 retiré détecté');
-select pg_temp.verifier((public.etat_base()->>'version') = '15', 'état de la base : version 15');
+select pg_temp.verifier((public.etat_base()->>'version') = '16', 'état de la base : version 16');
 
 -- ---------- 15 : erreurs du planning ----------
 set test.uid='00000000-0000-0000-0000-0000000000a1';
@@ -107,3 +107,21 @@ delete from public.erreurs where msg like 'a%';
 select pg_temp.verifier((select count(*) from public.erreurs) = 2, 'l''admin efface');
 reset role;
 select pg_temp.verifier(exists(select 1 from cron.job where jobname='erreurs-menage'), 'ménage des erreurs programmé');
+
+-- ---------- 16 : le labo ne modifie aucune commande ----------
+insert into public.documents(collection,id,data) values ('orders','oL','{"kind":"cmd","h":"08:00","date":"2026-11-27","tours":[{"v":8}],"pills":[{"t":"appeler"}]}');
+set role authenticated;
+set test.uid='00000000-0000-0000-0000-0000000000b1';
+select pg_temp.doit_echouer($$update public.documents set data=jsonb_set(data,'{h}','"09:00"') where id='oL'$$, 'PLB01', 'labo modifiant l''heure');
+select pg_temp.doit_echouer($$update public.documents set data=jsonb_set(data,'{pay}','{"paye":true}') where id='oL'$$, 'PLB01', 'labo validant un paiement');
+select pg_temp.doit_echouer($$update public.documents set data=jsonb_set(data,'{pills}','[{"t":"autre"}]') where id='oL'$$, 'PLB01', 'labo modifiant une info existante');
+select pg_temp.doit_echouer($$insert into public.documents(collection,id,data) values ('orders','oL2','{"date":"2026-11-27"}')$$, 'PLB01', 'labo créant une commande');
+do $$ begin delete from public.documents where id='oL'; exception when others then null; end $$;
+select pg_temp.verifier(exists(select 1 from public.documents where id='oL'), 'labo ne supprime pas une commande');
+update public.documents set data=jsonb_set(data,'{pills}','[{"t":"appeler"},{"t":"éprouvettes à 9 h","lab":1}]') where id='oL';
+update public.documents set data=jsonb_set(data,'{fLabo}','{"f":"C25/30","by":"Léa"}') where id='oL';
+select pg_temp.verifier((select jsonb_array_length(data->'pills') from public.documents where id='oL')=2 and (select data->'fLabo'->>'f' from public.documents where id='oL')='C25/30', 'labo : info ajoutée et formule proposée');
+set test.uid='00000000-0000-0000-0000-0000000000a1';
+update public.documents set data=jsonb_set(data,'{h}','"09:30"') where id='oL';
+select pg_temp.verifier((select data->>'h' from public.documents where id='oL')='09:30', 'le commercial modifie toujours');
+reset role;

@@ -98,6 +98,15 @@ function volPop(o,el){if(!o)return;const id=o.id;setEditing(id);const L=livre(o)
     const apres=`${fmt(total(x))}${x.plus?'+':''}`;if(avant!==apres)jlog(x.date,`Cubage ${cl(x.cl).n} : ${avant} → ${apres} m³`);
     commit();render();return 'close'});
   const f=popEl.querySelector('#pf0');if(f){f.setAttribute('inputmode','decimal');setTimeout(()=>{f.focus();f.select()},30)}}
+let labVus=new Set();
+function labInfoCheck(){if(role()!=='centraliste'||RO()||!S||!S.orders)return;
+  for(const o of S.orders){if(o.date!==view.date&&o.date!==TODAY)continue;const L=(o.pills||[]).filter(p=>p.lab&&!p.vu);if(!L.length)continue;
+    if(!(o.tours||[]).some(t=>t.s&&!t.mv))continue;const k=o.id+':'+L.map(p=>p.t).join('|');if(labVus.has(k))continue;
+    if(popEl&&!popEl.hidden){setTimeout(labInfoCheck,1500);return}
+    labVus.add(k);const id=o.id,row=document.getElementById('row-'+id);
+    openPop(row||document.body,`<div class="pop-h lab-h">Info du labo · ${esc(cl(o.cl).n)}</div><p class="muted" style="margin:0;font-size:12.5px">${esc(siteName(o))} · premier camion chargé</p>
+      <ul class="lab-l">${L.map(p=>`<li><b>${esc(p.t)}</b><small>${esc(p.by||'labo')}</small></li>`).join('')}</ul><button class="btn primary" data-pa="vu">Vu</button>`,
+      {vu(){const x=byId(id);if(x)(x.pills||[]).forEach(p=>{if(p.lab)p.vu=1});commit();render();return 'close'}});return}}
 function genTours(m3,cap){const n=Math.floor(m3/cap+1e-9);const t=[];for(let i=0;i<n;i++)t.push({v:cap,s:0});const r=Math.round((m3-n*cap)*10)/10;if(r>0.05)t.push({v:r,s:0});return t}
 const TR=o=>o.tours.filter(t=>!t.mv);
 const total=o=>TR(o).reduce((a,t)=>a+t.v,0);
@@ -572,7 +581,7 @@ function adjHTML(){
 const AIDE=[
  ['Pour commencer',[
   ['tous','Se connecter et changer d\'utilisateur',`<p>À l'ouverture : <b>Se connecter avec Google</b>, avec une adresse inscrite par la centrale (Administration → Accès).</p><ul><li>Chacun entre <b>avec son badge et son prénom</b>, ceux de son compte : on ne choisit pas un autre prénom.</li><li>Le <b>rôle</b> (centraliste, commercial, tech labo, lecture seule) est imposé par le compte : les autres s'affichent grisés. Seul un <b>admin</b> choisit le rôle sous lequel il travaille.</li><li>En dessous : <b>les personnes connectées en ce moment</b>, rangées par rôle.</li><li>Lecture seule : un seul bouton, <b>Ouvrir le planning</b>.</li><li>Au poste de la centrale : badge du compte (rond en haut à droite) → <b>Page de connexion</b> à chaque prise de poste. <b>Se déconnecter</b> au même endroit.</li><li>Si l'admin change votre rôle ou votre accès, vous êtes <b>déconnecté automatiquement</b> (dans les 30 secondes), avec un message.</li></ul>`],
-  ['tous','Ce que chaque rôle peut faire',`<ul><li><b>Centraliste</b> : tout le planning (tours, compléments, bulles, validations, clôture, journal de bord, agrégats).</li><li><b>Commercial</b> : passe et modifie ses commandes (à valider par la centrale), demandes, chat, tous les réglages de la centrale. Il voit les tours sans les charger ; il peut cocher [+] en passant une nouvelle commande.</li><li><b>Tech labo</b> : voit le planning, propose une formule pour une commande en attente, demandes et chat. Il ne charge ni tour ni complément.</li><li><b>Lecture seule</b> : consulte uniquement (voir « Compte en lecture seule »).</li><li><b>Admin</b> : un rôle au choix à la connexion, plus la gestion des Accès.</li></ul>`],
+  ['tous','Ce que chaque rôle peut faire',`<ul><li><b>Centraliste</b> : tout le planning (tours, compléments, bulles, validations, clôture, journal de bord, agrégats).</li><li><b>Commercial</b> : passe et modifie ses commandes (à valider par la centrale), demandes, chat, tous les réglages de la centrale. Il voit les tours sans les charger ; il peut cocher [+] en passant une nouvelle commande.</li><li><b>Tech labo</b> : consulte le planning sans modifier aucune commande (ni paiement, ni pompe, ni statut, ni tours). Il peut : proposer une formule pour une commande en attente, <b>ajouter une info</b> (badge LABO, montrée au centraliste dès le premier camion chargé), et dans le menu ⋯ <b>demander au commercial ou au centraliste</b>. Demandes et chat aussi.</li><li><b>Lecture seule</b> : consulte uniquement (voir « Compte en lecture seule »).</li><li><b>Admin</b> : un rôle au choix à la connexion, plus la gestion des Accès.</li></ul>`],
   ['tous','Compte en lecture seule',`<p>Un compte en lecture seule <b>consulte</b> sans rien modifier :</p><ul><li>planning complet (jour et semaine), demandes en cours, carte du chantier, impression ;</li><li>en consultation : camions, pompes, fournisseurs, agence et raccourcis.</li></ul><p>Pas de menu ⋯ sur les commandes, pas de chat, ni notifications ni administration ; un clic sur une formule, une bulle ou une commande n'ouvre rien.</p>`],
   ['tous','Lire l\'écran du jour',`<p>Une ligne par chantier, de haut en bas dans l'ordre des heures, regroupées en <b>Matin</b>, <b>Après-midi</b> et, à partir de 19 h, <b>☾ Nuit</b>. Le trait rouge marque l'heure actuelle.</p><ul><li><b>Ligne 1</b> : heure, client, m³ livrés / total, chantier, formule, type de camion, pompe, commentaires à droite.</li><li><b>Ligne 2</b> : les bulles des tours (une bulle = un camion).</li><li>Au-dessus du premier chantier : nombre de camions et de chantiers, et la légende prévu · chargé · complément.</li><li>Une ligne sur deux est sur fond gris pour mieux suivre.</li><li><b>Barre à gauche</b> de la ligne = statut : orange en attente, vert en cours, bleu terminée.</li></ul>`],
   ['tous','Changer de jour, de semaine ou de vue',`<ul><li><b>‹ ›</b> autour de la date, ou les flèches <b>← →</b> du clavier. Sur tablette : glisser vers la gauche ou la droite.</li><li>Clic sur la <b>grande date</b> : calendrier ou date tapée pour aller à un jour précis. <b>Aujourd'hui</b> pour revenir.</li><li><b>Jour / Semaine</b> en haut à gauche. En semaine, chaque jour a sa <b>barre de charge</b> (m³ du matin, de l'après-midi, de la nuit, comparés au jour le plus chargé), avec le nombre de tours, de pompes et de commandes à valider.</li><li><b>Sur téléphone</b> : les commandes sont en vue simple avec la formule ; un <b>appui sur une commande</b> affiche ses chargements (tours) et tous ses détails, un nouvel appui à gauche (sur l'heure) la referme.</li><li>Sur ordinateur, en bas : <b>Simple</b> (lignes serrées), <b>Normal</b>, <b>Détaillé</b> (téléphone, notes, commandes annulées).</li><li><b>Recherche</b> « Client ou chantier » en haut : clic sur un résultat pour y aller.</li></ul>`]]],
@@ -915,7 +924,7 @@ function morphKids(a,b){
 }
 function morph(el,html){const t=document.createElement('template');t.innerHTML=html;morphKids(el,t.content)}
 
-function render(force){if(typeof gateDay==='function'&&!document.getElementById('gate').hidden)gateDay();
+let _labT;function render(force){clearTimeout(_labT);_labT=setTimeout(()=>{try{labInfoCheck()}catch(e){}},400);if(typeof gateDay==='function'&&!document.getElementById('gate').hidden)gateDay();
   plRefresh();
   if(!S)return;
   if(histNeed())return;
@@ -1237,7 +1246,12 @@ function tourPop(o,i,anchor){const id=o.id;const t=o.tours[i];const fl=FLEET().c
       toast(`Camion replacé sur ${siteName(d)} · ${fmt(v)} m³${full?' · plein':''}`)},
     unmv(){const x=T();unmove(id,i);delete x.mv;toast('Replacement annulé')}});
 }
-function orderMenu(o,anchor){const id=o.id;setEditing(id);
+function orderMenu(o,anchor){const id=o.id;
+  if(LABO())return openPop(anchor,`<div class="pop-h">${esc(cl(o.cl).n)} · ${esc(siteName(o))}</div><p class="muted" style="margin:0;font-size:12.5px">${esc(dayShort(o.date))} · ${esc(o.h||'')} · ${fmt(total(o))} m³ · ${esc(o.f||'')}</p>
+    <button class="pop-b" data-pa="askcom">Demander au commercial…</button><button class="pop-b" data-pa="askcen">Demander au centraliste…</button><button class="pop-b" data-pa="info">Ajouter une info…</button>`,
+    {askcom(){const a=popAnchor;setTimeout(()=>demPop(a,id,'modif','commercial'));return 'close'},askcen(){const a=popAnchor;setTimeout(()=>demPop(a,id,'modif','centraliste'));return 'close'},
+     info(){const a=popAnchor;setTimeout(()=>act('addpill',a,byId(id),{}));return 'close'}});
+  setEditing(id);
   openPop(anchor,`<div class="pop-h">${esc(cl(o.cl).n)} · ${esc(siteName(o))}</div>${o.maj?`<p class="muted" style="margin:0;font-size:12.5px">Dernière modification : ${esc(o.maj.by)}, ${esc(dayShort(o.maj.at.slice(0,10)))} à ${esc(hm(o.maj.at.slice(11)))}</p>`:''}<p class="muted" style="margin:0;font-size:12.5px">Saisie par ${esc(o.by||'?')}</p>
     ${role()==='centraliste'?`<div class="pop-l">Statut</div><div class="pop-grid">${[['','Auto'],['attente','En attente'],['encours','En cours'],['terminee','Terminée'],['annulee','Annulée']].map(([k,l])=>`<button class="pop-c txt ${(o.st||'')===k?'on':''}" data-pa="st" data-v="${k}">${l}</button>`).join('')}</div>`:`<button class="pop-b" data-pa="askc">Demander une modification au centraliste…</button>`}
     <button class="pop-b" data-pa="edit">Modifier la commande</button>
@@ -1262,11 +1276,16 @@ function demPop(anchor,oid,typeDef,pourDef){
 
 // lecture seule : consulter uniquement (planning, demandes, carte, impression) ; aucune fenêtre de modification
 const RO=()=>!!(ME&&ME.role==='lecture');
+// Tech labo : ne modifie aucune commande. Il peut ajouter une info, proposer une formule en attente, demander (menu ⋯), consulter.
+const LABO=()=>role()==='labo'&&!RO();
+const LABO_OK=['focus','pills-all','map','menu','formule','flabo','addpill','ap-show','peek-x','vol'];
+const LABO_MSG='Tech labo : les commandes ne se modifient pas ici. Ajoutez une info (+ Info) ou ⋯ → Demander au commercial / au centraliste.';
 const RO_ACTS=['prev','next','today','mode','tab','goto','focus','pickdate','vue','settings','banner-ok','dfilter','hb','adj-year','map','aide-q','aide-close','aide-all','aide-pick','aide-show','export','tours-print','tours-per','conv-print','cmonth','ap-show','peek-x','pills-all'];
 // tours et compléments : réservés au centraliste (le commercial et le labo voient, sans pouvoir ajouter ni charger)
 const TOUR_ACTS=['plus','addtour','cpl-add','tour'];
 function act(a,el,o,e){
   if(RO()&&!RO_ACTS.includes(a)){if(e&&e.preventDefault)e.preventDefault();return}
+  if(o&&LABO()&&!LABO_OK.includes(a)){if(e&&e.preventDefault)e.preventDefault();toast(LABO_MSG,5000);return}
   if(o&&TOUR_ACTS.includes(a)&&role()!=='centraliste'){toast('Tours et compléments : réservés au centraliste');return}
   if(o&&!['focus','pills-all','map','menu'].includes(a)&&closedStop(o.date))return;
   if(!o&&/^(semi|cim|s-)/.test(a||'')){const dd=el.closest&&el.closest('[data-day]');if(dd&&closedStop(dd.dataset.day))return}
@@ -1299,7 +1318,7 @@ function act(a,el,o,e){
     case 'pill-x':{e.stopPropagation();const id=o.id;setEditing(id);return confirmPop(el,'Supprimer ce commentaire ?',o.pills[i].t,'Oui, supprimer',()=>{byId(id).pills.splice(i,1)},true)}
     case 'pills-all':return plShow(el);
     case 'pills-edit':{const id=o.id;return setTimeout(()=>pillsPop(plAnchor&&document.body.contains(plAnchor)?plAnchor:document.querySelector(`#row-${id} .r-menu`)||el,id))}
-    case 'addpill':{const id=o.id;setEditing(id);return listPop(el,'Ajouter une info sur la ligne',pPre(o),v=>{byId(id).pills.push({t:v,on:false,by:author()})},'Ou texte libre (retard, consigne…)')}
+    case 'addpill':{const id=o.id;if(!LABO())setEditing(id);return listPop(el,LABO()?'Info du labo (affichée au centraliste au premier chargement)':'Ajouter une info sur la ligne',pPre(o),v=>{const p={t:v,on:false,by:author()};if(LABO())p.lab=1;byId(id).pills.push(p)},'Ou texte libre (retard, consigne…)')}
     case 'flabo':{const id=o.id;if(role()==='labo')return act('formule',el,o,e);if(!o.fLabo)return;setEditing(id);
       return confirmPop(el,'Appliquer la formule du labo ?',`${o.f||'—'}  →  ${o.fLabo.f}${o.fLabo.sap?' · SAP '+o.fLabo.sap:''} (proposée par ${o.fLabo.by||'le labo'})`,'Oui, appliquer',()=>{const x=byId(id);const f0=x.f;x.f=x.fLabo.f;reCap(x,f0);if(x.fLabo.sap)x.sap=x.fLabo.sap;learnFormule(x.f,x.sap||'');jlog(x.date,`Formule du labo appliquée : ${siteName(x)} · ${x.f}`);delete x.fLabo;toast('Formule appliquée')})}
     case 'vol':return;   // clic simple : rien (clic droit = volPop)
@@ -1444,6 +1463,7 @@ function pillEdit(o,i,anchor){const id=o.id;setEditing(id);const p=o.pills[i];
 }
 function longAct(el){const a=el.dataset.act,i=+el.dataset.i;const row=el.closest('[data-id]');
   if(RO())return;
+  if(row&&LABO()){toast(LABO_MSG,5000);return}
   if(row&&TOUR_ACTS.includes(a)&&role()!=='centraliste'){toast('Tours et compléments : réservés au centraliste');return}
   if(row&&(closedStop((byId(row.dataset.id)||{}).date)||lockStop(row.dataset.id)))return;
   if(a==='pay'&&row){const o=byId(row.dataset.id);if(o&&o.pay){setEditing(o.id);return payPop(o,el)}}
@@ -1714,7 +1734,7 @@ function applyTheme(){const r=document.documentElement;if(prefs.theme==='auto')r
    Formulaire de commande (QQOQCP)
    ===================================================================== */
 let formCtx=null;
-function openOrderForm(o,opt){if(RO())return;
+function openOrderForm(o,opt){if(RO())return;if(LABO()){toast(o?LABO_MSG:'Tech labo : les commandes sont saisies par le commercial ou la centrale. Utilisez « Demandes » pour en demander une.',5000);return}
   if(o&&o.id&&!(opt&&opt.dup)&&(closedStop(o.date)||lockStop(o.id)))return;
   if(o&&o.id&&MODE==='shared'&&room&&room.live&&!room.live())toast('Direct interrompu : les autres ne voient pas que vous modifiez cette commande. Reconnexion en cours…');
   opt=opt||{};const isNew=!o||opt.dup;
@@ -2409,7 +2429,7 @@ window.addEventListener('error',ev=>{if(ev.target&&ev.target!==window&&ev.target
 window.addEventListener('unhandledrejection',ev=>{const r=ev.reason;errNote(r&&r.message?(r.name||'Error')+': '+r.message:String(r),'',r&&r.stack)});
 window.addEventListener('online',()=>errFlush());
 /* État de la base Supabase (comptes admin) : scripts supabase/ pas encore exécutés → avertissement */
-const BASE_V=15;let BASE_ETAT=null;const BASE_F={"01": "01_structure.sql", "02": "02_roles.sql", "03": "03_documents.sql", "04": "04_droits.sql", "05": "05_concurrence.sql", "06": "06_prenoms_poste.sql", "07": "07_catalogue_formules.sql", "08": "08_temps_reel_prive.sql", "09": "09_verrous.sql", "10": "10_notifications.sql", "11": "11_rappel_pompes.sql", "12": "12_journee_cloturee.sql", "13": "13_reglages_commercial.sql", "14": "14_etat_base.sql", "15": "15_erreurs.sql"};
+const BASE_V=16;let BASE_ETAT=null;const BASE_F={"01": "01_structure.sql", "02": "02_roles.sql", "03": "03_documents.sql", "04": "04_droits.sql", "05": "05_concurrence.sql", "06": "06_prenoms_poste.sql", "07": "07_catalogue_formules.sql", "08": "08_temps_reel_prive.sql", "09": "09_verrous.sql", "10": "10_notifications.sql", "11": "11_rappel_pompes.sql", "12": "12_journee_cloturee.sql", "13": "13_reglages_commercial.sql", "14": "14_etat_base.sql", "15": "15_erreurs.sql", "16": "16_labo.sql"};
 async function baseCheck(){if(!isAdmin()||!SB)return;
   try{const r=await SB.rpc('etat_base');
     if(r.error){BASE_ETAT={manque:[String(BASE_V)],inconnu:true}}else if(r.data){BASE_ETAT={manque:(r.data.manque||[]).concat(r.data.version<BASE_V?[String(BASE_V)]:[])}}
@@ -2722,7 +2742,7 @@ async function supaBoot(){
    Infos sur la ligne : affichage limité, liste complète au survol, éditeur
    ===================================================================== */
 const pillsLim=o=>{const n=(o.pills||[]).length;return isPhone()||n<=2?n:1};
-function pillChip(p,i){return `<button class="chip ${p.on?'on':''}" data-act="pill" data-i="${i}" data-long="1" title="${esc(p.t)} · posé par ${esc(p.by||'?')} · clic : fait / à faire · double-clic : modifier"><span class="pt">${esc(p.t)}</span><span class="x" data-act="pill-x" data-i="${i}" role="button" aria-label="Retirer">×</span></button>`}
+function pillChip(p,i){return `<button class="chip ${p.on?'on':''} ${p.lab?'lab':''}" data-act="pill" data-i="${i}" data-long="1" title="${p.lab?'Info du labo · ':''}${esc(p.t)} · posé par ${esc(p.by||'?')} · clic : fait / à faire · double-clic : modifier">${p.lab?'<b class="lab-b">LABO</b>':''}<span class="pt">${esc(p.t)}</span><span class="x" data-act="pill-x" data-i="${i}" role="button" aria-label="Retirer">×</span></button>`}
 function pillsRow(o){
   const all=o.pills||[],lim=pillsLim(o);
   const more=all.length-lim;
@@ -2814,7 +2834,7 @@ function boot(){
   let lt=null;
   document.addEventListener('pointerdown',e=>{const el=e.target.closest('[data-long]');if(!el||e.button>0)return;lt=setTimeout(()=>{lt=null;suppressClick=true;longAct(el)},480)});
   ['pointerup','pointercancel','pointerleave','scroll'].forEach(ev=>document.addEventListener(ev,()=>{if(lt){clearTimeout(lt);lt=null}},true));
-  document.addEventListener('dblclick',e=>{const el=e.target.closest('[data-act="pill"]');if(!el||RO())return;e.preventDefault();const row=el.closest('[data-id]');if(row){const o=byId(row.dataset.id),k=+el.dataset.i;if(o&&!lockStop(o.id)){const fresh=document.querySelector(`#row-${o.id} [data-act="pill"][data-i="${k}"]`)||el;pillEdit(o,k,fresh)}}});
+  document.addEventListener('dblclick',e=>{const el=e.target.closest('[data-act="pill"]');if(!el||RO()||LABO())return;e.preventDefault();const row=el.closest('[data-id]');if(row){const o=byId(row.dataset.id),k=+el.dataset.i;if(o&&!lockStop(o.id)){const fresh=document.querySelector(`#row-${o.id} [data-act="pill"][data-i="${k}"]`)||el;pillEdit(o,k,fresh)}}});
   document.addEventListener('contextmenu',e=>{const el=e.target.closest('[data-long]');if(!el)return;e.preventDefault();if(lt){clearTimeout(lt);lt=null}longAct(el)});
   // recherche
   const q=document.getElementById('q'),qres=document.getElementById('qres');
