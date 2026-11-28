@@ -4,6 +4,13 @@ Les nouveautés du Planning La Bocca, session par session (la plus récente en h
 
 ## 28 novembre 2026
 
+### Accès des chantiers et dérogations
+- Dans la commande : **camions autorisés sur le chantier** (cases par type de camion) et une note d'accès (chemin étroit, interdit +19 t…), **mémorisés pour le chantier** et repris aux commandes suivantes.
+- **Dérogation** : Pas de dérogation / En attente / Validée. Avertissement dans la commande si le camion prévu n'est pas autorisé.
+- Sur la ligne : étiquettes **ACCÈS SP4** (rouge si le camion prévu n'est pas autorisé) et **DÉROG. ?** / **DÉROG. ✓**, clic pour changer la dérogation.
+- **À surveiller** (aujourd'hui et demain) : dérogation en attente, ou camion non autorisé sans dérogation.
+- Une modification de la dérogation par le commercial apparaît dans « avant → après ».
+
 ### Tech labo : consultation seulement
 - Le labo ne modifie plus aucune commande : ni la commande, ni le paiement, ni la pompe, ni le bon de pompe, ni le statut, ni les tours, ni les infos existantes. Il ne crée ni ne supprime de commande.
 - Ce qu'il peut faire : **ajouter une info** (badge violet LABO) et **proposer une formule** pour une commande en attente. Menu ⋯ : « Demander au commercial… », « Demander au centraliste… », « Ajouter une info… ».

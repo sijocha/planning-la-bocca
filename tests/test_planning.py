@@ -375,3 +375,36 @@ def test_info_labo_au_premier_chargement(ouvrir):
     assert pg.evaluate("()=>byId('o19').pills.slice(-1)[0].vu") == 1
     pg.evaluate("()=>{byId('o19').tours[1].s=1;render(true)}"); pg.wait_for_timeout(800)
     assert pg.evaluate("()=>popEl.hidden")                       # une seule fois
+
+
+# ---------- accès du chantier et dérogation ----------
+def test_acces_et_derogation(ouvrir):
+    pg = ouvrir()
+    jour(pg)
+    pg.evaluate("()=>openOrderForm(byId('o19'))"); pg.wait_for_timeout(300)
+    t0 = pg.evaluate("()=>CFG().camions[0].t")
+    # chantier accessible seulement en SP4 ; le camion prévu (8x4) n'est pas autorisé → avertissement
+    pg.evaluate("()=>{document.querySelectorAll('input[name=f-acc]').forEach(x=>{x.checked=x.value==='SP4';x.dispatchEvent(new Event('input',{bubbles:true}))});const n=document.getElementById('f-accn');n.value='Chemin étroit, interdit +19 t';n.dispatchEvent(new Event('input',{bubbles:true}))}")
+    w = pg.evaluate("()=>{const w=document.getElementById('f-acc-w');return [w.hidden,w.textContent]}")
+    assert w[0] is False and "non autorisé" in w[1]
+    pg.check("input[name=f-der][value=attente]")
+    pg.evaluate("()=>document.getElementById('oform').requestSubmit()"); pg.wait_for_timeout(400)
+    r = pg.evaluate("()=>{const o=byId('o19'),c=chan(o.ch);return [o.der,c.acc,c.accNote]}")
+    assert r == ["attente", ["SP4"], "Chemin étroit, interdit +19 t"]
+    # ligne : DÉROG. ? et ACCÈS SP4 ; « À surveiller » : dérogation en attente
+    assert pg.evaluate("()=>[!!document.querySelector('#row-o19 .mo.der.warn'),!!document.querySelector('#row-o19 .mo.acc')]") == [True, True]
+    assert "Dérogation en attente" in pg.evaluate("()=>watchItems(view.date).join(' ')")
+    # clic sur l'étiquette → Validée
+    pg.click("#row-o19 .mo.der"); pg.wait_for_timeout(250)
+    pg.click("[data-pa=d][data-v=ok]"); pg.wait_for_timeout(250)
+    assert pg.evaluate("()=>[byId('o19').der,watchItems(view.date).join(' ').includes('o19')]") == ["ok", False]
+    # sans dérogation, camion non autorisé : alerte « Accès »
+    pg.evaluate("()=>{byId('o19').der='';render(true)}")
+    assert "Accès SP4" in pg.evaluate("()=>watchItems(view.date).join(' ')")
+    # nouvelle commande sur le même chantier : l'accès revient tout seul
+    nom = pg.evaluate("()=>chan(byId('o19').ch).nom")
+    if nom:
+        pg.evaluate("()=>openOrderForm(null)"); pg.wait_for_timeout(300)
+        pg.fill("#f-chn", nom); pg.wait_for_timeout(100)
+        assert pg.evaluate("()=>[...document.querySelectorAll('input[name=f-acc]:checked')].map(x=>x.value)") == ["SP4"]
+    assert pg.errs == []

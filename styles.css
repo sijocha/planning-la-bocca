@@ -1954,3 +1954,8 @@ body.aide-pick .aide-hl{outline:2px dashed var(--orange)!important;outline-offse
 .lab-l{margin:6px 0 8px;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
 .lab-l li{padding:8px 10px;border-left:4px solid #7A5AF8;background:color-mix(in srgb,#7A5AF8 8%,var(--panel));display:flex;flex-direction:column;gap:2px}
 .lab-l small{color:var(--muted)}
+/* Accès et dérogation */
+.f-acc input[type=text]{margin-top:6px;width:100%}
+#f-acc-w.bad{color:var(--bad-ink,#c0392b);font-weight:600}
+.row .mo.der,.row .mo.acc{font-size:10.5px}
+.row .mo.acc.bad{background:var(--bad-ink,#c0392b);color:#fff;border-color:transparent}
